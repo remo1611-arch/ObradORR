@@ -48,10 +48,10 @@ if 'iframe' in (ROOT / 'app' / 'js' / 'obradorr-app-classic.js').read_text(encod
     ok('iframe de impresión presente')
 else:
     fail('no se encontró iframe de impresión')
-if 'obradorr-100-rc2' in app_html:
-    ok('cache tag RC2 en HTML')
+if 'obradorr-100-rc3' in app_html:
+    ok('cache tag RC3 en HTML')
 else:
-    fail('cache tag RC2 ausente en HTML')
+    fail('cache tag RC3 ausente en HTML')
 
 # SQLite
 con = sqlite3.connect(ROOT / 'db' / 'obradorr.sqlite')
@@ -83,7 +83,7 @@ for label, sql in checks.items():
         fail(f'{label} vacío')
 
 meta = dict(cur.execute("SELECT key,value FROM app_meta WHERE key IN ('app_version','release_tag','cache_tag','schema_version')"))
-for key, expected in {'app_version':'1.0.0-rc.2','release_tag':'rc2','cache_tag':'obradorr-100-rc2','schema_version':'1.0.0-rc.2'}.items():
+for key, expected in {'app_version':'1.0.0-rc.3','release_tag':'rc3','cache_tag':'obradorr-100-rc3','schema_version':'1.0.0-rc.3'}.items():
     if meta.get(key) == expected:
         ok(f'app_meta {key}={expected}')
     else:
@@ -198,7 +198,7 @@ else:
     fail('metadato P0-F ausente')
 
 reset_html = (ROOT / 'app' / 'reset_local_data.html').read_text(encoding='utf-8')
-for marker in ['confirmReset', 'Confirmación final', 'descarga una copia SQLite', 'obradorr-data-100-rc2']:
+for marker in ['confirmReset', 'Confirmación final', 'descarga una copia SQLite', 'obradorr-data-100-rc3']:
     if marker in reset_html:
         ok(f'marcador reset seguro: {marker}')
     else:
@@ -218,7 +218,7 @@ for marker in ['data-safety', 'safe-action', 'danger-zone']:
         fail(f'marcador P0-F CSS ausente: {marker}')
 
 
-# RC2 copyright/footer validation
+# RC3 copyright/footer validation
 notice = '© 2026 Remo José Pereira González · Uso docente personal autorizado · Sin licencia abierta de redistribución o explotación comercial.'
 for path in ['app/js/obradorr-app-classic.js', 'app/css/obradorr.css', 'README.md', 'NOTICE.md']:
     content = (ROOT / path).read_text(encoding='utf-8')

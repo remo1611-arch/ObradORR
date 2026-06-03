@@ -1,4 +1,4 @@
-# USER_GUIDE · ObradORR 1.0.0-rc.2
+# USER_GUIDE · ObradORR 1.0.0-rc.3
 
 ## Flujo docente básico
 

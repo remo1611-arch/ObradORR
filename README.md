@@ -1,4 +1,4 @@
-# ObradORR 1.0.0-rc.2
+# ObradORR 1.0.0-rc.3
 
 Aplicación web local/offline para uso docente en Formación Profesional de Cocina, Pastelería y Panadería.
 
@@ -25,18 +25,18 @@ python -m http.server 8807 --bind 127.0.0.1
 Abrir:
 
 ```text
-http://127.0.0.1:8807/app/obradorr.html?v=obradorr-100-rc2
+http://127.0.0.1:8807/app/obradorr.html?v=obradorr-100-rc3
 ```
 
 Si venías de una versión anterior o queda una recuperación local antigua:
 
 ```text
-http://127.0.0.1:8807/app/reset_local_data.html?v=obradorr-100-rc2
+http://127.0.0.1:8807/app/reset_local_data.html?v=obradorr-100-rc3
 ```
 
 ## Cambios principales de la 2.0 candidata
 
-- Metadatos SQLite normalizados a `1.0.0-rc.2`.
+- Metadatos SQLite normalizados a `1.0.0-rc.3`.
 - `schema_migrations` incorporada.
 - Edición guiada ampliada: ficha, líneas, prefermento, pasos técnicos y componentes elaborados.
 - Operaciones críticas reforzadas con transacciones SQLite.

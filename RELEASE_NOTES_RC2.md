@@ -1,4 +1,4 @@
-# ObradORR 1.0.0-rc.2
+# ObradORR 1.0.0-rc.3
 
 Corrección menor sobre RC1 para incorporar autoría y condición de uso visible en app e impresión.
 
@@ -18,7 +18,7 @@ python -m http.server 8807 --bind 127.0.0.1
 
 Abrir:
 
-http://127.0.0.1:8807/app/obradorr.html?v=obradorr-100-rc2
+http://127.0.0.1:8807/app/obradorr.html?v=obradorr-100-rc3
 
 ## Nota docente
 

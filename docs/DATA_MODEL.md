@@ -1,4 +1,4 @@
-# DATA_MODEL · ObradORR 1.0.0-rc.2
+# DATA_MODEL · ObradORR 1.0.0-rc.3
 
 SQLite es la fuente de verdad. IndexedDB conserva la copia local de trabajo. localStorage se limita a preferencias ligeras de impresión.
 

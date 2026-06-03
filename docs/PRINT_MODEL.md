@@ -1,4 +1,4 @@
-# PRINT_MODEL · ObradORR 1.0.0-rc.2
+# PRINT_MODEL · ObradORR 1.0.0-rc.3
 
 ## Flujo de impresión real
 
@@ -36,7 +36,7 @@ La compilación actual conserva el flujo clásico para no romper Android/Termux,
 Torta de nata nunca debe imprimir nata ni azúcar a 0 g.
 
 
-## ObradORR 1.0.0-rc.2 · Autoría visible
+## ObradORR 1.0.0-rc.3 · Autoría visible
 
 © 2026 Remo José Pereira González · Uso docente personal autorizado · Sin licencia abierta de redistribución o explotación comercial.
 
