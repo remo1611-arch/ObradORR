@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ObradORR · Reinicio local</title>
+  <link rel="stylesheet" href="./css/obradorr.css?v=obradorr-100-rc1" />
+</head>
+<body>
+  <main class="main">
+    <section class="card">
+      <h1>Reinicio local de ObradORR</h1>
+      <p>Usa esta pantalla solo si la aplicación queda en blanco o arrastra una recuperación local antigua.</p>
+      <div class="notice warning">
+        <b>Antes de borrar:</b> si tienes trabajo que quieras conservar, abre ObradORR y descarga una copia SQLite desde Sistema. Esta pantalla borra la recuperación local del navegador e IndexedDB, pero no borra el ZIP ni la base pública del proyecto.
+      </div>
+      <label class="option-row" style="display:block;margin-top:14px">
+        <input type="checkbox" id="confirmReset" /> Confirmo que quiero borrar la recuperación local de este navegador.
+      </label>
+      <div class="actions" style="margin-top:14px">
+        <button class="btn danger" id="resetBtn">Borrar recuperación local</button>
+        <a class="btn primary" href="./obradorr.html?v=obradorr-100-rc1-reset">Abrir ObradORR</a>
+      </div>
+      <div id="status" class="notice" style="margin-top:16px">No se ha borrado nada todavía.</div>
+    </section>
+  </main>
+  <script>
+    async function deleteDb(name){
+      if (!('indexedDB' in window)) return 'IndexedDB no disponible';
+      return new Promise(resolve => { const req = indexedDB.deleteDatabase(name); req.onsuccess=()=>resolve('borrada'); req.onerror=()=>resolve('error'); req.onblocked=()=>resolve('bloqueada'); });
+    }
+    document.getElementById('resetBtn').addEventListener('click', async () => {
+      const status = document.getElementById('status');
+      if (!document.getElementById('confirmReset').checked) {
+        status.className = 'notice error';
+        status.textContent = 'Marca la casilla de confirmación antes de borrar la recuperación local.';
+        return;
+      }
+      if (!confirm('Confirmación final: se borrará la recuperación local de ObradORR en este navegador. ¿Continuar?')) return;
+      localStorage.removeItem('obradorr_ui_print_options_v1');
+      const stale = [
+        'obradorr-data-100-rc1',
+        'obradorr-data-' + '100' + 'rc1',
+        'obradorr-data-' + '100' + 'rc1-' + 'final',
+        'obradorr-data-' + '100' + 'rc1-' + 'fin' + 'al3-' + 'stable',
+        'obradorr-data-200-public'
+      ];
+      const results = [];
+      for (const name of stale) results.push(name + ': ' + await deleteDb(name));
+      status.className = 'notice success';
+      status.innerHTML = 'Recuperación local e IndexedDB procesadas. Abre ObradORR de nuevo.<br><small>' + results.join('<br>') + '</small>';
+    });
+  </script>
+</body>
+</html>

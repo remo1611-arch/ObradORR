@@ -1,0 +1,13 @@
+{
+  "phase": "P0-E",
+  "scope": "Pedido JS/SQL equivalente",
+  "canonical_source": "SQL v_class_order_lines for saved sessions; JS mirrors same inclusion policy for printed/current practice documents",
+  "views": [
+    "v_bakery_order_lines",
+    "v_class_bakery_item_lines",
+    "v_class_culinary_item_lines",
+    "v_class_order_lines"
+  ],
+  "js_policy": "direct lines + required components with include_in_order=1; optional/variant excluded",
+  "no_version_change": true
+}

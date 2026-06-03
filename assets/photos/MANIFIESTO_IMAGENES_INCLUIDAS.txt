@@ -1,0 +1,26 @@
+ObradORR · Imágenes públicas correctas incluidas
+
+Versión: ObradORR 1.0.0-rc.1
+Total incluidas: 15
+
+Incluidas:
+- 001_ajoblanco.png
+- 002_albondigas-en-salsa-espanola.png
+- 003_almibar-30-brix.png
+- 004_arroz-al-horno.png
+- 005_arroz-con-chocos.png
+- 008_arroz-marinero-con-fumet.png
+- 009_arroz-negro.png
+- 010_arroz-pilaf.png
+- 011_babka-chocolate.png
+- 012_bacalao-a-la-vizcaina.png
+- 013_bacalao-ajoarriero.png
+- 014_bacalao-al-pil-pil.png
+- 015_bagel-clasico.png
+- 016_bagel-con-semillas.png
+- 017_baguette-con-poolish.png
+
+No incluidas por no estar disponibles o no ser suficientemente correctas:
+- 006_arroz-con-leche-cremoso.png: no se conserva una versión inequívoca como archivo público validado.
+- 007_arroz-del-senoret.png: no se conserva una versión inequívoca y suficientemente específica; conviene regenerarla.
+- Cualquier generación intermedia no listada fue descartada.

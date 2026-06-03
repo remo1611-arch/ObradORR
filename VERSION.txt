@@ -1,0 +1,5 @@
+ObradORR 1.0.0-rc.1
+Canal: release-candidate
+Entrada: app/obradorr.html
+Cache tag: obradorr-100-rc1
+SQLite: db/obradorr.sqlite

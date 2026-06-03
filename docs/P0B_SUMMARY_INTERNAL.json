@@ -1,0 +1,42 @@
+{
+  "component_status_counts": [
+    {
+      "component_status": "optional",
+      "include_in_order": 0,
+      "include_in_cost": 0,
+      "n": 2
+    },
+    {
+      "component_status": "required",
+      "include_in_order": 1,
+      "include_in_cost": 1,
+      "n": 1
+    }
+  ],
+  "preferment_validation_counts": [
+    {
+      "validation_status": "not_applicable",
+      "n": 49
+    },
+    {
+      "validation_status": "pending",
+      "n": 48
+    }
+  ],
+  "yield_status_counts": [
+    {
+      "yield_status": "pending",
+      "n": 97
+    }
+  ],
+  "release_status_counts": [
+    {
+      "release_status": "no_apta",
+      "n": 1
+    },
+    {
+      "release_status": "pendiente",
+      "n": 96
+    }
+  ]
+}
