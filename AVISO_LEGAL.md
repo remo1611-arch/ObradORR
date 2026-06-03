@@ -31,3 +31,10 @@ Solo deben incorporarse imágenes propias, generadas específicamente para el pr
 ## Limitación
 
 Este aviso es una medida documental básica de protección y claridad de uso. No sustituye asesoramiento jurídico específico.
+
+
+## ObradORR 1.0.0-rc.2 · Autoría visible
+
+© 2026 Remo José Pereira González · Uso docente personal autorizado · Sin licencia abierta de redistribución o explotación comercial.
+
+Las fichas impresas incorporan este aviso en el pie documental.

@@ -1,4 +1,4 @@
-# ACCEPTANCE_CRITERIA · ObradORR 1.0.0-rc.1
+# ACCEPTANCE_CRITERIA · ObradORR 1.0.0-rc.2
 
 ## Bloqueantes
 

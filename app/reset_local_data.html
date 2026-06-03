@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>ObradORR · Reinicio local</title>
-  <link rel="stylesheet" href="./css/obradorr.css?v=obradorr-100-rc1" />
+  <link rel="stylesheet" href="./css/obradorr.css?v=obradorr-100-rc2" />
 </head>
 <body>
   <main class="main">
@@ -19,11 +19,12 @@
       </label>
       <div class="actions" style="margin-top:14px">
         <button class="btn danger" id="resetBtn">Borrar recuperación local</button>
-        <a class="btn primary" href="./obradorr.html?v=obradorr-100-rc1-reset">Abrir ObradORR</a>
+        <a class="btn primary" href="./obradorr.html?v=obradorr-100-rc2-reset">Abrir ObradORR</a>
       </div>
       <div id="status" class="notice" style="margin-top:16px">No se ha borrado nada todavía.</div>
     </section>
   </main>
+  <footer class="app-footer no-print">© 2026 Remo José Pereira González · Uso docente personal autorizado · Sin licencia abierta de redistribución o explotación comercial.</footer>
   <script>
     async function deleteDb(name){
       if (!('indexedDB' in window)) return 'IndexedDB no disponible';
@@ -39,7 +40,8 @@
       if (!confirm('Confirmación final: se borrará la recuperación local de ObradORR en este navegador. ¿Continuar?')) return;
       localStorage.removeItem('obradorr_ui_print_options_v1');
       const stale = [
-        'obradorr-data-100-rc1',
+        'obradorr-data-100-rc2',
+        'obradorr-data-' + '100' + 'rc2',
         'obradorr-data-' + '100' + 'rc1',
         'obradorr-data-' + '100' + 'rc1-' + 'final',
         'obradorr-data-' + '100' + 'rc1-' + 'fin' + 'al3-' + 'stable',

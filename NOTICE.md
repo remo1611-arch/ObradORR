@@ -27,3 +27,10 @@ Las fotografías y aportaciones externas deberán conservar autoría, fuente, li
 ## Componentes de terceros
 
 El paquete puede incluir componentes técnicos necesarios para la ejecución local, como SQLite WASM y código asociado. Esos componentes conservan sus propias condiciones de uso cuando correspondan. Esta reserva de derechos afecta al proyecto, documentación, estructura, base docente y recursos propios incluidos.
+
+
+## ObradORR 1.0.0-rc.2 · Autoría visible
+
+© 2026 Remo José Pereira González · Uso docente personal autorizado · Sin licencia abierta de redistribución o explotación comercial.
+
+Las fichas impresas incorporan este aviso en el pie documental.

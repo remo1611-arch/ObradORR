@@ -4,18 +4,19 @@ const ObradORRDatabase = window.ObradORRDatabase;
 if (!ObradORRDatabase)
     throw new Error("No se cargó la capa SQLite de ObradORR.");
 window.__OBRADORR_MODULE_STARTED = true;
-window.__OBRADORR_MODULE_VERSION = 'obradorr-100-rc1';
+window.__OBRADORR_MODULE_VERSION = 'obradorr-100-rc2';
 const DB_URL = '../db/obradorr.sqlite';
 const WORK_SELECTION_ID = 'WORK_CURRENT';
 const STORAGE_PRINT_OPTIONS = 'obradorr_ui_print_options_v1';
-const IDB_DATA_DB = 'obradorr-data-100-rc1';
+const IDB_DATA_DB = 'obradorr-data-100-rc2';
 const IDB_DATA_STORE = 'snapshots';
 const IDB_CURRENT_KEY = 'current-db';
-const VERSION = '1.0.0-rc.1';
+const VERSION = '1.0.0-rc.2';
 const INGREDIENT_SEARCH_LIMIT = 220;
 const PRINT_SEARCH_LIMIT = 60;
-const EXPECTED_RELEASE_TAG = 'rc1';
-const EXPECTED_CACHE_TAG = 'obradorr-100-rc1';
+const LEGAL_NOTICE = '© 2026 Remo José Pereira González · Uso docente personal autorizado · Sin licencia abierta de redistribución o explotación comercial.';
+const EXPECTED_RELEASE_TAG = 'rc2';
+const EXPECTED_CACHE_TAG = 'obradorr-100-rc2';
 const db = new ObradORRDatabase();
 const state = {
     ready: false,
@@ -133,6 +134,7 @@ function renderShell(status = '') {
     </header>
     ${dataSafetyBannerHtml()}
     <main class="main" id="main-view"></main>
+    <footer class="app-footer no-print">${escapeHtml(LEGAL_NOTICE)}</footer>
   `;
 }
 function render() {
@@ -353,7 +355,7 @@ function selectionEditorHtml() {
   </div>`).join('');
 }
 function docRadio(value, title, help) {
-    return `<label class="radio-card"><input type="radio" name="documentType" value="${value}" ${state.printOptions.documentType === value ? 'checked' : ''}/><span class="radio-card-text"><b>${title}</b><small class="muted">${help}</small></span></label>`;
+    return `<label class="radio-card"><input type="radio" name="documentType" value="${value}" ${state.printOptions.documentType === value ? 'checked' : ''}/><b>${title}</b><br><small class="muted">${help}</small></label>`;
 }
 function teachingFieldsHtml() {
     const t = state.printOptions.teaching || {};
@@ -421,7 +423,7 @@ function subrecipeMode() {
     return state.printOptions.subrecipeMode || (state.printOptions.expandSubrecipes ? 'ingredients' : 'none');
 }
 function subrecipeRadio(value, title, help) {
-    return `<label class="radio-card"><input type="radio" name="subrecipeMode" value="${value}" ${subrecipeMode() === value ? 'checked' : ''}/><span class="radio-card-text"><b>${title}</b><small class="muted">${help}</small></span></label>`;
+    return `<label class="radio-card"><input type="radio" name="subrecipeMode" value="${value}" ${subrecipeMode() === value ? 'checked' : ''}/><b>${title}</b><br><small class="muted">${help}</small></label>`;
 }
 function sessionsView() {
     return `<section class="card"><div class="panel-title"><div><h2>Sesiones</h2><p>Sesiones guardadas en la copia SQLite activa.</p></div><button class="btn accent" data-save-session>Guardar práctica actual</button></div>
@@ -1366,7 +1368,7 @@ async function culinarySheetHtml(item, opts, pageBreak, ctx = {}) {
     const subrecipes = mode === 'sheets' ? await culinarySubrecipeSectionsHtml(item.sourceId, scale, opts, ctx) : '';
     const directNotice = mode === 'sheets' ? culinarySubrecipeSummaryHtml(item.sourceId, scale) : '';
     return `<section class="print-sheet ${pageBreak ? 'page-break' : ''}">
-    <header class="sheet-head ${photo ? 'has-photo' : 'no-photo'}"><div><h2>${escapeHtml(item.name || recipe.name)}</h2><p>Cocina · ${formatQty(item.qty)} ${escapeHtml(item.unitLabel || '')}</p></div>${photo ? `<img class="sheet-photo" src="${photo}" alt="${escapeAttr(item.name || recipe.name)}" />` : ''}</header>
+    <header class="sheet-head"><div><h2>${escapeHtml(item.name || recipe.name)}</h2><p>Cocina · ${formatQty(item.qty)} ${escapeHtml(item.unitLabel || '')}</p></div>${photo ? `<img class="sheet-photo" src="${photo}" alt="${escapeAttr(item.name || recipe.name)}" />` : ''}</header>
     <h3>Ingredientes y cantidades</h3>
     ${linesTable(lines, opts.includeCosts)}
     ${opts.includeCosts ? `<p class="cost-line"><b>Coste estimado:</b> ${money(totalCost)}</p>` : ''}
@@ -1412,7 +1414,7 @@ async function culinarySubrecipeSheetHtml(row, opts, ctx) {
     const lines = culinaryLines(row.id, row.factor, false);
     const nested = await culinarySubrecipeSectionsHtml(row.id, row.factor, opts, ctx);
     const totalCost = sum(lines.map(l => l.cost || 0));
-    return `<section class="sub-sheet"><header class="sub-sheet-head ${photo ? 'has-photo' : 'no-photo'}"><div><h3>Subelaboración: ${escapeHtml(row.name)}</h3><p>Cantidad necesaria: ${escapeHtml(displayQuantity(row.requiredQty, row.requiredUnit).text)} · Rendimiento base: ${escapeHtml(displayQuantity(row.yieldQty, row.yieldUnit).text)} · factor ${formatQty(row.factor)}</p></div>${photo ? `<img class="sub-sheet-photo" src="${photo}" alt="${escapeAttr(row.name)}" />` : ''}</header>
+    return `<section class="sub-sheet"><header class="sub-sheet-head"><div><h3>Subelaboración: ${escapeHtml(row.name)}</h3><p>Cantidad necesaria: ${escapeHtml(displayQuantity(row.requiredQty, row.requiredUnit).text)} · Rendimiento base: ${escapeHtml(displayQuantity(row.yieldQty, row.yieldUnit).text)} · factor ${formatQty(row.factor)}</p></div>${photo ? `<img class="sub-sheet-photo" src="${photo}" alt="${escapeAttr(row.name)}" />` : ''}</header>
     ${linesTable(lines, opts.includeCosts)}
     ${opts.includeCosts ? `<p class="cost-line"><b>Coste subelaboración:</b> ${money(totalCost)}</p>` : ''}
     ${allergenBlockHtml(allergenData, 'Alérgenos de la subelaboración')}
@@ -1489,7 +1491,7 @@ function bakerySheetHtml(item, opts, pageBreak, ctx = {}) {
     const totalCost = sum(allLines.map(l => l.cost || 0)) + componentCost;
     const componentSections = bakeryComponentsSectionsHtml(components, opts, ctx);
     return `<section class="print-sheet ${pageBreak ? 'page-break' : ''}">
-    <header class="sheet-head ${photo ? 'has-photo' : 'no-photo'}"><div><h2>${escapeHtml(item.name || recipe.name)}</h2><p>Panadería/Pastelería · ${formatQty(item.qty)} ${escapeHtml(item.unitLabel || '')}</p></div>${photo ? `<img class="sheet-photo" src="${photo}" alt="${escapeAttr(item.name || recipe.name)}" />` : ''}</header>
+    <header class="sheet-head"><div><h2>${escapeHtml(item.name || recipe.name)}</h2><p>Panadería/Pastelería · ${formatQty(item.qty)} ${escapeHtml(item.unitLabel || '')}</p></div>${photo ? `<img class="sheet-photo" src="${photo}" alt="${escapeAttr(item.name || recipe.name)}" />` : ''}</header>
     ${bakeryMetaHtml(detail, item, recipe, blocks)}
     ${blocks.map(bakeryBlockHtml(opts.includeCosts)).join('\n')}
     ${componentSections}
@@ -2097,8 +2099,8 @@ function aggregateOrder(lines) {
 function printDocumentShell(content) {
     const baseHref = new URL('./', window.location.href).href;
     return `<!doctype html><html lang="es"><head><meta charset="utf-8"><base href="${escapeAttr(baseHref)}"><title>ObradORR · Documento</title><style>
-    @page{size:A4;margin:14mm}body{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#1f2933;line-height:1.35}h1{font-size:30px;margin:0 0 4px}h2{font-size:22px;margin:0 0 8px}h3{margin:18px 0 8px;color:#7c3f1d}.doc-cover{border-bottom:3px solid #7c3f1d;padding-bottom:18px;margin-bottom:18px}.doc-cover dl{display:grid;grid-template-columns:140px 1fr;gap:5px 12px}.doc-cover dt{font-weight:800}.doc-cover dd{margin:0}.sheet-head{display:grid;grid-template-columns:1fr;gap:14px;align-items:start;border-bottom:1px solid #ddd;padding-bottom:10px}.sheet-head.has-photo{grid-template-columns:minmax(0,1fr) 145px}.sheet-photo{width:145px;height:96px;max-height:96px;object-fit:contain;border-radius:12px;background:#f8f5ee;border:1px solid #e2d8c7}table{width:100%;border-collapse:collapse;margin:8px 0 14px;table-layout:fixed}th,td{border:1px solid #ddd;padding:6px 7px;text-align:left;vertical-align:top;overflow-wrap:break-word;word-break:normal;hyphens:auto}th{background:#f4efe6;font-size:11px;text-transform:uppercase}.lines-table th:nth-child(1){width:48%}.lines-table th:nth-child(2){width:18%}.lines-table th:nth-child(3){width:34%}.lines-table.with-costs th:nth-child(1){width:43%}.lines-table.with-costs th:nth-child(2){width:17%}.lines-table.with-costs th:nth-child(3){width:14%}.lines-table.with-costs th:nth-child(4){width:26%}.order-table th:nth-child(1){width:36%}.order-table th:nth-child(2){width:14%}.order-table th:nth-child(3){width:15%}.order-table th:nth-child(4){width:35%}.order-table.with-costs th:nth-child(1){width:33%}.order-table.with-costs th:nth-child(2){width:13%}.order-table.with-costs th:nth-child(3){width:14%}.order-table.with-costs th:nth-child(4){width:30%}.order-table.with-costs th:nth-child(5){width:10%}.qty,.money-cell{white-space:nowrap}.money-cell{text-align:right}.note-cell{font-size:12px}.page-break{break-before:page}.print-sheet:first-of-type{break-before:auto}.print-sheet,.print-order,.process-block,.appcc-block{break-inside:avoid-page;page-break-inside:avoid}.prose{max-width:100%;display:block}.prose p{margin:.45rem 0;break-inside:avoid;page-break-inside:avoid;overflow-wrap:normal;word-break:normal}.cost-line{background:#f6f0e6;padding:8px;border-radius:8px}.subrecipe-summary,.formula-meta,.component-block,.bakery-block,.sub-sheet,.warning-block{border:1px solid #e2d8c7;border-radius:10px;padding:9px 11px;margin:10px 0;break-inside:avoid-page;page-break-inside:avoid}.sub-sheet{background:#fffaf2}.sub-sheet .sub-sheet-head{display:grid;grid-template-columns:1fr;gap:10px;align-items:start}.sub-sheet .sub-sheet-head.has-photo{grid-template-columns:minmax(0,1fr) 105px}.sub-sheet-photo{width:105px;height:72px;max-height:72px;object-fit:contain;border-radius:10px;background:#f8f5ee;border:1px solid #e2d8c7}.formula-meta dl{display:grid;grid-template-columns:160px 1fr;gap:4px 10px;margin:0}.formula-meta dt{font-weight:800}.formula-meta dd{margin:0}.warning-block{background:#fff7ed;border-color:#fdba74}.allergen-block{border:1px solid #f0c36b;background:#fff8e8;border-radius:10px;padding:9px 11px;margin:10px 0;break-inside:avoid-page;page-break-inside:avoid}.allergen-block h3{margin-top:0}.allergen-block h4{margin:8px 0 4px;color:#7c3f1d}.allergen-block ul{margin:4px 0 8px 18px;padding:0}.allergen-block .pending{color:#9a3412}.allergen-block .may-contain{color:#6b4e16}.allergen-source{font-size:11px;color:#5b6472}.allergen-note{font-size:11px;color:#5b6472;margin:6px 0 0}.optional-allergens{background:#fffaf2}.structured-appcc{border:1px solid #b7c8a9;background:#f8fff2;border-radius:10px;padding:10px 12px;margin:10px 0}.appcc-disclaimer,.appcc-note{font-size:11px;color:#4f5d43;margin:6px 0 8px}.appcc-row-block{break-inside:avoid-page;page-break-inside:avoid;margin:8px 0 12px}.appcc-table th{width:24%;background:#eaf4df}.appcc-table td{width:76%}.appcc-cell p{margin:.25rem 0}.appcc-unstructured{background:#fff7ed;border-color:#fdba74}.warn{color:#9a3412;font-weight:700}h4{margin:10px 0 4px;color:#7c3f1d}.bakery-block h3,.component-block h3{margin-top:0}@media(max-width:700px){.sheet-head.has-photo,.sub-sheet .sub-sheet-head.has-photo{grid-template-columns:1fr}.sheet-photo{width:min(100%,320px);height:auto;max-height:150px}.sub-sheet-photo{width:min(100%,240px);height:auto;max-height:110px}}@media print{button{display:none}}
-  </style></head><body>${content}</body></html>`;
+    @page{size:A4;margin:14mm}body{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#1f2933;line-height:1.35}h1{font-size:30px;margin:0 0 4px}h2{font-size:22px;margin:0 0 8px}h3{margin:18px 0 8px;color:#7c3f1d}.doc-cover{border-bottom:3px solid #7c3f1d;padding-bottom:18px;margin-bottom:18px}.doc-cover dl{display:grid;grid-template-columns:140px 1fr;gap:5px 12px}.doc-cover dt{font-weight:800}.doc-cover dd{margin:0}.sheet-head{display:grid;grid-template-columns:1fr minmax(110px,150px);gap:14px;align-items:start;border-bottom:1px solid #ddd;padding-bottom:10px}.sheet-head img,.sheet-photo{max-width:150px;max-height:105px;width:auto;height:auto;object-fit:contain;border-radius:12px;justify-self:end;background:#faf7f0}.sheet-head:not(:has(img)){grid-template-columns:1fr}table{width:100%;border-collapse:collapse;margin:8px 0 14px;table-layout:fixed}th,td{border:1px solid #ddd;padding:6px 7px;text-align:left;vertical-align:top;overflow-wrap:break-word;word-break:normal;hyphens:auto}th{background:#f4efe6;font-size:11px;text-transform:uppercase}.lines-table th:nth-child(1){width:48%}.lines-table th:nth-child(2){width:18%}.lines-table th:nth-child(3){width:34%}.lines-table.with-costs th:nth-child(1){width:43%}.lines-table.with-costs th:nth-child(2){width:17%}.lines-table.with-costs th:nth-child(3){width:14%}.lines-table.with-costs th:nth-child(4){width:26%}.order-table th:nth-child(1){width:36%}.order-table th:nth-child(2){width:14%}.order-table th:nth-child(3){width:15%}.order-table th:nth-child(4){width:35%}.order-table.with-costs th:nth-child(1){width:33%}.order-table.with-costs th:nth-child(2){width:13%}.order-table.with-costs th:nth-child(3){width:14%}.order-table.with-costs th:nth-child(4){width:30%}.order-table.with-costs th:nth-child(5){width:10%}.qty,.money-cell{white-space:nowrap}.money-cell{text-align:right}.note-cell{font-size:12px}.page-break{break-before:page}.print-sheet:first-of-type{break-before:auto}.print-sheet,.print-order,.process-block,.appcc-block{break-inside:avoid-page;page-break-inside:avoid}.prose{max-width:100%;display:block}.prose p{margin:.45rem 0;break-inside:avoid;page-break-inside:avoid;overflow-wrap:normal;word-break:normal}.cost-line{background:#f6f0e6;padding:8px;border-radius:8px}.subrecipe-summary,.formula-meta,.component-block,.bakery-block,.sub-sheet,.warning-block{border:1px solid #e2d8c7;border-radius:10px;padding:9px 11px;margin:10px 0;break-inside:avoid-page;page-break-inside:avoid}.sub-sheet{background:#fffaf2}.sub-sheet .sub-sheet-head{display:grid;grid-template-columns:1fr minmax(90px,115px);gap:10px;align-items:start}.sub-sheet img,.sub-sheet-photo{max-width:115px;max-height:80px;width:auto;height:auto;object-fit:contain;border-radius:10px;justify-self:end;background:#faf7f0}.sub-sheet .sub-sheet-head:not(:has(img)){grid-template-columns:1fr}.formula-meta dl{display:grid;grid-template-columns:160px 1fr;gap:4px 10px;margin:0}.formula-meta dt{font-weight:800}.formula-meta dd{margin:0}.warning-block{background:#fff7ed;border-color:#fdba74}.allergen-block{border:1px solid #f0c36b;background:#fff8e8;border-radius:10px;padding:9px 11px;margin:10px 0;break-inside:avoid-page;page-break-inside:avoid}.allergen-block h3{margin-top:0}.allergen-block h4{margin:8px 0 4px;color:#7c3f1d}.allergen-block ul{margin:4px 0 8px 18px;padding:0}.allergen-block .pending{color:#9a3412}.allergen-block .may-contain{color:#6b4e16}.allergen-source{font-size:11px;color:#5b6472}.allergen-note{font-size:11px;color:#5b6472;margin:6px 0 0}.optional-allergens{background:#fffaf2}.structured-appcc{border:1px solid #b7c8a9;background:#f8fff2;border-radius:10px;padding:10px 12px;margin:10px 0}.appcc-disclaimer,.appcc-note{font-size:11px;color:#4f5d43;margin:6px 0 8px}.appcc-row-block{break-inside:avoid-page;page-break-inside:avoid;margin:8px 0 12px}.appcc-table th{width:24%;background:#eaf4df}.appcc-table td{width:76%}.appcc-cell p{margin:.25rem 0}.appcc-unstructured{background:#fff7ed;border-color:#fdba74}.warn{color:#9a3412;font-weight:700}h4{margin:10px 0 4px;color:#7c3f1d}.bakery-block h3,.component-block h3{margin-top:0}.print-legal-footer{border-top:1px solid #ddd;margin-top:18px;padding-top:8px;color:#5b6472;font-size:10.5px;text-align:center}.print-legal-footer strong{color:#1f2933}@media(max-width:760px){.sheet-head{grid-template-columns:1fr}.sheet-head img,.sheet-photo{justify-self:start;max-width:100%;max-height:90px}.sub-sheet .sub-sheet-head{grid-template-columns:1fr}.sub-sheet img,.sub-sheet-photo{justify-self:start;max-width:100%;max-height:70px}}@media print{button{display:none}}
+  </style></head><body>${content}<footer class="print-legal-footer"><strong>ObradORR</strong> · ${escapeHtml(LEGAL_NOTICE)}</footer></body></html>`;
 }
 function saveCurrentSession() {
     if (!state.selection.length) {

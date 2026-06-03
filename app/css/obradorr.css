@@ -41,81 +41,13 @@ textarea[data-step-instruction], textarea[data-step-notes]{min-width:240px;min-h
 .data-safety{max-width:1320px;margin:10px auto 0;padding:12px 18px;border-radius:16px;border:1px solid var(--line);display:flex;gap:12px;align-items:center;justify-content:space-between;background:#fff;color:var(--ink);box-shadow:0 8px 28px rgba(54,39,24,.08)}
 .data-safety.ok{border-color:#bbf7d0;background:#f0fdf4}.data-safety.warning{border-color:#fde68a;background:#fffbeb}.data-safety.saving{border-color:#bfdbfe;background:#eff6ff}.data-safety.error{border-color:#fecaca;background:#fff1f2;color:#7f1d1d}.data-safety.loading{display:none}.data-safety-meta{font-size:12px;color:var(--muted);text-align:right}.data-safety-panel{border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin:12px 0;background:#fff}.data-safety-panel.ok{border-color:#bbf7d0;background:#f0fdf4}.data-safety-panel.warning{border-color:#fde68a;background:#fffbeb}.data-safety-panel.saving{border-color:#bfdbfe;background:#eff6ff}.data-safety-panel.error{border-color:#fecaca;background:#fff1f2}.data-safety-panel p{margin:4px 0 2px;color:var(--ink)}.data-actions-safe{display:grid;gap:10px}.safe-action{border:1px solid var(--line);background:#fff;border-radius:16px;padding:12px;display:grid;gap:8px}.safe-action small{color:var(--muted)}.safe-action.danger-zone{border-color:#fecaca;background:#fff7f7}.notice.warning{border-color:#f59e0b;background:#fffbeb;color:#78350f}.notice.success{border-color:#22c55e;background:#f0fdf4;color:#14532d}
 @media(max-width:900px){.data-safety{margin:10px 12px 0;align-items:flex-start;flex-direction:column}.data-safety-meta{text-align:left}}
-/* P0-G1B UX ajuste específico: tarjetas de subelaboraciones sin desbordes ni cortes letra a letra. */
-.radio-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:12px;align-items:stretch}
-.radio-card{display:flex;align-items:flex-start;gap:10px;min-width:0;width:100%;height:100%;padding:14px;white-space:normal;overflow:hidden;overflow-wrap:normal;word-break:normal}
-.radio-card input{flex:0 0 auto;margin:4px 0 0}
-.radio-card br{display:none}
-.radio-card-text{display:block;min-width:0;max-width:100%}
-.radio-card b{display:block;line-height:1.25;font-weight:800;white-space:normal;overflow-wrap:break-word;word-break:normal;hyphens:auto}
-.radio-card small{display:block;margin-top:5px;line-height:1.35;white-space:normal;overflow-wrap:break-word;word-break:normal;hyphens:auto}
-.field-with-note{display:grid;gap:5px;min-width:0}.teaching-warning{margin:0;color:#92400e}
-@media(max-width:900px){.radio-row{grid-template-columns:1fr}}
+/* P0-G1 UX ajuste: tarjetas de radio robustas y notas docentes */
+.radio-row{align-items:stretch}.radio-card{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-areas:"radio title" ". help";gap:4px 9px;min-width:0;overflow-wrap:anywhere;align-content:start}.radio-card input{grid-area:radio;margin:4px 0 0}.radio-card b{grid-area:title;min-width:0}.radio-card small{grid-area:help;min-width:0}.field-with-note{display:grid;gap:5px;min-width:0}.teaching-warning{margin:0;color:#92400e}
 
-/* P0-G1C · Corrección visual definitiva del bloque Subelaboraciones culinarias.
-   Evita que los títulos se partan letra a letra y fuerza 2/1 columnas si el panel no admite 3. */
-.option-row:has(input[name="subrecipeMode"]) .radio-row{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));
-  gap:12px;
-  align-items:stretch;
-}
-.option-row:has(input[name="subrecipeMode"]) .radio-card{
-  display:grid;
-  grid-template-columns:auto minmax(0,1fr);
-  align-items:start;
-  gap:10px;
-  width:100%;
-  min-width:0;
-  min-height:86px;
-  height:100%;
-  padding:14px 16px;
-  overflow:visible;
-  white-space:normal;
-}
-.option-row:has(input[name="subrecipeMode"]) .radio-card input{
-  margin:4px 0 0;
-  flex:0 0 auto;
-}
-.option-row:has(input[name="subrecipeMode"]) .radio-card-text{
-  display:flex;
-  flex-direction:column;
-  gap:4px;
-  min-width:0;
-  max-width:100%;
-}
-.option-row:has(input[name="subrecipeMode"]) .radio-card b{
-  display:block;
-  line-height:1.25;
-  white-space:normal;
-  overflow-wrap:normal;
-  word-break:normal;
-  hyphens:none;
-}
-.option-row:has(input[name="subrecipeMode"]) .radio-card small{
-  display:block;
-  line-height:1.35;
-  white-space:normal;
-  overflow-wrap:break-word;
-  word-break:normal;
-  hyphens:none;
-}
-@media(max-width:760px){
-  .option-row:has(input[name="subrecipeMode"]) .radio-row{grid-template-columns:1fr;}
-  .option-row:has(input[name="subrecipeMode"]) .radio-card{min-height:auto;}
-}
+/* RC2 · autoría, impresión y fotos responsive */
+.app-footer,.static-app-footer{max-width:1320px;margin:0 auto;padding:12px 20px 22px;color:#6b7280;font-size:12.5px;text-align:center}
+.sheet-photo,.sub-sheet-photo{max-width:100%;height:auto;object-fit:contain}
+.print-legal-footer{border-top:1px solid var(--line);margin-top:18px;padding-top:8px;color:#6b7280;font-size:11px;text-align:center}
+@media(max-width:760px){.app-footer,.static-app-footer{padding:10px 12px 18px;font-size:11.5px}}
 
-/* P0-G2 · Fotos de vista previa/documento: tamaño docente proporcionado */
-.print-sheet .sheet-head{display:grid;grid-template-columns:1fr;gap:14px;align-items:start;border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:12px;}
-.print-sheet .sheet-head.has-photo{grid-template-columns:minmax(0,1fr) minmax(120px,180px);}
-.print-sheet .sheet-photo{display:block;width:100%;max-width:180px;height:auto;max-height:120px;object-fit:contain;border-radius:14px;border:1px solid var(--line);background:#f8f5ee;margin:0 auto;}
-.sub-sheet .sub-sheet-head{display:grid;grid-template-columns:1fr;gap:10px;align-items:start;}
-.sub-sheet .sub-sheet-head.has-photo{grid-template-columns:minmax(0,1fr) minmax(96px,140px);}
-.sub-sheet .sub-sheet-photo{display:block;width:100%;max-width:140px;height:auto;max-height:92px;object-fit:contain;border-radius:12px;border:1px solid var(--line);background:#f8f5ee;margin:0 auto;}
-.preview-photo{display:block;width:min(100%,360px);height:auto;max-height:220px;object-fit:contain;border-radius:16px;border:1px solid var(--line);background:#f8f5ee;margin:10px auto 16px;}
-@media(max-width:760px){
-  .print-sheet .sheet-head.has-photo,.sub-sheet .sub-sheet-head.has-photo{grid-template-columns:1fr;}
-  .print-sheet .sheet-photo{max-width:320px;max-height:155px;}
-  .sub-sheet .sub-sheet-photo{max-width:260px;max-height:115px;}
-  .preview-photo{width:min(100%,320px);max-height:170px;}
-}
+/* © 2026 Remo José Pereira González · Uso docente personal autorizado · Sin licencia abierta de redistribución o explotación comercial. */
