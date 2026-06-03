@@ -2,6 +2,36 @@
 
 Aplicación web local/offline para uso docente en Formación Profesional de Cocina, Pastelería y Panadería.
 
+## Usar ObradORR online
+
+Abrir directamente desde GitHub Pages:
+
+https://remo1611-arch.github.io/ObradORR/
+
+Esta URL carga la versión publicada actualmente en la rama `main`.
+
+Si la app no arranca después de haber probado versiones anteriores, usa primero el reset local:
+
+https://remo1611-arch.github.io/ObradORR/app/reset_local_data.html
+
+Después vuelve a abrir:
+
+https://remo1611-arch.github.io/ObradORR/
+
+## Uso local/offline recomendado
+
+También puedes descargar el ZIP de la release, descomprimirlo y ejecutar ObradORR desde tu propio dispositivo.
+
+Desde la raíz del proyecto:
+
+    python -m http.server 8807 --bind 127.0.0.1
+
+Después abrir:
+
+    http://127.0.0.1:8807/app/obradorr.html
+
+La dirección `127.0.0.1` solo funciona en el dispositivo donde se ha arrancado el servidor local. No es una URL pública.
+
 ## Autoría y uso
 
 © 2026 Remo José Pereira González · Uso docente personal autorizado · Sin licencia abierta de redistribución o explotación comercial.
@@ -14,41 +44,41 @@ Elaboraciones → selección docente → cálculo → ficha técnica / pedido �
 
 ObradORR no es un ERP, TPV, sistema de stock real, SaaS ni plataforma con login. Está pensado para aula-taller, Windows, Android/Termux y trabajo offline.
 
-## Arranque rápido
+## Estado de la versión
 
-Desde la raíz del proyecto:
+Versión actual:
 
-```bash
-python -m http.server 8807 --bind 127.0.0.1
-```
+    1.0.0-rc.4
 
-Abrir:
+Canal:
 
-```text
-http://127.0.0.1:8807/app/obradorr.html?v=obradorr-100-rc4
-```
+    release candidate / pre-release
 
-Si venías de una versión anterior o queda una recuperación local antigua:
+No debe considerarse versión estable final hasta completar prueba real de uso docente.
 
-```text
-http://127.0.0.1:8807/app/reset_local_data.html?v=obradorr-100-rc4
-```
-
-## Cambios principales de la 2.0 candidata
+## Cambios principales
 
 - Metadatos SQLite normalizados a `1.0.0-rc.4`.
-- `schema_migrations` incorporada.
-- Edición guiada ampliada: ficha, líneas, prefermento, pasos técnicos y componentes elaborados.
-- Operaciones críticas reforzadas con transacciones SQLite.
-- Control preventivo de ciclos en subrecetas culinarias y componentes panaderos.
-- Componentes semilla para validar Babka, Croissant y Torta de nata.
-- Registro automático de trabajos de impresión en `print_jobs`.
-- Diagnóstico ampliado en Sistema.
-- Regresión bloqueante: Torta de nata no puede tener nata o azúcar a 0 g.
-- Impresión por iframe; no se usa `window.open`.
+- Alérgenos derivados en fichas y pedido.
+- APPCC docente mínimo estructurado.
+- Pedido consolidado coherente entre JS/SQL.
+- Persistencia, importación y reset reforzados.
+- Componentes panaderos normalizados como obligatorios/opcionales.
+- Prefermentos y rendimientos pendientes marcados explícitamente.
+- Pie legal visible en app e impresión.
+- Corrección de coherencia interna de versión/cache/IndexedDB.
+- Fotos de ficha limitadas para no dominar la documentación.
 
 ## Límites conocidos
 
-Esta versión mantiene el cargador clásico monolítico por compatibilidad. La arquitectura por carpetas queda preparada y documentada, pero no se ha hecho una reescritura greenfield completa en módulos ES para evitar regresiones de arranque en Android/Termux.
+Esta versión mantiene el cargador clásico monolítico por compatibilidad.
 
-La validación automática incluida cubre sintaxis JS, SQLite, metadatos, componentes, regresión de Torta de nata, presencia de iframe y ausencia de `window.open`. Aun así, antes de uso real en aula conviene abrir la app en navegador, generar fichas + pedido y guardar una sesión de prueba.
+Los rendimientos panaderos y algunos prefermentos siguen marcados como pendientes de prueba de obrador cuando no hay datos reales suficientes.
+
+El APPCC incluido es un modelo docente mínimo. No sustituye el manual APPCC del centro ni las fichas técnicas de proveedor.
+
+## Releases
+
+Las versiones descargables están disponibles en:
+
+https://github.com/remo1611-arch/ObradORR/releases
