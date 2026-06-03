@@ -1,6 +1,6 @@
 # P0-H RC2 · Autoría visible en app e impresión
 
-Versión: ObradORR 1.0.0-rc.3
+Versión: ObradORR 1.0.0-rc.4
 
 Cambio aplicado:
 

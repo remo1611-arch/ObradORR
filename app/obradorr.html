@@ -9,7 +9,7 @@
   <meta http-equiv="Expires" content="0" />
   <title>ObradORR · Inicio</title>
   <link rel="icon" href="../favicon.ico" />
-  <link rel="stylesheet" href="./css/obradorr.css?v=obradorr-100-rc3" />
+  <link rel="stylesheet" href="./css/obradorr.css?v=obradorr-100-rc4" />
 </head>
 <body>
   <div id="app" class="app-shell" aria-live="polite">
@@ -25,7 +25,7 @@
   <input type="file" id="dbFileInput" class="hidden" accept=".sqlite,.db,application/vnd.sqlite3,application/octet-stream" />
   <script>
     window.__OBRADORR_MODULE_STARTED = false;
-    window.__OBRADORR_BOOT_BUILD = 'obradorr-100-rc3';
+    window.__OBRADORR_BOOT_BUILD = 'obradorr-100-rc4';
     window.__OBRADORR_BOOT_ERRORS = [];
     function __obradorrEsc(s) { return String(s || '').replace(/[&<>"']/g, function(c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
     function __obradorrPushBootError(label, value) {
@@ -41,12 +41,12 @@
       var stillStatic = app && /Cargando aplicación y base SQLite/.test(app.textContent || '');
       if (!window.__OBRADORR_MODULE_STARTED && stillStatic) {
         var details = (window.__OBRADORR_BOOT_ERRORS || []).map(function(e) { return '<li><code>' + __obradorrEsc(e) + '</code></li>'; }).join('');
-        app.innerHTML = '<main class="main"><section class="card"><h1>ObradORR</h1><h2>No se ha ejecutado el JavaScript principal</h2><p>El HTML se ha cargado, pero la aplicación no llegó a iniciar.</p><div class="notice"><b>Diagnóstico:</b> el navegador ha rechazado o bloqueado algún script de arranque. Esta compilación usa cargador clásico compatible, sin depender de <code>type="module"</code>.</div>' + (details ? '<h3>Error capturado</h3><ul>' + details + '</ul>' : '<p>No se capturó detalle del error. Revisa la consola del navegador.</p>') + '<p>Abre una URL nueva: <code>app/obradorr.html?v=obradorr-100-rc3</code>. Si venías de una versión anterior, ejecuta <code>app/reset_local_data.html?v=obradorr-100-rc3</code>.</p></section></main>';
+        app.innerHTML = '<main class="main"><section class="card"><h1>ObradORR</h1><h2>No se ha ejecutado el JavaScript principal</h2><p>El HTML se ha cargado, pero la aplicación no llegó a iniciar.</p><div class="notice"><b>Diagnóstico:</b> el navegador ha rechazado o bloqueado algún script de arranque. Esta compilación usa cargador clásico compatible, sin depender de <code>type="module"</code>.</div>' + (details ? '<h3>Error capturado</h3><ul>' + details + '</ul>' : '<p>No se capturó detalle del error. Revisa la consola del navegador.</p>') + '<p>Abre una URL nueva: <code>app/obradorr.html?v=obradorr-100-rc4</code>. Si venías de una versión anterior, ejecuta <code>app/reset_local_data.html?v=obradorr-100-rc4</code>.</p></section></main>';
       }
     }, 7000);
   </script>
-  <script defer src="./wasm/sqlite3-classic.js?v=obradorr-100-rc3"></script>
-  <script defer src="./js/obradorr-db-classic.js?v=obradorr-100-rc3"></script>
-  <script defer src="./js/obradorr-app-classic.js?v=obradorr-100-rc3"></script>
+  <script defer src="./wasm/sqlite3-classic.js?v=obradorr-100-rc4"></script>
+  <script defer src="./js/obradorr-db-classic.js?v=obradorr-100-rc4"></script>
+  <script defer src="./js/obradorr-app-classic.js?v=obradorr-100-rc4"></script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-# IMPLEMENTATION_LOG · ObradORR 1.0.0-rc.3
+# IMPLEMENTATION_LOG · ObradORR 1.0.0-rc.4
 
 - [x] Copia de trabajo creada desde RC estable.
 - [x] Metadatos públicos actualizados.

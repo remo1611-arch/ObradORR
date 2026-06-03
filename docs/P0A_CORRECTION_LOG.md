@@ -1,13 +1,13 @@
 # ObradORR · P0-A Corrección de datos críticos, alérgenos y fichas no aptas
 
 Fecha de intervención: 2026-06-03  
-Paquete base: ObradORR 1.0.0-rc.3 PUBLIC / public-stable-candidate  
+Paquete base: ObradORR 1.0.0-rc.4 PUBLIC / public-stable-candidate  
 Objetivo de fase: saneamiento quirúrgico inicial para futura línea ObradORR 1.0.0-RC1.  
 Estado: **fase corregida, no estable, no RC1 final**.
 
 ## Alcance aplicado
 
-- Se mantiene el versionado original `1.0.0-rc.3 / obradorr-100-rc3`.
+- Se mantiene el versionado original `1.0.0-rc.4 / obradorr-100-rc4`.
 - Se corrigen datos críticos y se añade `release_status` como estado de calidad documental mínimo.
 - No se implementa todavía impresión completa de alérgenos.
 - No se implementa todavía APPCC estructurado completo.

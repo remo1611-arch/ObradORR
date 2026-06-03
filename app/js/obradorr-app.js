@@ -4,19 +4,19 @@ const ObradORRDatabase = window.ObradORRDatabase;
 if (!ObradORRDatabase)
     throw new Error("No se cargó la capa SQLite de ObradORR.");
 window.__OBRADORR_MODULE_STARTED = true;
-window.__OBRADORR_MODULE_VERSION = 'obradorr-100-rc3';
+window.__OBRADORR_MODULE_VERSION = 'obradorr-100-rc4';
 const DB_URL = '../db/obradorr.sqlite';
 const WORK_SELECTION_ID = 'WORK_CURRENT';
 const STORAGE_PRINT_OPTIONS = 'obradorr_ui_print_options_v1';
-const IDB_DATA_DB = 'obradorr-data-100-rc2';
+const IDB_DATA_DB = 'obradorr-data-100-rc4';
 const IDB_DATA_STORE = 'snapshots';
 const IDB_CURRENT_KEY = 'current-db';
-const VERSION = '1.0.0-rc.3';
+const VERSION = '1.0.0-rc.4';
 const INGREDIENT_SEARCH_LIMIT = 220;
 const PRINT_SEARCH_LIMIT = 60;
 const LEGAL_NOTICE = '© 2026 Remo José Pereira González · Uso docente personal autorizado · Sin licencia abierta de redistribución o explotación comercial.';
-const EXPECTED_RELEASE_TAG = 'rc2';
-const EXPECTED_CACHE_TAG = 'obradorr-100-rc3';
+const EXPECTED_RELEASE_TAG = 'rc4';
+const EXPECTED_CACHE_TAG = 'obradorr-100-rc4';
 const db = new ObradORRDatabase();
 const state = {
     ready: false,

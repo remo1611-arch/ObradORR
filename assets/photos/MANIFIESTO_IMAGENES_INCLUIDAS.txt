@@ -1,6 +1,6 @@
 ObradORR · Imágenes públicas correctas incluidas
 
-Versión: ObradORR 1.0.0-rc.3
+Versión: ObradORR 1.0.0-rc.4
 Total incluidas: 15
 
 Incluidas:

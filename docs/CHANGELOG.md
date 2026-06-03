@@ -1,6 +1,6 @@
 # CHANGELOG · ObradORR
 
-## 1.0.0-rc.3 PUBLIC
+## 1.0.0-rc.4 PUBLIC
 
 - Actualización de metadatos y cache tag.
 - Incorporación de `schema_migrations`.
@@ -15,7 +15,7 @@
 - QA de release con `tools/validate_release.py`.
 
 
-## ObradORR 1.0.0-rc.3 · Autoría visible
+## ObradORR 1.0.0-rc.4 · Autoría visible
 
 © 2026 Remo José Pereira González · Uso docente personal autorizado · Sin licencia abierta de redistribución o explotación comercial.
 

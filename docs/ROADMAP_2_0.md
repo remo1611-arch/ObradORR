@@ -1,4 +1,4 @@
-# ROADMAP_2_0 · ObradORR 1.0.0-rc.3
+# ROADMAP_2_0 · ObradORR 1.0.0-rc.4
 
 Leyenda: [ ] Pendiente · [~] En curso · [x] Realizado · [✓] Validado · [!] Bloqueado
 
@@ -14,7 +14,7 @@ Leyenda: [ ] Pendiente · [~] En curso · [x] Realizado · [✓] Validado · [!]
 [~] Extracción real a módulos queda como trabajo de endurecimiento posterior.
 
 ## Fase 2 · SQLite y migraciones
-[x] Metadatos `1.0.0-rc.3`.
+[x] Metadatos `1.0.0-rc.4`.
 [x] Tabla `schema_migrations`.
 [x] `PRAGMA integrity_check` validado.
 [x] `PRAGMA foreign_key_check` validado.
