@@ -1,0 +1,225 @@
+[OK] node --check app/js/obradorr-app-classic.js
+[OK] node --check app/js/obradorr-app.js
+[OK] node --check app/js/obradorr-db-classic.js
+[OK] node --check app/js/obradorr-db.js
+[OK] cache tag RC28-STABLE-CANDIDATE presente en HTML y JS
+[OK] perfil documental y clasificación de subrecetas presentes
+[OK] opciones manuales de costes/APPCC presentes
+[OK] sin window.open directo en app clásica
+[OK] editor ordinario sin opción Validada
+[OK] inserción JS protegida: release_status,yield_status
+[OK] inserción JS protegida: 'draft','pendiente','pending'
+[OK] inserción JS protegida: status,release_status,process
+[OK] inserción JS protegida: 'draft','pendiente'
+[OK] SQLite integrity_check ok
+[OK] SQLite foreign_key_check sin errores
+[OK] app_meta app_version=1.0.0-rc.28-stable-candidate
+[OK] app_meta schema_version=1.0.0-rc.28-stable-candidate
+[OK] app_meta release_tag=rc28-stable-candidate
+[OK] app_meta cache_tag=obradorr-100-rc28-stable-candidate
+[OK] app_meta validation_policy presente
+[OK] app_meta rc22_0_preflight presente
+[OK] app_meta b1_documentary_reviews presente
+[OK] app_meta b2_documentary_reviews presente
+[OK] app_meta b3_documentary_reviews presente
+[OK] app_meta b4_documentary_reviews presente
+[OK] culinary_recipes release_status blindado
+[INFO] culinary_recipes release_status: [('no_apta', 1), ('pendiente', 205)]
+[OK] culinary_recipes activas sin release_status validada
+[OK] bakery_recipes release_status blindado
+[INFO] bakery_recipes release_status: [('no_apta', 3), ('pendiente', 96)]
+[OK] bakery_recipes activas sin release_status validada
+[OK] bakery_recipes yield_status blindado
+[OK] smoke culinary default release_status=pendiente
+[OK] smoke bakery default release_status/yield_status=pendiente/pending
+[OK] no_apta preservada: Mezcla de harinas sin gluten base
+[OK] P0 reformulada como pendiente: REC-PAD-THAI
+[OK] P0 reformulada como pendiente: REC-QUICHE-LORRAINE
+[OK] Pad thai contiene componentes técnicos corregidos
+[OK] Pad thai sin uva/nueces
+[OK] Quiche sin pasta quebrada dulce
+[OK] Quiche usa masa quebrada refrigerada/neutral
+[OK] RC23-DATA2 pendiente preservado: REC-FUMET-PESCADO
+[OK] RC23-DATA2 pendiente preservado: REC-FONDO-OSCURO-TERNERA
+[OK] RC23-DATA2 pendiente preservado: REC-FONDO-BLANCO-AVE
+[OK] RC23-DATA2 pendiente preservado: REC-SALSA-TOMATE
+[OK] RC23-DATA2 pendiente preservado: REC-BOUQUET-GARNI
+[OK] RC23-DATA2 pendiente preservado: REC-SALSA-TARTARA
+[OK] RC23-DATA2 pendiente preservado: REC-SALSA-BRAVA
+[OK] RC23-DATA2 pendiente preservado: REC-SOFRITO-BASE
+[OK] RC23-DATA2 pendiente preservado: REC-SALSA-CHORON
+[OK] Bouquet garni contiene tomillo
+[OK] Bouquet garni sin estragón
+[OK] Salsa brava contiene pimentón picante
+[OK] Sofrito usa aceite de oliva virgen
+[OK] Sofrito sin girasol alto oleico
+[OK] Choron marcada como servicio inmediato/no reutilización
+[OK] review RC23 presente: REV_RC23_DATA2_FUMET_PESCADO
+[OK] review RC23 presente: REV_RC23_DATA2_FONDO_OSCURO_TERNERA
+[OK] review RC23 presente: REV_RC23_DATA2_FONDO_BLANCO_AVE
+[OK] review RC23 presente: REV_RC23_DATA2_SALSA_TOMATE
+[OK] review RC23 presente: REV_RC23_DATA2_BOUQUET_GARNI
+[OK] review RC23 presente: REV_RC23_DATA2_SALSA_TARTARA
+[OK] review RC23 presente: REV_RC23_DATA2_SALSA_BRAVA
+[OK] review RC23 presente: REV_RC23_DATA2_SOFRITO_BASE
+[OK] review RC23 presente: REV_RC23_DATA2_SALSA_CHORON
+[OK] app_meta rc23_data2_subrecetas_madre presente
+[OK] RC24-DATA3 pendiente y trazado: REC-CHOCOS-ARROZ
+[OK] RC24-DATA3 pendiente y trazado: REC-ARROZ-MARINERO
+[OK] RC24-DATA3 pendiente y trazado: REC-ARROZ-PILAF
+[OK] RC24-DATA3 pendiente y trazado: REC-BACALAO-VIZCAINA
+[OK] RC24-DATA3 pendiente y trazado: REC-BLANQUETA-TERNERA
+[OK] RC24-DATA3 pendiente y trazado: REC-CALAMARES-TINTA
+[OK] RC24-DATA3 pendiente y trazado: REC-CARRILLERAS-VINO-TINTO
+[OK] RC24-DATA3 pendiente y trazado: REC-COQ-AU-VIN
+[OK] RC24-DATA3 pendiente y trazado: REC-FIDEUA-MARISCO
+[OK] RC24-DATA3 pendiente y trazado: REC-FRICANDO
+[OK] RC24-DATA3 pendiente y trazado: REC-MERLUZA-SALSA-VERDE-CLASICA
+[OK] RC24-DATA3 pendiente y trazado: REC-PATATAS-BRAVAS
+[OK] RC24-DATA3 pendiente y trazado: REC-PIZZA-MARGARITA
+[OK] RC24-DATA3 pendiente y trazado: REC-RABO-TORO
+[OK] RC24-DATA3 pendiente y trazado: REC-RISOTTO-SETAS
+[OK] RC24-DATA3 pendiente y trazado: REC-RODABALLO-HORNO-PANADERA
+[OK] RC24-DATA3 pendiente y trazado: REC-SUQUET-PEIX
+[OK] RC24-DATA3 pendiente y trazado: REC-XARRETE-TERNERA-GLASEADO
+[OK] RC24-DATA3 pendiente y trazado: REC-ZARZUELA-MARISCO
+[OK] review RC24 presente: REV_RC24_DATA3_CHOCOS_ARROZ
+[OK] review RC24 presente: REV_RC24_DATA3_ARROZ_MARINERO
+[OK] review RC24 presente: REV_RC24_DATA3_ARROZ_PILAF
+[OK] review RC24 presente: REV_RC24_DATA3_BACALAO_VIZCAINA
+[OK] review RC24 presente: REV_RC24_DATA3_BLANQUETA_TERNERA
+[OK] review RC24 presente: REV_RC24_DATA3_CALAMARES_TINTA
+[OK] review RC24 presente: REV_RC24_DATA3_CARRILLERAS_VINO_TINTO
+[OK] review RC24 presente: REV_RC24_DATA3_COQ_AU_VIN
+[OK] review RC24 presente: REV_RC24_DATA3_FIDEUA_MARISCO
+[OK] review RC24 presente: REV_RC24_DATA3_FRICANDO
+[OK] review RC24 presente: REV_RC24_DATA3_MERLUZA_SALSA_VERDE_CLASICA
+[OK] review RC24 presente: REV_RC24_DATA3_PATATAS_BRAVAS
+[OK] review RC24 presente: REV_RC24_DATA3_PIZZA_MARGARITA
+[OK] review RC24 presente: REV_RC24_DATA3_RABO_TORO
+[OK] review RC24 presente: REV_RC24_DATA3_RISOTTO_SETAS
+[OK] review RC24 presente: REV_RC24_DATA3_RODABALLO_HORNO_PANADERA
+[OK] review RC24 presente: REV_RC24_DATA3_SUQUET_PEIX
+[OK] review RC24 presente: REV_RC24_DATA3_XARRETE_TERNERA_GLASEADO
+[OK] review RC24 presente: REV_RC24_DATA3_ZARZUELA_MARISCO
+[OK] Arroz pilaf usa arroz largo/basmati
+[OK] Arroz con chocos contiene tinta de calamar
+[OK] Calamares en tinta usan aceite de oliva virgen
+[OK] Calamares en tinta sin girasol alto oleico
+[OK] Suquet sin salmón
+[OK] Suquet usa pescado blanco firme
+[OK] Fricandó usa avellana en picada
+[OK] app_meta rc24_data3_platos_finales presente
+[OK] RC25-DATA4 pendiente y trazado: REC-FOCACCIA
+[OK] review RC25 presente: REV_RC25_DATA4_FOCACCIA
+[OK] RC25-DATA4 pendiente y trazado: REC-MASA-EMPANADA
+[OK] review RC25 presente: REV_RC25_DATA4_MASA_EMPANADA
+[OK] RC25-DATA4 pendiente y trazado: REC-MASA-PIZZA
+[OK] review RC25 presente: REV_RC25_DATA4_MASA_PIZZA
+[OK] RC25-DATA4 pendiente y trazado: REC-PAN-BASICO
+[OK] review RC25 presente: REV_RC25_DATA4_PAN_BASICO
+[OK] RC25-DATA4 pendiente y trazado: REC-PAN-GALLEGO
+[OK] review RC25 presente: REV_RC25_DATA4_PAN_GALLEGO
+[OK] RC25-DATA4 pendiente y trazado: REC-PAST-ALMIBAR-30
+[OK] review RC25 presente: REV_RC25_DATA4_PAST_ALMIBAR_30
+[OK] RC25-DATA4 pendiente y trazado: REC-PAST-MANZANA-COMPOTA
+[OK] review RC25 presente: REV_RC25_DATA4_PAST_MANZANA_COMPOTA
+[OK] RC25-DATA4 pendiente y trazado: REC-PAST-GENOVES
+[OK] review RC25 presente: REV_RC25_DATA4_PAST_GENOVES
+[OK] RC25-DATA4 pendiente y trazado: REC-PAST-BIZCOCHO-PLANCHA
+[OK] review RC25 presente: REV_RC25_DATA4_PAST_BIZCOCHO_PLANCHA
+[OK] RC25-DATA4 pendiente y trazado: REC-PAST-QUEBRADA-DULCE
+[OK] review RC25 presente: REV_RC25_DATA4_PAST_QUEBRADA_DULCE
+[OK] RC25-DATA4 pendiente y trazado: REC-PAST-HOJALDRE-BASE
+[OK] review RC25 presente: REV_RC25_DATA4_PAST_HOJALDRE_BASE
+[OK] RC25-DATA4 pendiente y trazado: REC-PAST-MERENGUE-FRANCES
+[OK] review RC25 presente: REV_RC25_DATA4_PAST_MERENGUE_FRANCES
+[OK] RC25-DATA4 pendiente y trazado: REC-PAST-MERENGUE-ITALIANO
+[OK] review RC25 presente: REV_RC25_DATA4_PAST_MERENGUE_ITALIANO
+[OK] Almíbar 30 °Brix corregido a 300 g azúcar / rendimiento no validado
+[OK] Pasta quebrada dulce corregida con sablage y restricción salada
+[OK] Hojaldre contiene vueltas y reposos en frío
+[OK] Genovés contiene punto de cinta/rubán
+[OK] Merengue italiano mantiene control 118-121 °C y termómetro
+[OK] app_meta rc25_data4 presente
+[OK] tabla documental presente: documentary_sources
+[OK] tabla documental presente: recipe_documentary_reviews
+[INFO] documentary_sources=22 reviews=651 b1=13 b2=39 b3=30 b4=97 active_bakery=97
+[OK] fuentes documentales ampliadas presentes
+[OK] B1 contiene 13 revisiones documentales
+[OK] B2 contiene 39 revisiones documentales
+[OK] B3 contiene 30 revisiones documentales
+[OK] B4 contiene 97 revisiones documentales
+[OK] B4 cubre todas las fichas activas de bakery_recipes
+[OK] review presente: REV_B4_CROISSANT_DIRECTO_RC16
+[OK] review presente: REV_B4_BAGUETTE_CON_POOLISH_RC16
+[OK] review presente: REV_B4_PAN_SIN_GLUTEN_BASICO_RC16
+[OK] review presente: REV_B4_DOSA_FERMENTADA_RC16
+[OK] review presente: REV_B4_MEZCLA_DE_HARINAS_SIN_GLUTEN_BASE_RC16
+[OK] app_meta rc26_final_print_review presente
+[OK] RC26 escalado de almíbar en pedido consolidado: 0,35 l -> 0,105 kg azúcar / 0,245 l agua
+[OK] app_meta rc27_data5_7_refinamiento_global presente
+[OK] app_meta rc28_stable_candidate presente
+[OK] RC27 mantiene 0 fichas activas validadas
+[OK] RC27 mantiene yield_status pending en bakery activo
+[OK] RC27 DATA5 cambio específico presente: REC-FABADA-ASTURIANA -> CER046
+[OK] RC27 DATA5 cambio específico presente: REC-TORTILLA-PAISANA -> HOR049
+[OK] RC27 DATA5 cambio específico presente: REC-ZORZA-PATATAS -> POR019
+[OK] RC27 DATA5 renombre volandeiras/zamburiñas presente
+[OK] RC27 reviews REV_RC27_DATA5_ presentes: 116
+[OK] RC27 reviews REV_RC27_DATA6_BAK_ presentes: 97
+[OK] RC27 reviews REV_RC27_DATA7_CUL_ presentes: 204
+[OK] RC27 fuente documental presente: SRC_REG_852_2004
+[OK] RC27 fuente documental presente: SRC_REG_2073_2005
+[OK] RC27 fuente documental presente: SRC_REG_UE_1169_2011
+[OK] RC27 fuente documental presente: SRC_RD_1021_2022
+[OK] RC27 fuente documental presente: SRC_AESAN_ANISAKIS
+[OK] RC27 fuente documental presente: SRC_AESAN_TIEMPO_TEMPERATURA
+[OK] documento RC27 presente: RELEASE_NOTES_RC27_DATA5_7.md
+[OK] documento RC27 presente: docs/RC27_DATA5_7_REFINAMIENTO_GLOBAL_LOG.md
+[OK] documento RC27 presente: docs/RC27_DATA5_7_MODIFIED_RECIPES_MATRIX.csv
+[OK] documento RC27 presente: docs/RC27_DATA5_7_APPCC_ALERGENOS_MATRIX.csv
+[OK] documento RC27 presente: docs/RC27_DATA5_TARGETED_CHANGES.csv
+[OK] documento RC27 presente: docs/RC27_DATA8_PENDIENTE_OBRADOR.md
+[OK] documento RC27 presente: RELEASE_NOTES_RC28_STABLE_CANDIDATE.md
+[OK] documento RC27 presente: docs/RC28_CIERRE_PRIMERA_VERSION.md
+[OK] documento RC27 presente: docs/RC28_LIMITACIONES_Y_ESTADOS.md
+[OK] documento RC27 presente: docs/RC28_MATRIZ_VALIDACION.md
+[OK] documento RC27 presente: docs/RC28_GUIA_TERMUX.md
+[OK] documento RC27 presente: docs/RC28_GUIA_WINDOWS.md
+[OK] documento RC27 presente: docs/RC28_DATA8_HOJA_DE_PRUEBA_OBRADOR.md
+[OK] documento RC27 presente: docs/RC28_CHANGELOG_RC21_RC28.md
+[OK] documento presente: RELEASE_NOTES_RC26.md
+[OK] documento presente: RELEASE_NOTES_RC25_DATA4.md
+[OK] documento presente: docs/RC26_REVISION_FINAL_IMPRESION_LOG.md
+[OK] documento presente: docs/RC25_DATA4_PANADERIA_PASTELERIA_PUENTES_LOG.md
+[OK] documento presente: docs/RC25_DATA4_PANADERIA_PASTELERIA_PUENTES_MATRIX.csv
+[OK] documento presente: docs/RC22_DATA1_P0_CORRECTION_LOG.md
+[OK] documento presente: docs/RC22_DATA1_P0_CORRECTION_MATRIX.csv
+[OK] documento presente: docs/PRINT_PROFILES.md
+[OK] documento presente: docs/PRINT_MODEL.md
+[OK] documento presente: docs/B4_REVISION_DOCUMENTAL_PANADERIA_BOLLERIA.md
+[OK] documento presente: docs/RC23_DATA2_SUBRECETAS_MADRE_LOG.md
+[OK] documento presente: docs/RC23_DATA2_SUBRECETAS_MADRE_MATRIX.csv
+[OK] documento presente: docs/FUENTES_Y_CRITERIOS_GASTRONOMICOS.md
+[OK] token de impresión/documento presente: documentProfile: 'aula_taller'
+[OK] token de impresión/documento presente: profileRadio('aula_taller'
+[OK] token de impresión/documento presente: profileRadio('docente_produccion'
+[OK] token de impresión/documento presente: profileRadio('auditoria_completa'
+[OK] token de impresión/documento presente: buildPrintDocumentModel
+[OK] token de impresión/documento presente: renderPrintDocumentModel
+[OK] token de impresión/documento presente: renderedSubrecipes
+[OK] token de impresión/documento presente: subrecipeReferenceHtml
+[OK] token de impresión/documento presente: appccBriefRowsHtml
+[OK] token de impresión/documento presente: technical-base-collapsed
+[OK] token de impresión/documento presente: document-status-warning
+[OK] token de impresión/documento presente: profileOptionDefaults
+[OK] token de impresión/documento presente: minimalSafetyNoticeHtml
+[OK] token de impresión/documento presente: printOutputSummaryHtml
+[OK] token de impresión/documento presente: Pedido consolidado
+[OK] token de impresión/documento presente: Aviso mínimo de seguridad alimentaria
+[OK] token de impresión/documento presente: Mostrar costes
+[OK] token de impresión/documento presente: Mostrar APPCC docente
+[OK] manifest SHA correcto
+
+VALIDACIÓN OK · ObradORR 1.0.0-rc.28-stable-candidate

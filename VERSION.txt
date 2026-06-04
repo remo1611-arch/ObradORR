@@ -1,5 +1,8 @@
-ObradORR 1.0.0-rc.9
-Release tag: rc9
-Release channel: release-candidate
-Cache tag: obradorr-100-rc9
-© 2026 Remo José Pereira González · Uso docente personal autorizado · Sin licencia abierta de redistribución o explotación comercial.
+ObradORR 1.0.0-rc.28-stable-candidate
+Release tag: rc28-stable-candidate
+SQLite schema: 1.0.0-rc.28-stable-candidate
+Cache tag: obradorr-100-rc28-stable-candidate
+Canal: stable-candidate / RC1 docente
+Fecha de cierre documental: 2026-06-04T17:54:20Z
+
+RC28-STABLE-CANDIDATE: cierre de la primera versión docente tras RC27-DATA5-7. No introduce nuevas correcciones de fórmula, motor ni impresión. Congela el estado funcional para prueba real Windows/Termux/PDF y añade documentación de uso, límites, validación y ruta DATA8. Todas las fichas activas mantienen release_status pendiente salvo no_apta justificada; no existe validación de obrador automatizada.

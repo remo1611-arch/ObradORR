@@ -57,6 +57,33 @@ textarea[data-step-instruction], textarea[data-step-notes]{min-width:240px;min-h
 .btn[disabled]:hover{transform:none;box-shadow:none}
 .recipe-card-blocked,.result-row-blocked{background:#fff7ed;border-color:#fdba74}
 .danger-pill{background:#fee2e2;color:#991b1b}
-.rc8-status-warning ul,.rc9-status-warning ul{margin:.35rem 0 0 1.1rem;padding:0}
-.rc8-status-warning li,.rc9-status-warning li{margin:.25rem 0}
+.rc8-status-warning ul,.rc9-status-warning ul,.rc11-status-warning ul,.rc12-status-warning ul,.rc13-status-warning ul{margin:.35rem 0 0 1.1rem;padding:0}
+.rc8-status-warning li,.rc9-status-warning li,.rc11-status-warning li,.rc12-status-warning li,.rc13-status-warning li{margin:.25rem 0}
 .technical-base-collapsed{background:#fffaf2;border-style:dashed}
+
+.rc14-status-warning ul{margin:.35rem 0 0 1.1rem;padding:0}
+.rc14-status-warning li{margin:.25rem 0}
+
+.rc15-status-warning ul{margin:.35rem 0 0 1.1rem;padding:0}
+.rc15-status-warning li{margin:.25rem 0}
+
+.rc16-status-warning ul{margin:.35rem 0 0 1.1rem;padding:0}
+.rc16-status-warning li{margin:.25rem 0}
+
+.rc18-status-warning ul{margin:.35rem 0 0 1.1rem;padding:0}
+.rc18-status-warning li{margin:.25rem 0}
+.profile-row .radio-card{border-color:#c7d2fe}
+
+/* RC21 · resumen y estado documental de impresión */
+.print-summary{border:1px solid #bfdbfe;background:#eff6ff;border-radius:14px;padding:12px;margin-top:2px}
+.print-summary h4{margin:0 0 8px;color:#1e3a8a}
+.print-summary dl{display:grid;grid-template-columns:150px 1fr;gap:4px 10px;margin:0}
+.print-summary dt{font-weight:800;color:#1e3a8a}
+.print-summary dd{margin:0;color:#1f2933}
+.print-summary ul{margin:8px 0 0 18px;color:#334155}
+.rc20-status-warning ul{margin:.35rem 0 0 1.1rem;padding:0}
+.rc20-status-warning li{margin:.25rem 0}
+
+/* RC21 · clase neutra para avisos documentales de ficha */
+.document-status-warning ul{margin:.35rem 0 0 1.1rem;padding:0}
+.document-status-warning li{margin:.25rem 0}

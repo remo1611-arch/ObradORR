@@ -1,0 +1,158 @@
+[OK] node --check app/js/obradorr-app-classic.js
+[OK] node --check app/js/obradorr-app.js
+[OK] node --check app/js/obradorr-db-classic.js
+[OK] node --check app/js/obradorr-db.js
+[OK] cache tag RC25-DATA4 presente en HTML y JS
+[OK] perfil documental y clasificación de subrecetas presentes
+[OK] opciones manuales de costes/APPCC presentes
+[OK] sin window.open directo en app clásica
+[OK] editor ordinario sin opción Validada
+[OK] inserción JS protegida: release_status,yield_status
+[OK] inserción JS protegida: 'draft','pendiente','pending'
+[OK] inserción JS protegida: status,release_status,process
+[OK] inserción JS protegida: 'draft','pendiente'
+[OK] SQLite integrity_check ok
+[OK] SQLite foreign_key_check sin errores
+[OK] app_meta app_version=1.0.0-rc.25-data4
+[OK] app_meta schema_version=1.0.0-rc.25-data4
+[OK] app_meta release_tag=rc25-data4
+[OK] app_meta cache_tag=obradorr-100-rc25-data4
+[OK] app_meta validation_policy presente
+[OK] app_meta rc22_0_preflight presente
+[OK] app_meta b1_documentary_reviews presente
+[OK] app_meta b2_documentary_reviews presente
+[OK] app_meta b3_documentary_reviews presente
+[OK] app_meta b4_documentary_reviews presente
+[OK] culinary_recipes release_status blindado
+[INFO] culinary_recipes release_status: [('no_apta', 1), ('pendiente', 205)]
+[OK] culinary_recipes activas sin release_status validada
+[OK] bakery_recipes release_status blindado
+[INFO] bakery_recipes release_status: [('no_apta', 3), ('pendiente', 96)]
+[OK] bakery_recipes activas sin release_status validada
+[OK] bakery_recipes yield_status blindado
+[OK] smoke culinary default release_status=pendiente
+[OK] smoke bakery default release_status/yield_status=pendiente/pending
+[OK] no_apta preservada: Mezcla de harinas sin gluten base
+[OK] P0 reformulada como pendiente: REC-PAD-THAI
+[OK] P0 reformulada como pendiente: REC-QUICHE-LORRAINE
+[OK] Pad thai contiene componentes técnicos corregidos
+[OK] Pad thai sin uva/nueces
+[OK] Quiche sin pasta quebrada dulce
+[OK] Quiche usa masa quebrada refrigerada/neutral
+[OK] RC23-DATA2 pendiente preservado: REC-FUMET-PESCADO
+[OK] RC23-DATA2 pendiente preservado: REC-FONDO-OSCURO-TERNERA
+[OK] RC23-DATA2 pendiente preservado: REC-FONDO-BLANCO-AVE
+[OK] RC23-DATA2 pendiente preservado: REC-SALSA-TOMATE
+[OK] RC23-DATA2 pendiente preservado: REC-BOUQUET-GARNI
+[OK] RC23-DATA2 pendiente preservado: REC-SALSA-TARTARA
+[OK] RC23-DATA2 pendiente preservado: REC-SALSA-BRAVA
+[OK] RC23-DATA2 pendiente preservado: REC-SOFRITO-BASE
+[OK] RC23-DATA2 pendiente preservado: REC-SALSA-CHORON
+[OK] Bouquet garni contiene tomillo
+[OK] Bouquet garni sin estragón
+[OK] Salsa brava contiene pimentón picante
+[OK] Sofrito usa aceite de oliva virgen
+[OK] Sofrito sin girasol alto oleico
+[OK] Choron marcada como servicio inmediato/no reutilización
+[OK] review RC23 presente: REV_RC23_DATA2_FUMET_PESCADO
+[OK] review RC23 presente: REV_RC23_DATA2_FONDO_OSCURO_TERNERA
+[OK] review RC23 presente: REV_RC23_DATA2_FONDO_BLANCO_AVE
+[OK] review RC23 presente: REV_RC23_DATA2_SALSA_TOMATE
+[OK] review RC23 presente: REV_RC23_DATA2_BOUQUET_GARNI
+[OK] review RC23 presente: REV_RC23_DATA2_SALSA_TARTARA
+[OK] review RC23 presente: REV_RC23_DATA2_SALSA_BRAVA
+[OK] review RC23 presente: REV_RC23_DATA2_SOFRITO_BASE
+[OK] review RC23 presente: REV_RC23_DATA2_SALSA_CHORON
+[OK] app_meta rc23_data2_subrecetas_madre presente
+[OK] RC25-DATA4 pendiente y trazado: REC-CHOCOS-ARROZ
+[OK] RC25-DATA4 pendiente y trazado: REC-ARROZ-MARINERO
+[OK] RC25-DATA4 pendiente y trazado: REC-ARROZ-PILAF
+[OK] RC25-DATA4 pendiente y trazado: REC-BACALAO-VIZCAINA
+[OK] RC25-DATA4 pendiente y trazado: REC-BLANQUETA-TERNERA
+[OK] RC25-DATA4 pendiente y trazado: REC-CALAMARES-TINTA
+[OK] RC25-DATA4 pendiente y trazado: REC-CARRILLERAS-VINO-TINTO
+[OK] RC25-DATA4 pendiente y trazado: REC-COQ-AU-VIN
+[OK] RC25-DATA4 pendiente y trazado: REC-FIDEUA-MARISCO
+[OK] RC25-DATA4 pendiente y trazado: REC-FRICANDO
+[OK] RC25-DATA4 pendiente y trazado: REC-MERLUZA-SALSA-VERDE-CLASICA
+[OK] RC25-DATA4 pendiente y trazado: REC-PATATAS-BRAVAS
+[OK] RC25-DATA4 pendiente y trazado: REC-PIZZA-MARGARITA
+[OK] RC25-DATA4 pendiente y trazado: REC-RABO-TORO
+[OK] RC25-DATA4 pendiente y trazado: REC-RISOTTO-SETAS
+[OK] RC25-DATA4 pendiente y trazado: REC-RODABALLO-HORNO-PANADERA
+[OK] RC25-DATA4 pendiente y trazado: REC-SUQUET-PEIX
+[OK] RC25-DATA4 pendiente y trazado: REC-XARRETE-TERNERA-GLASEADO
+[OK] RC25-DATA4 pendiente y trazado: REC-ZARZUELA-MARISCO
+[OK] review RC24 presente: REV_RC25_DATA4_CHOCOS_ARROZ
+[OK] review RC24 presente: REV_RC25_DATA4_ARROZ_MARINERO
+[OK] review RC24 presente: REV_RC25_DATA4_ARROZ_PILAF
+[OK] review RC24 presente: REV_RC25_DATA4_BACALAO_VIZCAINA
+[OK] review RC24 presente: REV_RC25_DATA4_BLANQUETA_TERNERA
+[OK] review RC24 presente: REV_RC25_DATA4_CALAMARES_TINTA
+[OK] review RC24 presente: REV_RC25_DATA4_CARRILLERAS_VINO_TINTO
+[OK] review RC24 presente: REV_RC25_DATA4_COQ_AU_VIN
+[OK] review RC24 presente: REV_RC25_DATA4_FIDEUA_MARISCO
+[OK] review RC24 presente: REV_RC25_DATA4_FRICANDO
+[OK] review RC24 presente: REV_RC25_DATA4_MERLUZA_SALSA_VERDE_CLASICA
+[OK] review RC24 presente: REV_RC25_DATA4_PATATAS_BRAVAS
+[OK] review RC24 presente: REV_RC25_DATA4_PIZZA_MARGARITA
+[OK] review RC24 presente: REV_RC25_DATA4_RABO_TORO
+[OK] review RC24 presente: REV_RC25_DATA4_RISOTTO_SETAS
+[OK] review RC24 presente: REV_RC25_DATA4_RODABALLO_HORNO_PANADERA
+[OK] review RC24 presente: REV_RC25_DATA4_SUQUET_PEIX
+[OK] review RC24 presente: REV_RC25_DATA4_XARRETE_TERNERA_GLASEADO
+[OK] review RC24 presente: REV_RC25_DATA4_ZARZUELA_MARISCO
+[OK] Arroz pilaf usa arroz largo/basmati
+[OK] Arroz con chocos contiene tinta de calamar
+[OK] Calamares en tinta usan aceite de oliva virgen
+[OK] Calamares en tinta sin girasol alto oleico
+[OK] Suquet sin salmón
+[OK] Suquet usa pescado blanco firme
+[OK] Fricandó usa avellana en picada
+[OK] app_meta rc24_data3_platos_finales presente
+[OK] tabla documental presente: documentary_sources
+[OK] tabla documental presente: recipe_documentary_reviews
+[INFO] documentary_sources=19 reviews=221 b1=13 b2=39 b3=30 b4=97 active_bakery=97
+[OK] fuentes documentales ampliadas presentes
+[OK] B1 contiene 13 revisiones documentales
+[OK] B2 contiene 39 revisiones documentales
+[OK] B3 contiene 30 revisiones documentales
+[OK] B4 contiene 97 revisiones documentales
+[OK] B4 cubre todas las fichas activas de bakery_recipes
+[OK] review presente: REV_B4_CROISSANT_DIRECTO_RC16
+[OK] review presente: REV_B4_BAGUETTE_CON_POOLISH_RC16
+[OK] review presente: REV_B4_PAN_SIN_GLUTEN_BASICO_RC16
+[OK] review presente: REV_B4_DOSA_FERMENTADA_RC16
+[OK] review presente: REV_B4_MEZCLA_DE_HARINAS_SIN_GLUTEN_BASE_RC16
+[OK] documento presente: RELEASE_NOTES_RC25_DATA4.md
+[OK] documento presente: docs/RC22_DATA1_P0_CORRECTION_LOG.md
+[OK] documento presente: docs/RC22_DATA1_P0_CORRECTION_MATRIX.csv
+[OK] documento presente: docs/PRINT_PROFILES.md
+[OK] documento presente: docs/PRINT_MODEL.md
+[OK] documento presente: docs/B4_REVISION_DOCUMENTAL_PANADERIA_BOLLERIA.md
+[OK] documento presente: docs/RC23_DATA2_SUBRECETAS_MADRE_LOG.md
+[OK] documento presente: docs/RC23_DATA2_SUBRECETAS_MADRE_MATRIX.csv
+[OK] documento presente: docs/FUENTES_Y_CRITERIOS_GASTRONOMICOS.md
+[OK] token de impresión/documento presente: documentProfile: 'aula_taller'
+[OK] token de impresión/documento presente: profileRadio('aula_taller'
+[OK] token de impresión/documento presente: profileRadio('docente_produccion'
+[OK] token de impresión/documento presente: profileRadio('auditoria_completa'
+[OK] token de impresión/documento presente: buildPrintDocumentModel
+[OK] token de impresión/documento presente: renderPrintDocumentModel
+[OK] token de impresión/documento presente: renderedSubrecipes
+[OK] token de impresión/documento presente: subrecipeReferenceHtml
+[OK] token de impresión/documento presente: appccBriefRowsHtml
+[OK] token de impresión/documento presente: technical-base-collapsed
+[OK] token de impresión/documento presente: document-status-warning
+[OK] token de impresión/documento presente: profileOptionDefaults
+[OK] token de impresión/documento presente: minimalSafetyNoticeHtml
+[OK] token de impresión/documento presente: printOutputSummaryHtml
+[OK] token de impresión/documento presente: Pedido consolidado
+[OK] token de impresión/documento presente: Aviso mínimo de seguridad alimentaria
+[OK] token de impresión/documento presente: Mostrar costes
+[OK] token de impresión/documento presente: Mostrar APPCC docente
+[OK] manifest SHA correcto
+
+VALIDACIÓN OK · ObradORR 1.0.0-rc.25-data4
+
+STDERR:

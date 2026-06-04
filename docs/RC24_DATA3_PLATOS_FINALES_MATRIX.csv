@@ -1,0 +1,20 @@
+id,nombre,production_kind,release_status,subrecetas_recursivas,accion_rc24,estado_final,validacion_obrador
+REC-CHOCOS-ARROZ,Arroz con chocos,final_servings,pendiente,REC-FUMET-PESCADO,proceso/appcc/notas reforzados; fórmula ajustada si había incoherencia clara,pendiente,requerida
+REC-ARROZ-MARINERO,Arroz marinero con fumet,final_servings,pendiente,REC-SOFRITO-BASE;REC-FUMET-PESCADO,proceso/appcc/notas reforzados; fórmula ajustada si había incoherencia clara,pendiente,requerida
+REC-ARROZ-PILAF,Arroz pilaf,final_servings,pendiente,REC-FONDO-BLANCO-AVE,proceso/appcc/notas reforzados; fórmula ajustada si había incoherencia clara,pendiente,requerida
+REC-BACALAO-VIZCAINA,Bacalao a la vizcaína,final_servings,pendiente,REC-FUMET-PESCADO,proceso/appcc/notas reforzados; fórmula ajustada si había incoherencia clara,pendiente,requerida
+REC-BLANQUETA-TERNERA,Blanqueta de ternera,final_servings,pendiente,REC-MIREPOIX-BLANCA;REC-FONDO-BLANCO-AVE,proceso/appcc/notas reforzados; fórmula ajustada si había incoherencia clara,pendiente,requerida
+REC-CALAMARES-TINTA,Calamares en su tinta,final_servings,pendiente,REC-FUMET-PESCADO,proceso/appcc/notas reforzados; fórmula ajustada si había incoherencia clara,pendiente,requerida
+REC-CARRILLERAS-VINO-TINTO,Carrilleras de ternera al vino tinto,final_servings,pendiente,REC-FONDO-OSCURO-TERNERA,proceso/appcc/notas reforzados; fórmula ajustada si había incoherencia clara,pendiente,requerida
+REC-COQ-AU-VIN,Coq au vin,final_servings,pendiente,REC-MIREPOIX-OSCURA;REC-FONDO-OSCURO-TERNERA,proceso/appcc/notas reforzados; fórmula ajustada si había incoherencia clara,pendiente,requerida
+REC-FIDEUA-MARISCO,Fideuá de marisco,final_servings,pendiente,REC-SOFRITO-BASE;REC-FUMET-PESCADO,proceso/appcc/notas reforzados; fórmula ajustada si había incoherencia clara,pendiente,requerida
+REC-FRICANDO,Fricandó de ternera,final_servings,pendiente,REC-FONDO-OSCURO-TERNERA,proceso/appcc/notas reforzados; fórmula ajustada si había incoherencia clara,pendiente,requerida
+REC-MERLUZA-SALSA-VERDE-CLASICA,Merluza en salsa verde,final_servings,pendiente,REC-FUMET-PESCADO,proceso/appcc/notas reforzados; fórmula ajustada si había incoherencia clara,pendiente,requerida
+REC-PATATAS-BRAVAS,Patatas bravas,final_servings,pendiente,REC-SALSA-BRAVA;REC-MAYONESA-BASE,proceso/appcc/notas reforzados; fórmula ajustada si había incoherencia clara,pendiente,requerida
+REC-PIZZA-MARGARITA,Pizza margarita,final_servings,pendiente,REC-MASA-PIZZA;REC-SALSA-TOMATE,proceso/appcc/notas reforzados; fórmula ajustada si había incoherencia clara,pendiente,requerida
+REC-RABO-TORO,Rabo de toro estofado,final_servings,pendiente,REC-MIREPOIX-OSCURA;REC-FONDO-OSCURO-TERNERA,proceso/appcc/notas reforzados; fórmula ajustada si había incoherencia clara,pendiente,requerida
+REC-RISOTTO-SETAS,Risotto de setas y parmesano,final_servings,pendiente,REC-FONDO-BLANCO-AVE,proceso/appcc/notas reforzados; fórmula ajustada si había incoherencia clara,pendiente,requerida
+REC-RODABALLO-HORNO-PANADERA,Rodaballo al horno con patata panadera,dual,pendiente,REC-PATATAS-PANADERA;REC-FUMET-PESCADO,proceso/appcc/notas reforzados; fórmula ajustada si había incoherencia clara,pendiente,requerida
+REC-SUQUET-PEIX,Suquet de pescado,final_servings,pendiente,REC-FUMET-PESCADO,proceso/appcc/notas reforzados; fórmula ajustada si había incoherencia clara,pendiente,requerida
+REC-XARRETE-TERNERA-GLASEADO,Xarrete de ternera glaseado con demi-glace,final_servings,pendiente,REC-MIREPOIX-OSCURA;REC-FONDO-OSCURO-TERNERA;REC-DEMI-GLACE,proceso/appcc/notas reforzados; fórmula ajustada si había incoherencia clara,pendiente,requerida
+REC-ZARZUELA-MARISCO,Zarzuela de pescado y marisco,final_servings,pendiente,REC-FUMET-PESCADO,proceso/appcc/notas reforzados; fórmula ajustada si había incoherencia clara,pendiente,requerida

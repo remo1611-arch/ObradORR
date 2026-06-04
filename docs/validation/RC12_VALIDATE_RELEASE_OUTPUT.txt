@@ -1,0 +1,35 @@
+[OK] node --check app/js/obradorr-app-classic.js
+[OK] node --check app/js/obradorr-app.js
+[OK] node --check app/js/obradorr-db-classic.js
+[OK] node --check app/js/obradorr-db.js
+[OK] cache tag RC13 presente en HTML y JS
+[OK] aviso RC13 documental presente
+[OK] sin window.open directo en app clásica
+[OK] SQLite integrity_check ok
+[OK] SQLite foreign_key_check sin errores
+[OK] app_meta app_version=1.0.0-rc.13
+[OK] app_meta schema_version=1.0.0-rc.13
+[OK] app_meta release_tag=rc13
+[OK] app_meta cache_tag=obradorr-100-rc13
+[OK] app_meta validation_policy presente
+[INFO] culinary_recipes release_status: [('no_apta', 3), ('pendiente', 203)]
+[OK] culinary_recipes sin release_status validada
+[OK] culinary_recipes sin status legacy validated en activas
+[INFO] bakery_recipes release_status: [('no_apta', 3), ('pendiente', 96)]
+[OK] bakery_recipes sin release_status validada
+[OK] bakery_recipes sin status legacy validated en activas
+[OK] no_apta preservada: Pad thai de langostinos
+[OK] no_apta preservada: Quiche lorraine
+[OK] no_apta preservada: Mezcla de harinas sin gluten base
+[OK] tabla documental presente: documentary_sources
+[OK] tabla documental presente: recipe_documentary_reviews
+[OK] fuentes documentales iniciales presentes
+[OK] documento presente: RELEASE_NOTES_RC13.md
+[OK] documento presente: docs/RC13_VIA_B_AUDITORIA_DOCUMENTAL_LOG.md
+[OK] documento presente: docs/FUENTES_Y_CRITERIOS_GASTRONOMICOS.md
+[OK] documento presente: docs/AUDITORIA_DOCUMENTAL_FUENTES.md
+[OK] manifest SHA correcto
+
+VALIDACIÓN OK · ObradORR 1.0.0-rc.13
+
+STDERR:

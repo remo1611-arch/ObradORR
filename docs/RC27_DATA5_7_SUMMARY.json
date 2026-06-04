@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0-rc.27-data5-7",
+  "data5_modified_rows": 116,
+  "data6_bakery_rows": 97,
+  "data7_appcc_rows": 301,
+  "specific_ingredient_or_name_changes": 12,
+  "culinary_active": 204,
+  "bakery_active": 97,
+  "culinary_validated_active": 0,
+  "bakery_validated_active": 0,
+  "bakery_yield_non_pending_active": 0
+}

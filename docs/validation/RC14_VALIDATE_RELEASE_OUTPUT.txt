@@ -1,0 +1,42 @@
+[OK] node --check app/js/obradorr-app-classic.js
+[OK] node --check app/js/obradorr-app.js
+[OK] node --check app/js/obradorr-db-classic.js
+[OK] node --check app/js/obradorr-db.js
+[OK] cache tag RC14 presente en HTML y JS
+[OK] aviso RC14/B2 documental presente
+[OK] sin window.open directo en app clásica
+[OK] SQLite integrity_check ok
+[OK] SQLite foreign_key_check sin errores
+[OK] app_meta app_version=1.0.0-rc.14
+[OK] app_meta schema_version=1.0.0-rc.14
+[OK] app_meta release_tag=rc14
+[OK] app_meta cache_tag=obradorr-100-rc14
+[OK] app_meta validation_policy presente
+[OK] app_meta b1_documentary_reviews preservado
+[OK] app_meta b2_documentary_reviews presente
+[INFO] culinary_recipes release_status: [('no_apta', 3), ('pendiente', 203)]
+[OK] culinary_recipes sin release_status validada
+[INFO] bakery_recipes release_status: [('no_apta', 3), ('pendiente', 96)]
+[OK] bakery_recipes sin release_status validada
+[OK] no_apta preservada: Pad thai de langostinos
+[OK] no_apta preservada: Quiche lorraine
+[OK] no_apta preservada: Mezcla de harinas sin gluten base
+[OK] tabla documental presente: documentary_sources
+[OK] tabla documental presente: recipe_documentary_reviews
+[INFO] documentary_sources=13 reviews=56 b1=13 b2=39
+[OK] fuentes documentales ampliadas presentes
+[OK] B1 contiene 13 revisiones documentales
+[OK] B2 contiene 39 revisiones documentales
+[OK] review presente: REV_B2_ARROZ_MARINERO_RC14
+[OK] review presente: REV_B2_SPAGHETTI_CARBONARA_TRADICIONAL_RC14
+[OK] review presente: REV_B2_ENSALADILLA_RUSA_RC14
+[OK] review presente: REV_B2_SUQUET_PEIX_RC14
+[OK] review presente: REV_B2_XARRETE_TERNERA_GLASEADO_RC14
+[OK] documento presente: RELEASE_NOTES_RC14.md
+[OK] documento presente: docs/B2_REVISION_DOCUMENTAL_COCINA_CALIENTE.md
+[OK] documento presente: docs/FUENTES_Y_CRITERIOS_GASTRONOMICOS.md
+[OK] manifest SHA correcto
+
+VALIDACIÓN OK · ObradORR 1.0.0-rc.14
+
+STDERR:

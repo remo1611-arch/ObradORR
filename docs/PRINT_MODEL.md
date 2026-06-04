@@ -1,43 +1,33 @@
-# PRINT_MODEL · ObradORR 1.0.0-rc.6
+# Modelo de impresión · ObradORR 1.0.0-rc.21
 
-## Flujo de impresión real
-
-```text
-SQLite → funciones de consulta/cálculo → HTML imprimible → iframe → impresión/PDF
-```
-
-## Flujo objetivo documentado
+## Flujo real actual
 
 ```text
-SQLite → repositories → domain engines → DocumentContext → print templates → iframe → PDF/impresión
+SQLite → consultas/cálculos → modelo de documento → render HTML → iframe → impresión/PDF
 ```
 
-La compilación actual conserva el flujo clásico para no romper Android/Termux, pero deja documentada la separación de capas.
+La RC21 mantiene el cargador clásico compatible con Android/Termux, pero separa el flujo lógico en funciones diferenciadas:
 
-## Documentos disponibles
+- `buildPrintDocumentModel(items, opts)`: normaliza opciones, perfil y contexto de deduplicación.
+- `renderPrintDocumentModel(model)`: construye el HTML imprimible.
+- `presentPrintDocument(html, title)`: presenta el iframe y permite imprimir/guardar PDF.
+- `recordPrintJob(items, opts, html)`: registra metadatos de impresión sin almacenar HTML pesado.
 
-- Fichas técnicas.
-- Pedido consolidado.
-- Fichas técnicas + pedido.
-- Impresión de sesión guardada.
+## Perfiles
 
-## Condiciones de impresión
+Ver `docs/PRINT_PROFILES.md`.
+
+## Criterios de cierre
 
 - Sin `window.open`.
-- Con previsualización interna.
-- Con iframe.
-- Con subrecetas culinarias según modo seleccionado.
-- Con prefermentos y bloques panaderos.
-- Con componentes elaborados desarrollados cuando existen.
-- Con registro en `print_jobs`.
+- Vista previa interna en iframe.
+- Pedido consolidado separado de auditoría.
+- Checks de costes y APPCC respetados.
+- Subrecetas deduplicadas por identidad documental.
+- Bases técnicas plegadas fuera de auditoría.
+- Alérgenos directos y derivados siempre visibles.
+- Fichas como propuesta documental pendiente hasta prueba real de obrador.
 
-## Caso bloqueante
+## Límites
 
-Torta de nata nunca debe imprimir nata ni azúcar a 0 g.
-
-
-## ObradORR 1.0.0-rc.6 · Autoría visible
-
-© 2026 Remo José Pereira González · Uso docente personal autorizado · Sin licencia abierta de redistribución o explotación comercial.
-
-Las fichas impresas incorporan este aviso en el pie documental.
+La impresión no valida fórmulas ni rendimientos. La versión `validada` queda reservada a prueba real documentada por el profesorado o el centro.

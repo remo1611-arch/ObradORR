@@ -1,0 +1,59 @@
+[OK] node --check app/js/obradorr-app-classic.js
+[OK] node --check app/js/obradorr-app.js
+[OK] node --check app/js/obradorr-db-classic.js
+[OK] node --check app/js/obradorr-db.js
+[OK] cache tag RC18 presente en HTML y JS
+[OK] perfil documental y clasificación de subrecetas presentes
+[OK] RC18 opciones manuales de costes/APPCC presentes
+[OK] sin window.open directo en app clásica
+[OK] SQLite integrity_check ok
+[OK] SQLite foreign_key_check sin errores
+[OK] app_meta app_version=1.0.0-rc.18
+[OK] app_meta schema_version=1.0.0-rc.18
+[OK] app_meta release_tag=rc18
+[OK] app_meta cache_tag=obradorr-100-rc18
+[OK] app_meta validation_policy presente
+[OK] app_meta b1_documentary_reviews presente
+[OK] app_meta b2_documentary_reviews presente
+[OK] app_meta b3_documentary_reviews presente
+[OK] app_meta b4_documentary_reviews presente
+[INFO] culinary_recipes release_status: [('no_apta', 3), ('pendiente', 203)]
+[OK] culinary_recipes sin release_status validada
+[INFO] bakery_recipes release_status: [('no_apta', 3), ('pendiente', 96)]
+[OK] bakery_recipes sin release_status validada
+[OK] no_apta preservada: Pad thai de langostinos
+[OK] no_apta preservada: Quiche lorraine
+[OK] no_apta preservada: Mezcla de harinas sin gluten base
+[OK] tabla documental presente: documentary_sources
+[OK] tabla documental presente: recipe_documentary_reviews
+[INFO] documentary_sources=19 reviews=183 b1=13 b2=39 b3=30 b4=97 active_bakery=97
+[OK] fuentes documentales ampliadas presentes
+[OK] B1 contiene 13 revisiones documentales
+[OK] B2 contiene 39 revisiones documentales
+[OK] B3 contiene 30 revisiones documentales
+[OK] B4 contiene 97 revisiones documentales
+[OK] B4 cubre todas las fichas activas de bakery_recipes
+[OK] review presente: REV_B4_CROISSANT_DIRECTO_RC16
+[OK] review presente: REV_B4_BAGUETTE_CON_POOLISH_RC16
+[OK] review presente: REV_B4_PAN_SIN_GLUTEN_BASICO_RC16
+[OK] review presente: REV_B4_DOSA_FERMENTADA_RC16
+[OK] review presente: REV_B4_MEZCLA_DE_HARINAS_SIN_GLUTEN_BASE_RC16
+[OK] documento presente: RELEASE_NOTES_RC18.md
+[OK] documento presente: docs/RC18_PRINT_OPTIONS_OVERRIDE_LOG.md
+[OK] documento presente: docs/B4_REVISION_DOCUMENTAL_PANADERIA_BOLLERIA.md
+[OK] documento presente: docs/FUENTES_Y_CRITERIOS_GASTRONOMICOS.md
+[OK] RC18 token presente: documentProfile: 'aula_taller'
+[OK] RC18 token presente: profileRadio('aula_taller'
+[OK] RC18 token presente: profileRadio('docente_produccion'
+[OK] RC18 token presente: profileRadio('auditoria_completa'
+[OK] RC18 token presente: renderedSubrecipes
+[OK] RC18 token presente: subrecipeReferenceHtml
+[OK] RC18 token presente: appccBriefRowsHtml
+[OK] RC18 token presente: technical-base-collapsed
+[OK] RC18 token presente: profileOptionDefaults
+[OK] RC18 token presente: minimalSafetyNoticeHtml
+[OK] RC18 token presente: Mostrar costes
+[OK] RC18 token presente: Mostrar APPCC docente
+[OK] manifest SHA correcto
+
+VALIDACIÓN OK · ObradORR 1.0.0-rc.18

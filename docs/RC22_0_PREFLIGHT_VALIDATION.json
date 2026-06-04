@@ -1,0 +1,45 @@
+{
+  "integrity_check": "ok",
+  "foreign_key_check_count": 0,
+  "culinary_recipes_schema": "CREATE TABLE \"culinary_recipes\" (\n        id TEXT PRIMARY KEY,\n        name TEXT NOT NULL UNIQUE,\n        family_id TEXT,\n        subfamily_id TEXT,\n\n        base_servings REAL NOT NULL DEFAULT 1 CHECK (base_servings > 0),\n        serving_weight_g REAL,\n        yield_quantity REAL,\n        yield_unit_id TEXT,\n        production_kind TEXT NOT NULL DEFAULT 'final_servings'\n            CHECK (production_kind IN ('final_servings', 'technical_yield', 'dual')),\n        default_production_mode TEXT NOT NULL DEFAULT 'servings'\n            CHECK (default_production_mode IN ('servings', 'yield')),\n        production_contract_notes TEXT,\n        status TEXT NOT NULL DEFAULT 'draft'\n            CHECK (status IN ('draft', 'reviewed', 'validated', 'archived')),\n\n        labor_minutes REAL NOT NULL DEFAULT 0 CHECK (labor_minutes >= 0),\n        labor_cost_per_hour REAL NOT NULL DEFAULT 0 CHECK (labor_cost_per_hour >= 0),\n        overhead_pct REAL NOT NULL DEFAULT 0 CHECK (overhead_pct >= 0),\n        target_margin_pct REAL NOT NULL DEFAULT 0 CHECK (target_margin_pct >= 0 AND target_margin_pct < 100),\n        sale_price_total REAL,\n        sale_price_per_serving REAL,\n\n        process TEXT,\n        service_notes TEXT,\n        appcc_notes TEXT,\n        notes TEXT,\n\n        active INTEGER NOT NULL DEFAULT 1 CHECK (active IN (0, 1)),\n        created_at TEXT DEFAULT CURRENT_TIMESTAMP,\n        updated_at TEXT DEFAULT CURRENT_TIMESTAMP,\n        release_status TEXT NOT NULL DEFAULT 'pendiente'\n            CHECK (release_status IN ('pendiente', 'no_apta', 'validada')),\n\n        FOREIGN KEY (family_id) REFERENCES technical_families(id),\n        FOREIGN KEY (subfamily_id) REFERENCES technical_subfamilies(id),\n        FOREIGN KEY (yield_unit_id) REFERENCES units(id)\n    )",
+  "culinary_recipes_active_release_counts": [
+    [
+      "no_apta",
+      2
+    ],
+    [
+      "pendiente",
+      202
+    ]
+  ],
+  "culinary_recipes_active_validada": 0,
+  "culinary_recipes_status_counts_active": [
+    [
+      "draft",
+      204
+    ]
+  ],
+  "bakery_recipes_schema": "CREATE TABLE \"bakery_recipes\" (\n        id TEXT PRIMARY KEY,\n        name TEXT NOT NULL UNIQUE,\n        family_id TEXT,\n        subfamily_id TEXT,\n\n        base_flour_g REAL NOT NULL DEFAULT 1000 CHECK (base_flour_g > 0),\n        base_raw_weight_g REAL,\n        base_pieces REAL,\n        base_raw_piece_weight_g REAL,\n        baked_piece_weight_g REAL,\n        baking_loss_pct REAL NOT NULL DEFAULT 0 CHECK (baking_loss_pct >= 0 AND baking_loss_pct < 100),\n\n        preferment_type TEXT,\n        target_dough_temp_c REAL,\n        fermentation_notes TEXT,\n\n        status TEXT NOT NULL DEFAULT 'draft'\n            CHECK (status IN ('draft', 'reviewed', 'validated', 'archived')),\n\n        labor_minutes REAL NOT NULL DEFAULT 0 CHECK (labor_minutes >= 0),\n        labor_cost_per_hour REAL NOT NULL DEFAULT 0 CHECK (labor_cost_per_hour >= 0),\n        overhead_pct REAL NOT NULL DEFAULT 0 CHECK (overhead_pct >= 0),\n        target_margin_pct REAL NOT NULL DEFAULT 0 CHECK (target_margin_pct >= 0 AND target_margin_pct < 100),\n        sale_price_total REAL,\n        sale_price_per_kg REAL,\n        sale_price_per_piece REAL,\n\n        notes TEXT,\n        active INTEGER NOT NULL DEFAULT 1 CHECK (active IN (0, 1)),\n        created_at TEXT DEFAULT CURRENT_TIMESTAMP,\n        updated_at TEXT DEFAULT CURRENT_TIMESTAMP,\n        release_status TEXT NOT NULL DEFAULT 'pendiente'\n            CHECK (release_status IN ('pendiente', 'no_apta', 'validada')),\n        yield_status TEXT NOT NULL DEFAULT 'pending'\n            CHECK (yield_status IN ('pending', 'tested', 'validated')),\n\n        FOREIGN KEY (family_id) REFERENCES technical_families(id),\n        FOREIGN KEY (subfamily_id) REFERENCES technical_subfamilies(id)\n    )",
+  "bakery_recipes_active_release_counts": [
+    [
+      "no_apta",
+      1
+    ],
+    [
+      "pendiente",
+      96
+    ]
+  ],
+  "bakery_recipes_active_validada": 0,
+  "bakery_recipes_status_counts_active": [
+    [
+      "draft",
+      97
+    ]
+  ],
+  "smoke_culinary_default_release_status": "pendiente",
+  "smoke_bakery_default_release_status_yield": [
+    "pendiente",
+    "pending"
+  ]
+}

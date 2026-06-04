@@ -1,0 +1,44 @@
+[OK] node --check app/js/obradorr-app-classic.js
+[OK] node --check app/js/obradorr-app.js
+[OK] node --check app/js/obradorr-db-classic.js
+[OK] node --check app/js/obradorr-db.js
+[OK] cache tag RC15 presente en HTML y JS
+[OK] aviso RC15/B3 documental presente
+[OK] sin window.open directo en app clásica
+[OK] SQLite integrity_check ok
+[OK] SQLite foreign_key_check sin errores
+[OK] app_meta app_version=1.0.0-rc.15
+[OK] app_meta schema_version=1.0.0-rc.15
+[OK] app_meta release_tag=rc15
+[OK] app_meta cache_tag=obradorr-100-rc15
+[OK] app_meta validation_policy presente
+[OK] app_meta b1_documentary_reviews preservado
+[OK] app_meta b2_documentary_reviews preservado
+[OK] app_meta b3_documentary_reviews presente
+[INFO] culinary_recipes release_status: [('no_apta', 3), ('pendiente', 203)]
+[OK] culinary_recipes sin release_status validada
+[INFO] bakery_recipes release_status: [('no_apta', 3), ('pendiente', 96)]
+[OK] bakery_recipes sin release_status validada
+[OK] no_apta preservada: Pad thai de langostinos
+[OK] no_apta preservada: Quiche lorraine
+[OK] no_apta preservada: Mezcla de harinas sin gluten base
+[OK] tabla documental presente: documentary_sources
+[OK] tabla documental presente: recipe_documentary_reviews
+[INFO] documentary_sources=15 reviews=86 b1=13 b2=39 b3=30
+[OK] fuentes documentales ampliadas presentes
+[OK] B1 contiene 13 revisiones documentales
+[OK] B2 contiene 39 revisiones documentales
+[OK] B3 contiene 30 revisiones documentales
+[OK] review presente: REV_B3_PAST_CREMA_PASTELERA_RC15
+[OK] review presente: REV_B3_PAST_PANNA_COTTA_RC15
+[OK] review presente: REV_B3_PAST_CHOUX_RC15
+[OK] review presente: REV_B3_PAST_TIRAMISU_RC15
+[OK] review presente: REV_B3_PAST_CHEESECAKE_FRIO_RC15
+[OK] documento presente: RELEASE_NOTES_RC15.md
+[OK] documento presente: docs/B3_REVISION_DOCUMENTAL_PASTELERIA_SENSIBLE.md
+[OK] documento presente: docs/FUENTES_Y_CRITERIOS_GASTRONOMICOS.md
+[OK] manifest SHA correcto
+
+VALIDACIÓN OK · ObradORR 1.0.0-rc.15
+
+STDERR:

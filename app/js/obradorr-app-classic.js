@@ -4,19 +4,19 @@ const ObradORRDatabase = window.ObradORRDatabase;
 if (!ObradORRDatabase)
     throw new Error("No se cargó la capa SQLite de ObradORR.");
 window.__OBRADORR_MODULE_STARTED = true;
-window.__OBRADORR_MODULE_VERSION = 'obradorr-100-rc9';
+window.__OBRADORR_MODULE_VERSION = 'obradorr-100-rc28-stable-candidate';
 const DB_URL = '../db/obradorr.sqlite';
 const WORK_SELECTION_ID = 'WORK_CURRENT';
 const STORAGE_PRINT_OPTIONS = 'obradorr_ui_print_options_v1';
-const IDB_DATA_DB = 'obradorr-data-100-rc9';
+const IDB_DATA_DB = 'obradorr-data-100-rc28-stable-candidate';
 const IDB_DATA_STORE = 'snapshots';
 const IDB_CURRENT_KEY = 'current-db';
-const VERSION = '1.0.0-rc.9';
+const VERSION = '1.0.0-rc.28-stable-candidate';
 const INGREDIENT_SEARCH_LIMIT = 220;
 const PRINT_SEARCH_LIMIT = 60;
 const LEGAL_NOTICE = '© 2026 Remo José Pereira González · Uso docente personal autorizado · Sin licencia abierta de redistribución o explotación comercial.';
-const EXPECTED_RELEASE_TAG = 'rc9';
-const EXPECTED_CACHE_TAG = 'obradorr-100-rc9';
+const EXPECTED_RELEASE_TAG = 'rc28-stable-candidate';
+const EXPECTED_CACHE_TAG = 'obradorr-100-rc28-stable-candidate';
 const db = new ObradORRDatabase();
 const state = {
     ready: false,
@@ -50,6 +50,7 @@ const state = {
     printSearch: '',
     printOptions: loadJson(STORAGE_PRINT_OPTIONS, {
         documentType: 'fichas_pedido',
+        documentProfile: 'aula_taller',
         includeTeachingData: false,
         includeCosts: false,
         subrecipeMode: 'sheets',
@@ -209,7 +210,7 @@ function releaseStatusLabel(status) {
     return map[status] || status || 'Sin estado';
 }
 function recipeCard(recipe) {
-    const releaseStatus = recipe.release_status || (recipe.status === 'validated' ? 'validada' : recipe.status || 'borrador');
+    const releaseStatus = recipe.release_status || 'pendiente';
     const blocked = releaseStatus === 'no_apta' || releaseStatus === 'bloqueante';
     return `<article class="recipe-card ${blocked ? 'recipe-card-blocked' : ''}">
     <header><div><b>${escapeHtml(recipe.name)}</b><br><small class="muted">${escapeHtml(recipe.category_label || recipe.source_type)} · ${escapeHtml(recipe.family || 'Sin familia')}</small></div><div class="pill-stack"><span class="pill">${recipe.source_type === 'bakery' ? 'Panadería' : 'Cocina'}</span><span class="pill ${blocked ? 'danger-pill' : ''}">${escapeHtml(releaseStatusLabel(releaseStatus))}</span></div></header>
@@ -335,11 +336,18 @@ function printWorkspaceView() {
         <div class="radio-row">
           ${docRadio('fichas_pedido', 'Fichas + pedido', 'Documento completo de aula.')}
           ${docRadio('fichas', 'Fichas', 'Solo fichas técnicas.')}
-          ${docRadio('pedido', 'Pedido', 'Solo ingredientes consolidados.')}
+          ${docRadio('pedido', 'Pedido consolidado', 'Solo ingredientes consolidados para compra/economato.')}
+        </div>
+        <h3 style="margin-top:16px">Perfil de salida</h3>
+        <div class="radio-row profile-row">
+          ${profileRadio('aula_taller', 'Aula-taller alumnado', 'Salida compacta para aula: ingredientes, proceso, alérgenos y avisos críticos sin auditoría interna.')}
+          ${profileRadio('docente_produccion', 'Docente producción', 'Ficha docente con proceso, pedido, costes y APPCC según checks.')}
+          ${profileRadio('auditoria_completa', 'Auditoría documental', 'Documento interno completo con trazabilidad, fuentes, avisos RC y revisión técnica.')}
         </div>
         <div class="options" style="margin-top:14px">
           <div class="option-row"><label><input type="checkbox" id="includeTeachingData" ${opts.includeTeachingData ? 'checked' : ''}/> Incluir datos docentes</label>${opts.includeTeachingData ? teachingFieldsHtml() : ''}</div>
           ${opts.documentType !== 'pedido' ? sheetOptionsHtml() : ''}
+          ${printOutputSummaryHtml(opts)}
         </div>
         <div class="actions" style="margin-top:18px">
           <button class="btn primary" data-generate-document>Generar documento</button>
@@ -361,6 +369,9 @@ function selectionEditorHtml() {
 }
 function docRadio(value, title, help) {
     return `<label class="radio-card"><input type="radio" name="documentType" value="${value}" ${state.printOptions.documentType === value ? 'checked' : ''}/><b>${title}</b><br><small class="muted">${help}</small></label>`;
+}
+function profileRadio(value, title, help) {
+    return `<label class="radio-card"><input type="radio" name="documentProfile" value="${value}" ${printProfile(state.printOptions) === value ? 'checked' : ''}/><b>${title}</b><br><small class="muted">${help}</small></label>`;
 }
 function teachingFieldsHtml() {
     const t = state.printOptions.teaching || {};
@@ -412,17 +423,38 @@ function updateTeachingInput(el) {
     }
     savePrintOptions();
 }
+function printOutputSummaryHtml(opts) {
+    const e = effectivePrintOptions(opts);
+    const profile = printProfile(e);
+    const sub = subrecipeModeFromOptions(e);
+    const rows = [];
+    rows.push(['Documento', docTitle(e.documentType)]);
+    rows.push(['Perfil', profileLabel(profile)]);
+    rows.push(['Costes', e.includeCosts ? 'visibles' : 'ocultos']);
+    rows.push(['Seguridad alimentaria', e.includeAppcc ? (isCompactProfile(e) ? 'APPCC docente breve' : 'APPCC docente completo') : 'aviso mínimo, sin tabla APPCC']);
+    rows.push(['Subelaboraciones', e.documentType === 'pedido' ? 'expandidas para pedido consolidado' : subrecipeModeLabel(sub)]);
+    rows.push(['Proceso', e.documentType === 'pedido' ? 'no aplica' : (e.includeProcess ? 'incluido' : 'oculto')]);
+    const notes = [];
+    if (e.documentType === 'pedido') notes.push('El pedido es un documento operativo: agrupa ingredientes consolidados y mantiene alérgenos globales.');
+    if (!e.includeAppcc) notes.push('Aunque el APPCC detallado esté oculto, se mantienen alérgenos y avisos críticos.');
+    if (!e.includeCosts) notes.push('Los costes se ocultan en fichas y pedido, pero el cálculo interno no se modifica.');
+    if (profile === 'auditoria_completa') notes.push('La auditoría documental no está pensada para entregar al alumnado.');
+    return `<div class="print-summary"><h4>Resumen antes de imprimir</h4><dl>${rows.map(([k,v]) => `<dt>${escapeHtml(k)}</dt><dd>${escapeHtml(v)}</dd>`).join('')}</dl>${notes.length ? `<ul>${notes.map(n => `<li>${escapeHtml(n)}</li>`).join('')}</ul>` : ''}</div>`;
+}
+function subrecipeModeLabel(mode) {
+    return mode === 'none' ? 'no desarrolladas' : mode === 'ingredients' ? 'ingredientes recursivos desglosados' : 'subfichas sensibles desarrolladas y bases técnicas plegadas';
+}
 function sheetOptionsHtml() {
     const o = state.printOptions;
     const mode = subrecipeMode();
-    return `<div class="option-row"><label><input type="checkbox" id="includeCosts" ${o.includeCosts ? 'checked' : ''}/> Incluir costes</label></div>
+    return `<div class="option-row"><label><input type="checkbox" id="includeCosts" ${o.includeCosts ? 'checked' : ''}/> Mostrar costes</label><small class="muted">El perfil marca el valor inicial; este check lo sobrescribe para esta exportación.</small></div>
     <div class="option-row"><b>Subelaboraciones culinarias</b><div class="radio-row" style="margin-top:10px">
       ${subrecipeRadio('none', 'No desarrollar', 'Muestra solo las líneas directas de la ficha.')}
       ${subrecipeRadio('ingredients', 'Desglosar ingredientes', 'Expande ingredientes recursivos para ficha, coste y pedido.')}
       ${subrecipeRadio('sheets', 'Incluir subfichas', 'Imprime fichas hijas con rendimiento, proceso y APPCC.')}
     </div></div>
     <div class="option-row"><label><input type="checkbox" id="includeProcess" ${o.includeProcess ? 'checked' : ''}/> Incluir proceso</label></div>
-    <div class="option-row"><label><input type="checkbox" id="includeAppcc" ${o.includeAppcc ? 'checked' : ''}/> Incluir APPCC</label></div>`;
+    <div class="option-row"><label><input type="checkbox" id="includeAppcc" ${o.includeAppcc ? 'checked' : ''}/> Mostrar APPCC docente</label><small class="muted">Si se desmarca, se conserva solo una nota mínima de seguridad documental.</small></div>`;
 }
 function subrecipeMode() {
     return state.printOptions.subrecipeMode || (state.printOptions.expandSubrecipes ? 'ingredients' : 'none');
@@ -478,6 +510,7 @@ function bindCurrentView() {
     document.querySelectorAll('[data-remove-selection]').forEach(b => b.addEventListener('click', () => removeSelection(b.dataset.removeSelection)));
     document.querySelectorAll('[data-update-qty]').forEach(input => input.addEventListener('input', () => updateQty(input.dataset.updateQty, input.value)));
     document.querySelectorAll('input[name="documentType"]').forEach(r => r.addEventListener('change', () => { state.printOptions.documentType = r.value; savePrintOptions(); render(); }));
+    document.querySelectorAll('input[name="documentProfile"]').forEach(r => r.addEventListener('change', () => { state.printOptions.documentProfile = r.value; applyProfileDefaultsToState(r.value); savePrintOptions(); render(); }));
     document.querySelectorAll('input[name="subrecipeMode"]').forEach(r => r.addEventListener('change', () => { state.printOptions.subrecipeMode = r.value; state.printOptions.expandSubrecipes = r.value !== 'none'; savePrintOptions(); render(); }));
     bindCheck('includeTeachingData');
     bindCheck('includeCosts');
@@ -697,14 +730,14 @@ async function createEmptyRecipe(kind) {
     const id = uniqueId(kind === 'bakery' ? 'BAK' : 'REC', name);
     withTransaction(() => {
         if (kind === 'bakery') {
-            db.exec(`INSERT INTO bakery_recipes (id,name,family_id,base_flour_g,base_pieces,baking_loss_pct,status,fermentation_notes,notes,active)
-        VALUES ($id,$name,$family,1000,10,0,'draft','','',1)`, { $id: id, $name: name.trim(), $family: defaultFamilyId('bakery') });
+            db.exec(`INSERT INTO bakery_recipes (id,name,family_id,base_flour_g,base_pieces,baking_loss_pct,status,release_status,yield_status,fermentation_notes,notes,active)
+        VALUES ($id,$name,$family,1000,10,0,'draft','pendiente','pending','','',1)`, { $id: id, $name: name.trim(), $family: defaultFamilyId('bakery') });
             db.exec(`INSERT OR IGNORE INTO bakery_preferments (recipe_id,preferment_type,calculation_mode,hydration_pct,yeast_pct,notes,active)
         VALUES ($id,'Ninguno','none',100,0,'',0)`, { $id: id });
         }
         else {
-            db.exec(`INSERT INTO culinary_recipes (id,name,family_id,base_servings,production_kind,default_production_mode,status,process,service_notes,appcc_notes,notes,active)
-        VALUES ($id,$name,$family,10,'final_servings','servings','draft','','','','',1)`, { $id: id, $name: name.trim(), $family: defaultFamilyId('culinary') });
+            db.exec(`INSERT INTO culinary_recipes (id,name,family_id,base_servings,production_kind,default_production_mode,status,release_status,process,service_notes,appcc_notes,notes,active)
+        VALUES ($id,$name,$family,10,'final_servings','servings','draft','pendiente','','','','',1)`, { $id: id, $name: name.trim(), $family: defaultFamilyId('culinary') });
         }
     });
     await loadCatalogs();
@@ -787,7 +820,7 @@ function showRecipeEditor(uid) {
 function culinaryRecipeForm(detail, familyOptions, subfamilyOptions) {
     return `<div class="grid two">
     <label>Nombre<input class="input" id="recipeName" value="${escapeAttr(detail.name || '')}" /></label>
-    <label>Estado<select id="recipeStatus"><option value="draft" ${detail.status === 'draft' ? 'selected' : ''}>Borrador</option><option value="validated" ${detail.status === 'validated' ? 'selected' : ''}>Validada</option></select></label>
+    <label>Estado interno<select id="recipeStatus"><option value="draft" ${(detail.status || 'draft') === 'draft' ? 'selected' : ''}>Borrador / propuesta</option><option value="reviewed" ${detail.status === 'reviewed' ? 'selected' : ''}>Revisada documentalmente</option></select><small class="muted">La validación real queda reservada a prueba de obrador.</small></label>
     <label>Familia<select id="recipeFamily">${familyOptions}</select></label>
     <label>Subfamilia<select id="recipeSubfamily">${subfamilyOptions}</select></label>
     <label>Raciones base<input class="input" id="recipeServings" type="number" step="0.01" value="${escapeAttr(detail.base_servings || 10)}" /></label>
@@ -803,7 +836,7 @@ function culinaryRecipeForm(detail, familyOptions, subfamilyOptions) {
 function bakeryRecipeForm(detail, familyOptions, subfamilyOptions) {
     return `<div class="grid two">
     <label>Nombre<input class="input" id="recipeName" value="${escapeAttr(detail.name || '')}" /></label>
-    <label>Estado<select id="recipeStatus"><option value="draft" ${detail.status === 'draft' ? 'selected' : ''}>Borrador</option><option value="validated" ${detail.status === 'validated' ? 'selected' : ''}>Validada</option></select></label>
+    <label>Estado interno<select id="recipeStatus"><option value="draft" ${(detail.status || 'draft') === 'draft' ? 'selected' : ''}>Borrador / propuesta</option><option value="reviewed" ${detail.status === 'reviewed' ? 'selected' : ''}>Revisada documentalmente</option></select><small class="muted">La validación real queda reservada a prueba de obrador.</small></label>
     <label>Familia<select id="recipeFamily">${familyOptions}</select></label>
     <label>Subfamilia<select id="recipeSubfamily">${subfamilyOptions}</select></label>
     <label>Harina base g<input class="input" id="recipeBaseFlour" type="number" step="0.01" value="${escapeAttr(detail.base_flour_g || 1000)}" /></label>
@@ -1280,35 +1313,54 @@ function showIngredientEditor(id) {
         render();
     });
 }
+// ────────────────────────────────────────────────────────────────────────────
+// Motor de impresión RC21/RC25-DATA4: sin cambios de motor; RC25-DATA4 blinda política documental
+// Separación conservadora: datos de documento → render HTML → presentación/registro.
+// No cambia el modelo SQLite ni valida fórmulas gastronómicas.
+// ────────────────────────────────────────────────────────────────────────────
 async function generateDocument(items, opts) {
     if (!items.length) {
         alert('Añade al menos una elaboración.');
         return;
     }
-    const body = [];
-    body.push(printHeader(opts));
+    const model = buildPrintDocumentModel(items, opts);
+    const html = await renderPrintDocumentModel(model);
+    recordPrintJob(model.items, model.options, html);
+    presentPrintDocument(html, model.title);
+}
+function buildPrintDocumentModel(items, opts = {}) {
+    const options = effectivePrintOptions(opts);
+    return {
+        items: items.slice(),
+        options,
+        context: createPrintContext(items, options),
+        title: `${docTitle(options.documentType)} · ${profileLabel(printProfile(options))}`,
+        generatedAt: new Date().toISOString()
+    };
+}
+async function renderPrintDocumentModel(model) {
+    const opts = model.options;
+    const body = [printHeader(opts)];
     if (opts.documentType !== 'pedido') {
-        for (const item of items)
-            body.push(await recipeSheetHtml(item, opts, true));
+        for (const item of model.items)
+            body.push(await recipeSheetHtml(item, opts, true, model.context));
     }
     if (opts.documentType !== 'fichas')
-        body.push(await orderHtml(items, opts));
-    const html = printDocumentShell(body.join('\n'));
-    recordPrintJob(items, opts, html);
-    presentPrintDocument(html, docTitle(opts.documentType));
+        body.push(await orderHtml(model.items, opts));
+    return printDocumentShell(body.join('\n'));
 }
 function recordPrintJob(items, opts, html) {
     try {
         const id = uniqueId('PJ', opts.documentType || 'documento');
         const title = docTitle(opts.documentType);
-        const payload = JSON.stringify({ documentType: opts.documentType, subrecipeMode: subrecipeModeFromOptions(opts), includeCosts: !!opts.includeCosts, includeProcess: !!opts.includeProcess, includeAppcc: !!opts.includeAppcc, generatedAt: new Date().toISOString(), htmlBytes: html.length });
+        const payload = JSON.stringify({ documentType: opts.documentType, documentProfile: printProfile(opts), subrecipeMode: subrecipeModeFromOptions(opts), includeCosts: !!opts.includeCosts, includeProcess: !!opts.includeProcess, includeAppcc: !!opts.includeAppcc, generatedAt: new Date().toISOString(), htmlBytes: html.length });
         withTransaction(() => {
             db.exec(`INSERT INTO print_jobs (id,source_type,source_id,profile,title,payload_json,total_cost,item_count,notes)
         VALUES ($id,$sourceType,$sourceId,$profile,$title,$payload,$totalCost,$itemCount,$notes)`, {
                 $id: id,
                 $sourceType: opts.documentType === 'pedido' ? 'order' : 'selection',
                 $sourceId: WORK_SELECTION_ID,
-                $profile: opts.includeTeachingData ? 'docente' : 'aula',
+                $profile: printProfile(opts),
                 $title: title,
                 $payload: payload,
                 $totalCost: sum(items.map(i => Number(i.totalCost || 0))),
@@ -1347,7 +1399,7 @@ function presentPrintDocument(html, title = 'Documento') {
         w.print();
     });
 }
-function sheetStatusWarningHtml(detail, kind) {
+function sheetStatusWarningHtml(detail, kind, opts = {}) {
     if (!detail)
         return '';
     const warnings = [];
@@ -1356,8 +1408,16 @@ function sheetStatusWarningHtml(detail, kind) {
     const releaseStatus = detail.release_status || '';
     if (releaseStatus === 'no_apta')
         warnings.push('<b>Ficha no apta:</b> no usar como ficha final de aula-taller sin corrección previa.');
-    else if (releaseStatus === 'pendiente')
-        warnings.push('<b>Ficha pendiente:</b> requiere validación técnica, documental o de obrador antes de considerarse cerrada.');
+    else if (releaseStatus === 'pendiente') {
+        warnings.push('<b>Ficha pendiente:</b> propuesta docente contrastable, no validada en obrador; requiere prueba docente real antes de considerarse cerrada.');
+        if (isAuditProfile(opts)) {
+            warnings.push('<b>Vía B · Fuentes:</b> ficha elaborada como propuesta documental; debe contrastarse contra bibliografía/normativa registrada y documentar fuente, criterio técnico y nivel de confianza antes de cualquier validación de aula.');
+            warnings.push('<b>B1 · Revisión documental:</b> las fichas recursivas y sensibles pueden tener revisión por fuente registrada en SQLite, pero siguen pendientes de prueba real de obrador.');
+            warnings.push('<b>B2 · Cocina caliente:</b> platos con arroces, pastas, carnes, pescados, frituras o subrecetas deben mantenerse como propuestas documentales hasta prueba de obrador.');
+            warnings.push('<b>B3 · Pastelería sensible:</b> cremas, semifríos, choux, tartas, rellenos, nata, gelatina, huevo y lácteos permanecen como propuestas documentales hasta prueba de obrador y control APPCC.');
+            warnings.push('<b>B4 · Panadería/pastelería:</b> panes, prefermentos, masa madre, centenos, sin gluten, laminados y bollería permanecen como propuestas documentales hasta prueba de obrador; no hay pesos cocidos ni mermas validadas.');
+        }
+    }
     else if (releaseStatus === 'bloqueante')
         warnings.push('<b>Ficha bloqueante:</b> no utilizar hasta resolver la incidencia.');
     if (kind === 'bakery' && detail.yield_status === 'pending')
@@ -1413,15 +1473,40 @@ function sheetStatusWarningHtml(detail, kind) {
         warnings.push('<b>Variante refrigerada:</b> nata, chantilly, crema, trufa o relleno postcocción cambian pedido, APPCC, alérgenos, conservación y servicio.');
     if (notes.includes('masa laminada fermentada'))
         warnings.push('<b>Masa laminada fermentada:</b> no confundir con hojaldre clásico no fermentado; laminado, fermentación y cocción siguen pendientes.');
+    if (notes.includes('relación arroz/líquido pendiente') || notes.includes('relacion arroz/liquido pendiente'))
+        warnings.push('<b>Relación arroz/líquido pendiente:</b> absorción, punto, reposo, rendimiento y gramaje por ración requieren prueba de obrador.');
+    if (notes.includes('emulsión técnica') || notes.includes('emulsion tecnica'))
+        warnings.push('<b>Emulsión técnica:</b> estabilidad, temperatura de trabajo, punto final y servicio inmediato requieren control en obrador.');
+    if (notes.includes('bechamel sensible'))
+        warnings.push('<b>Bechamel sensible/refrigerada:</b> salsa láctea con harina/mantequilla; si se enfría o actúa como relleno, requiere enfriado rápido, protección y frío.');
+    if (notes.includes('mayonesa sensible'))
+        warnings.push('<b>Mayonesa sensible/refrigerada:</b> emulsión fría con huevo; usar ovoproducto pasteurizado cuando proceda y conservar en frío hasta el servicio.');
+    if (notes.includes('mantenimiento caliente') || notes.includes('enfriado rápido') || notes.includes('regeneración segura') || notes.includes('regeneracion segura'))
+        warnings.push('<b>Mantenimiento/enfriado/regeneración:</b> definir y controlar servicio caliente, enfriado rápido o regeneración según el procedimiento APPCC del centro.');
+    if (notes.includes('ave: controlar cocción interna') || notes.includes('cocción interna') || notes.includes('coccion interna'))
+        warnings.push('<b>Ave/relleno:</b> controlar cocción interna y separación crudo/cocido; no validar sin prueba de obrador.');
+    if (notes.includes('contraste bibliográfico pendiente') || notes.includes('contraste bibliografico pendiente') || notes.includes('vía b') || notes.includes('via b'))
+        warnings.push('<b>Contraste bibliográfico pendiente:</b> documentar fuente principal, fuente secundaria, ajuste técnico y límite de confianza antes de marcar la ficha como lista para prueba.');
+    if (notes.includes('pescado/moluscos/crustáceos') || notes.includes('pescado/moluscos/crustaceos'))
+        warnings.push('<b>Pescado y marisco cocinados:</b> verificar alérgenos, proveedor, punto de cocción y conservación; en bacalao, controlar desalado.');
     if (!warnings.length)
         return '';
     const uniqueWarnings = [...new Set(warnings)];
-    return `<div class="warning-block rc9-status-warning"><h3>Estado documental RC9</h3><ul>${uniqueWarnings.map(w => `<li>${w}</li>`).join('')}</ul></div>`;
+    const title = isAuditProfile(opts) ? 'Estado documental · auditoría' : 'Estado documental';
+    return `<div class="warning-block document-status-warning"><h3>${title}</h3><ul>${uniqueWarnings.map(w => `<li>${w}</li>`).join('')}</ul></div>`;
 }
 
-// RC9 marker: Coste directo ≠ coste recursivo
+// Coste directo ≠ coste recursivo: aviso documental, no cálculo validado de obrador.
 function printHeader(opts) {
     const fields = [];
+    const profile = printProfile(opts);
+    const generated = new Date().toISOString().slice(0, 10);
+    const headerProfileLabel = opts.documentType === 'pedido' ? 'Pedido consolidado' : profileLabel(profile);
+    addField(fields, 'Perfil', `${headerProfileLabel} · Generado: ${generated} · ObradORR`);
+    if (opts.documentType === 'pedido') {
+        addField(fields, 'Tipo de documento', 'Pedido consolidado');
+        addField(fields, 'Costes', opts.includeCosts ? 'visibles' : 'ocultos');
+    }
     if (opts.includeTeachingData) {
         const t = opts.teaching || {};
         addField(fields, 'Título', t.title);
@@ -1432,13 +1517,22 @@ function printHeader(opts) {
         addField(fields, 'Responsable', t.responsible);
         addField(fields, 'Observaciones', t.notes);
     }
-    return `<section class="doc-cover"><h1>ObradORR</h1><h2>${docTitle(opts.documentType)}</h2>${fields.length ? `<dl>${fields.map(([k, v]) => `<dt>${escapeHtml(k)}</dt><dd>${escapeHtml(v)}</dd>`).join('')}</dl>` : `<p>Documento generado desde la selección actual.</p>`}</section>`;
+    const help = documentHelpText(opts, profile);
+    return `<section class="doc-cover profile-${escapeAttr(profile)}"><h1>ObradORR</h1><h2>${docTitle(opts.documentType)}</h2><p>${escapeHtml(help)}</p>${fields.length ? `<dl>${fields.map(([k, v]) => `<dt>${escapeHtml(k)}</dt><dd>${escapeHtml(v)}</dd>`).join('')}</dl>` : ''}</section>`;
 }
-async function recipeSheetHtml(item, opts, pageBreak) {
+function documentHelpText(opts, profile) {
+    if (opts.documentType === 'pedido') return 'Pedido consolidado para compra, economato o reparto de mise en place. Agrupa ingredientes expandidos, mantiene alérgenos globales y no sustituye la revisión docente.';
+    if (profile === 'auditoria_completa') return 'Auditoría documental completa con trazabilidad interna, fuentes, avisos RC y revisión técnica. No es el perfil ordinario para alumnado.';
+    if (profile === 'docente_produccion') return 'Documento de producción docente: preparación de práctica, subrecetas sensibles, costes y APPCC según configuración.';
+    return 'Documento de aula-taller: propuesta docente pendiente de prueba real de obrador. No sustituye el manual APPCC del centro.';
+}
+async function recipeSheetHtml(item, opts, pageBreak, printCtx = createPrintContext([item], opts)) {
+    const localCtx = { depth: 0, visited: new Set([`${item.sourceType}:${item.sourceId}`]), printCtx, mainKeys: printCtx.mainKeys, rootKey: `${item.sourceType}:${item.sourceId}` };
     return item.sourceType === 'bakery'
-        ? bakerySheetHtml(item, opts, pageBreak, { depth: 0, visited: new Set([`bakery:${item.sourceId}`]) })
-        : culinarySheetHtml(item, opts, pageBreak, { depth: 0, visited: new Set([`culinary:${item.sourceId}`]) });
+        ? bakerySheetHtml(item, opts, pageBreak, localCtx)
+        : culinarySheetHtml(item, opts, pageBreak, localCtx);
 }
+// Renderizado de fichas culinarias
 async function culinarySheetHtml(item, opts, pageBreak, ctx = {}) {
     const recipe = recipeSummary('culinary', item.sourceId) || state.recipes.find(r => r.uid === item.uid) || item;
     const scale = scaleForItem(item, recipe);
@@ -1452,14 +1546,14 @@ async function culinarySheetHtml(item, opts, pageBreak, ctx = {}) {
     const directNotice = mode === 'sheets' ? culinarySubrecipeSummaryHtml(item.sourceId, scale) : '';
     return `<section class="print-sheet ${pageBreak ? 'page-break' : ''}">
     <header class="sheet-head"><div><h2>${escapeHtml(item.name || recipe.name)}</h2><p>Cocina · ${formatQty(item.qty)} ${escapeHtml(item.unitLabel || '')}</p></div>${photo ? `<img class="sheet-photo" src="${photo}" alt="${escapeAttr(item.name || recipe.name)}" />` : ''}</header>
-    ${sheetStatusWarningHtml(detail, 'culinary')}
+    ${sheetStatusWarningHtml(detail, 'culinary', opts)}
     <h3>Ingredientes y cantidades</h3>
     ${linesTable(lines, opts.includeCosts)}
     ${opts.includeCosts ? `<p class="cost-line"><b>Coste estimado:</b> ${money(totalCost)}</p>` : ''}
     ${directNotice}
-    ${allergenBlockHtml(allergenData, 'Alérgenos derivados')}
+    ${allergenBlockHtml(allergenData, 'Alérgenos directos y derivados consolidados')}
     ${opts.includeProcess ? processBlock(detail, [], 'culinary') : ''}
-    ${opts.includeAppcc ? appccBlock(detail, 'culinary') : ''}
+    ${appccPrintHtml(detail, 'culinary', opts)}
     ${subrecipes}
   </section>`;
 }
@@ -1487,22 +1581,25 @@ async function culinarySubrecipeSectionsHtml(recipeId, parentScale, opts, ctx = 
             continue;
         }
         const detail = recipeDetail('culinary', row.id);
-        if (shouldFoldTechnicalSubrecipe(row, detail)) {
-            chunks.push(foldedTechnicalSubrecipeHtml(row, detail));
+        const globalRendered = ctx.printCtx && ctx.printCtx.renderedSubrecipes;
+        if (globalRendered && globalRendered.has(key) && !(ctx.mainKeys && ctx.mainKeys.has(key))) {
+            chunks.push(subrecipeReferenceHtml(row));
             continue;
         }
-        const childCtx = { depth: depth + 1, visited: new Set([...(ctx.visited || []), key]) };
+        if (shouldFoldSubrecipe(row, detail, opts, ctx)) {
+            if (globalRendered) globalRendered.add(key);
+            chunks.push(foldedTechnicalSubrecipeHtml(row, detail, opts));
+            continue;
+        }
+        if (globalRendered) globalRendered.add(key);
+        const childCtx = { depth: depth + 1, visited: new Set([...(ctx.visited || []), key]), printCtx: ctx.printCtx, mainKeys: ctx.mainKeys, rootKey: ctx.rootKey };
         chunks.push(await culinarySubrecipeSheetHtml(row, opts, childCtx));
     }
     return chunks.join('\n');
 }
-function shouldFoldTechnicalSubrecipe(row, detail) {
-    const text = `${(row && row.name) || ''} ${(detail && detail.notes) || ''} ${(detail && detail.service_notes) || ''}`.toLowerCase();
-    return (text.includes('base técnica') || text.includes('base tecnica')) && (text.includes('mirepoix') || text.includes('roux'));
-}
-function foldedTechnicalSubrecipeHtml(row, detail) {
+function foldedTechnicalSubrecipeHtml(row, detail, opts = {}) {
     const allergenData = culinaryAllergenData(row.id);
-    return `<section class="sub-sheet technical-base-collapsed"><h3>Base técnica plegada: ${escapeHtml(row.name)}</h3><p>Cantidad necesaria: ${escapeHtml(displayQuantity(row.requiredQty, row.requiredUnit).text)} · Rendimiento base: ${escapeHtml(displayQuantity(row.yieldQty, row.yieldUnit).text)} · factor ${formatQty(row.factor)}</p><p class="muted">No se desarrolla como producto final para no saturar la impresión. Sus ingredientes, pedido y alérgenos derivados permanecen consolidados en la ficha recursiva.</p>${sheetStatusWarningHtml(detail, 'culinary')}${allergenBlockHtml(allergenData, 'Alérgenos de base técnica')}</section>`;
+    return `<section class="sub-sheet technical-base-collapsed"><h3>Base técnica plegada: ${escapeHtml(row.name)}</h3><p>Cantidad necesaria: ${escapeHtml(displayQuantity(row.requiredQty, row.requiredUnit).text)} · Rendimiento base: ${escapeHtml(displayQuantity(row.yieldQty, row.yieldUnit).text)} · factor ${formatQty(row.factor)}</p><p class="muted">No se desarrolla como producto final para no saturar la impresión. Sus ingredientes, pedido y alérgenos derivados permanecen consolidados en la ficha recursiva.</p>${isAuditProfile(opts) ? sheetStatusWarningHtml(detail, 'culinary', opts) : ''}${allergenBlockHtml(allergenData, 'Alérgenos de base técnica')}</section>`;
 }
 async function culinarySubrecipeSheetHtml(row, opts, ctx) {
     const photo = await recipePhotoDataUrl('culinary', row.id);
@@ -1512,12 +1609,12 @@ async function culinarySubrecipeSheetHtml(row, opts, ctx) {
     const nested = await culinarySubrecipeSectionsHtml(row.id, row.factor, opts, ctx);
     const totalCost = sum(lines.map(l => l.cost || 0));
     return `<section class="sub-sheet"><header class="sub-sheet-head"><div><h3>Subelaboración: ${escapeHtml(row.name)}</h3><p>Cantidad necesaria: ${escapeHtml(displayQuantity(row.requiredQty, row.requiredUnit).text)} · Rendimiento base: ${escapeHtml(displayQuantity(row.yieldQty, row.yieldUnit).text)} · factor ${formatQty(row.factor)}</p></div>${photo ? `<img class="sub-sheet-photo" src="${photo}" alt="${escapeAttr(row.name)}" />` : ''}</header>
-    ${sheetStatusWarningHtml(detail, 'culinary')}
+    ${sheetStatusWarningHtml(detail, 'culinary', opts)}
     ${linesTable(lines, opts.includeCosts)}
     ${opts.includeCosts ? `<p class="cost-line"><b>Coste subelaboración:</b> ${money(totalCost)}</p>` : ''}
-    ${allergenBlockHtml(allergenData, 'Alérgenos de la subelaboración')}
+    ${allergenBlockHtml(allergenData, 'Alérgenos directos y derivados de la subelaboración')}
     ${opts.includeProcess ? processBlock(detail, [], 'culinary') : ''}
-    ${opts.includeAppcc ? appccBlock(detail, 'culinary') : ''}
+    ${appccPrintHtml(detail, 'culinary', opts)}
     ${nested}
   </section>`;
 }
@@ -1569,12 +1666,100 @@ function lineScaled(l, scale) {
     var _a, _b;
     return Object.assign(Object.assign({}, l), { quantity: Number(l.quantity || 0) * Number(scale || 1), cost: Number((_b = (_a = l.estimated_cost) !== null && _a !== void 0 ? _a : l.cost) !== null && _b !== void 0 ? _b : 0) * Number(scale || 1) });
 }
+// Perfiles documentales y opciones efectivas
 function subrecipeModeFromOptions(opts) {
     return (opts === null || opts === void 0 ? void 0 : opts.subrecipeMode) || ((opts === null || opts === void 0 ? void 0 : opts.expandSubrecipes) ? 'ingredients' : 'none');
+}
+function printProfile(opts = {}) {
+    return opts.documentProfile || 'aula_taller';
+}
+function applyProfileDefaultsToState(profile) {
+    const p = profile || 'aula_taller';
+    if (p === 'aula_taller') {
+        state.printOptions.includeCosts = false;
+        state.printOptions.subrecipeMode = 'sheets';
+        state.printOptions.expandSubrecipes = true;
+        state.printOptions.includeProcess = true;
+        state.printOptions.includeAppcc = true;
+    }
+    else if (p === 'docente_produccion') {
+        state.printOptions.includeCosts = true;
+        state.printOptions.subrecipeMode = 'sheets';
+        state.printOptions.expandSubrecipes = true;
+        state.printOptions.includeProcess = true;
+        state.printOptions.includeAppcc = true;
+    }
+    else if (p === 'auditoria_completa') {
+        state.printOptions.includeCosts = true;
+        state.printOptions.subrecipeMode = 'sheets';
+        state.printOptions.expandSubrecipes = true;
+        state.printOptions.includeProcess = true;
+        state.printOptions.includeAppcc = true;
+    }
+}
+function boolOption(opts, key, fallback) {
+    return typeof (opts === null || opts === void 0 ? void 0 : opts[key]) === 'boolean' ? !!opts[key] : fallback;
+}
+function profileOptionDefaults(profile, documentType) {
+    if (profile === 'auditoria_completa')
+        return { includeCosts: true, includeProcess: true, includeAppcc: true, subrecipeMode: 'sheets' };
+    if (profile === 'docente_produccion')
+        return { includeCosts: true, includeProcess: true, includeAppcc: true, subrecipeMode: documentType === 'pedido' ? 'ingredients' : 'sheets' };
+    return { includeCosts: false, includeProcess: true, includeAppcc: true, subrecipeMode: documentType === 'pedido' ? 'ingredients' : 'sheets' };
+}
+function effectivePrintOptions(opts = {}) {
+    const profile = printProfile(opts);
+    const documentType = opts.documentType || 'fichas_pedido';
+    const defaults = profileOptionDefaults(profile, documentType);
+    const out = Object.assign({}, opts, { documentType, documentProfile: profile });
+    out.includeCosts = boolOption(opts, 'includeCosts', defaults.includeCosts);
+    out.includeProcess = boolOption(opts, 'includeProcess', defaults.includeProcess);
+    out.includeAppcc = boolOption(opts, 'includeAppcc', defaults.includeAppcc);
+    out.subrecipeMode = opts.subrecipeMode || defaults.subrecipeMode;
+    if (documentType === 'pedido' && out.subrecipeMode === 'sheets')
+        out.subrecipeMode = 'ingredients';
+    out.expandSubrecipes = out.subrecipeMode !== 'none';
+    return out;
+}
+function profileLabel(profile) {
+    return ({ aula_taller: 'Aula-taller alumnado', docente_produccion: 'Docente producción', auditoria_completa: 'Auditoría documental' })[profile] || 'Aula-taller alumnado';
+}
+function isAuditProfile(opts) {
+    return printProfile(opts) === 'auditoria_completa';
+}
+function isCompactProfile(opts) {
+    return printProfile(opts) === 'aula_taller';
+}
+function createPrintContext(items, opts) {
+    return {
+        profile: printProfile(opts),
+        renderedSubrecipes: new Set(),
+        referencedSubrecipes: new Set(),
+        mainKeys: new Set((items || []).map(i => `${i.sourceType}:${i.sourceId}`))
+    };
+}
+const SENSITIVE_SUBRECIPE_IDS = new Set(['REC-BECHAMEL','REC-PAST-CREMA-PASTELERA','REC-CREMA-INGLESA','REC-MAYONESA-BASE','REC-HOLANDESA','REC-SALSA-BEARNESA','REC-FUMET-PESCADO','REC-VELOUTE-AVE','REC-VELOUTE-PESCADO','REC-DEMI-GLACE','REC-SALSA-ESPANOLA','REC-SALSA-AMERICANA','REC-FONDO-OSCURO-TERNERA','REC-FONDO-BLANCO-AVE','REC-BISQUE']);
+const BASE_TECNICA_IDS = new Set(['REC-MIREPOIX-BLANCA','REC-MIREPOIX-OSCURA','REC-ROUX-BLANCO','REC-ROUX-RUBIO','REC-ROUX-OSCURO','REC-BOUQUET-GARNI','REC-SOFITO-BASE','REC-SOFRITO-BASE','REC-DUXELLES','REC-PERSILLADE']);
+function subrecipeCategory(id, name = '') {
+    if (SENSITIVE_SUBRECIPE_IDS.has(id)) return 'SENSIBLE';
+    if (BASE_TECNICA_IDS.has(id)) return 'BASE_TECNICA';
+    const t = normalize(`${id || ''} ${name || ''}`);
+    if (['bechamel','crema pastelera','crema inglesa','mayonesa','holandesa','hollandesa','bearnesa','fumet','veloute','veloute','demi glace','salsa espanola','salsa americana','fondo oscuro','fondo blanco','bisque'].some(x => t.includes(x))) return 'SENSIBLE';
+    if (['mirepoix','brunoise aromatica','roux','bouquet garni','sachet','sofrito base','duxelles','persillade'].some(x => t.includes(x))) return 'BASE_TECNICA';
+    return 'DEFECTO';
+}
+function shouldFoldSubrecipe(row, detail, opts, ctx = {}) {
+    const key = `culinary:${row.id}`;
+    if ((ctx.mainKeys && ctx.mainKeys.has(key)) || ctx.rootKey === key) return false;
+    return printProfile(opts) !== 'auditoria_completa' && subrecipeCategory(row.id, row.name) === 'BASE_TECNICA';
+}
+function subrecipeReferenceHtml(row, reason = 'ya desarrollada') {
+    return `<section class="sub-sheet sub-sheet-reference"><h3>Subelaboración referenciada: ${escapeHtml(row.name)}</h3><p>${escapeHtml(displayQuantity(row.requiredQty, row.requiredUnit).text)} · ${escapeHtml(reason)} en este documento. Sus ingredientes, pedido y alérgenos derivados permanecen consolidados.</p></section>`;
 }
 function recipeSummary(sourceType, sourceId) {
     return state.recipes.find(r => r.uid === `${sourceType}:${sourceId}`) || null;
 }
+// Renderizado de fichas panaderas/pasteleras
 function bakerySheetHtml(item, opts, pageBreak, ctx = {}) {
     if (Number(ctx.depth || 0) >= 5)
         return `<div class="warning-block"><b>Aviso:</b> profundidad máxima de componentes panaderos alcanzada.</div>`;
@@ -1590,15 +1775,15 @@ function bakerySheetHtml(item, opts, pageBreak, ctx = {}) {
     const componentSections = bakeryComponentsSectionsHtml(components, opts, ctx);
     return `<section class="print-sheet ${pageBreak ? 'page-break' : ''}">
     <header class="sheet-head"><div><h2>${escapeHtml(item.name || recipe.name)}</h2><p>Panadería/Pastelería · ${formatQty(item.qty)} ${escapeHtml(item.unitLabel || '')}</p></div>${photo ? `<img class="sheet-photo" src="${photo}" alt="${escapeAttr(item.name || recipe.name)}" />` : ''}</header>
-    ${sheetStatusWarningHtml(detail, 'bakery')}
+    ${sheetStatusWarningHtml(detail, 'bakery', opts)}
     ${bakeryMetaHtml(detail, item, recipe, blocks)}
     ${blocks.map(bakeryBlockHtml(opts.includeCosts)).join('\n')}
     ${componentSections}
-    ${allergenBlockHtml(allergenBundle.main, 'Alérgenos derivados')}
+    ${allergenBlockHtml(allergenBundle.main, 'Alérgenos directos y derivados consolidados')}
     ${optionalComponentAllergensHtml(allergenBundle.optional)}
     ${opts.includeCosts ? `<p class="cost-line"><b>Coste estimado:</b> ${money(totalCost)}</p>` : ''}
     ${opts.includeProcess ? bakeryProcessBlocksHtml(item.sourceId) : ''}
-    ${opts.includeAppcc ? appccBlock(recipeDetail('bakery', item.sourceId), 'bakery') : ''}
+    ${appccPrintHtml(recipeDetail('bakery', item.sourceId), 'bakery', opts)}
   </section>`;
 }
 function bakeryDetail(recipeId) {
@@ -1862,16 +2047,24 @@ function componentSectionHtml(c, opts, ctx = {}) {
         return `<div class="warning-block"><b>Ciclo omitido:</b> ${escapeHtml(c.component_name)}</div>`;
     if ((_b = c.factor) === null || _b === void 0 ? void 0 : _b.warning)
         return `<div class="warning-block"><b>Componente no escalado:</b> ${escapeHtml(c.component_name)} · ${escapeHtml(c.factor.warning)}</div>`;
+    const globalRendered = ctx.printCtx && ctx.printCtx.renderedSubrecipes;
+    if (globalRendered && globalRendered.has(key) && !(ctx.mainKeys && ctx.mainKeys.has(key)))
+        return `<section class="sub-sheet sub-sheet-reference"><h3>Componente referenciado: ${escapeHtml(c.component_name)}</h3><p>Cantidad necesaria: ${escapeHtml(c.displayQty)} · ya desarrollado en este documento. Sus ingredientes, pedido y alérgenos permanecen consolidados.</p></section>`;
+    if (globalRendered) globalRendered.add(key);
     if (c.component_type === 'culinary') {
         const detail = recipeDetail('culinary', c.component_id);
         const lines = culinaryLines(c.component_id, c.factor.value, false);
         const allergenData = culinaryAllergenData(c.component_id);
-        return `<section class="sub-sheet"><h3>Componente: ${escapeHtml(c.component_name)}</h3><p>${escapeHtml(roleLabel(c.usage_role))} · ${escapeHtml(componentStatusLabel(c.component_status))} · cantidad necesaria: ${escapeHtml(c.displayQty)} · ${Number(c.include_in_order) ? 'incluido en pedido' : 'sin pedido base'} · ${Number(c.include_in_cost) ? 'incluido en coste' : 'sin coste base'}</p>${linesTable(lines, opts.includeCosts)}${allergenBlockHtml(allergenData, 'Alérgenos del componente')}${opts.includeProcess ? processBlock(detail, [], 'culinary') : ''}${opts.includeAppcc ? appccBlock(detail, 'culinary') : ''}</section>`;
+        const category = subrecipeCategory(c.component_id, c.component_name);
+        if (printProfile(opts) !== 'auditoria_completa' && category === 'BASE_TECNICA') {
+            return `<section class="sub-sheet technical-base-collapsed"><h3>Componente base técnica plegado: ${escapeHtml(c.component_name)}</h3><p>${escapeHtml(roleLabel(c.usage_role))} · cantidad necesaria: ${escapeHtml(c.displayQty)}.</p><p class="muted">No se desarrolla para no saturar la salida de aula-taller. Sus ingredientes, pedido y alérgenos permanecen consolidados.</p>${allergenBlockHtml(allergenData, 'Alérgenos del componente plegado')}</section>`;
+        }
+        return `<section class="sub-sheet"><h3>Componente: ${escapeHtml(c.component_name)}</h3><p>${escapeHtml(roleLabel(c.usage_role))} · ${escapeHtml(componentStatusLabel(c.component_status))} · cantidad necesaria: ${escapeHtml(c.displayQty)} · ${Number(c.include_in_order) ? 'incluido en pedido' : 'sin pedido base'} · ${Number(c.include_in_cost) ? 'incluido en coste' : 'sin coste base'}</p>${sheetStatusWarningHtml(detail, 'culinary', opts)}${linesTable(lines, opts.includeCosts)}${allergenBlockHtml(allergenData, 'Alérgenos del componente')}${opts.includeProcess ? processBlock(detail, [], 'culinary') : ''}${appccPrintHtml(detail, 'culinary', opts)}</section>`;
     }
     const childRecipe = recipeSummary('bakery', c.component_id) || { source_id: c.component_id, base_flour_g: 1000, name: c.component_name };
     const flour = Number(childRecipe.base_flour_g || 1000) * c.factor.value;
     const childItem = { uid: `bakery:${c.component_id}`, sourceType: 'bakery', sourceId: c.component_id, name: c.component_name, qty: flour, unitLabel: 'g harina', baseMode: 'flour_g', baseValue: Number(childRecipe.base_flour_g || 1000) };
-    return `<section class="sub-sheet"><h3>Componente: ${escapeHtml(c.component_name)}</h3><p>${escapeHtml(roleLabel(c.usage_role))} · ${escapeHtml(componentStatusLabel(c.component_status))} · cantidad necesaria: ${escapeHtml(c.displayQty)} · ${Number(c.include_in_order) ? 'incluido en pedido' : 'sin pedido base'} · ${Number(c.include_in_cost) ? 'incluido en coste' : 'sin coste base'}</p>${bakerySheetHtml(childItem, opts, false, { depth: Number(ctx.depth || 0) + 1, visited: new Set([...(ctx.visited || []), key]) })}</section>`;
+    return `<section class="sub-sheet"><h3>Componente: ${escapeHtml(c.component_name)}</h3><p>${escapeHtml(roleLabel(c.usage_role))} · ${escapeHtml(componentStatusLabel(c.component_status))} · cantidad necesaria: ${escapeHtml(c.displayQty)} · ${Number(c.include_in_order) ? 'incluido en pedido' : 'sin pedido base'} · ${Number(c.include_in_cost) ? 'incluido en coste' : 'sin coste base'}</p>${bakerySheetHtml(childItem, opts, false, { depth: Number(ctx.depth || 0) + 1, visited: new Set([...(ctx.visited || []), key]), printCtx: ctx.printCtx, mainKeys: ctx.mainKeys, rootKey: ctx.rootKey })}</section>`;
 }
 function lineGroupLabel(group) {
     return ({ dough: 'Masa', filling: 'Relleno', topping: 'Cobertura', decoration: 'Decoración / acabado', other: 'Otros' })[group] || group || '';
@@ -1991,13 +2184,22 @@ function allergenEntryHtml(entry) {
 function allergenListHtml(map) {
     return [...map.values()].sort((a, b) => (a.order - b.order) || a.name.localeCompare(b.name, 'es')).map(allergenEntryHtml).join('');
 }
-function allergenBlockHtml(data, title = 'Alérgenos derivados') {
+function allergenBlockHtml(data, title = 'Alérgenos directos y derivados consolidados') {
     const confirmed = allergenListHtml(data.confirmed);
     const pending = allergenListHtml(data.pending);
     const may = allergenListHtml(data.mayContain);
+    const emptyMsg = allergenEmptyMessage(title);
     if (!confirmed && !pending && !may)
-        return `<div class="allergen-block"><h3>${escapeHtml(title)}</h3><p class="muted">No se detectan alérgenos normativos confirmados en los ingredientes vinculados.</p></div>`;
+        return `<div class="allergen-block"><h3>${escapeHtml(title)}</h3><p class="muted">${escapeHtml(emptyMsg)}</p></div>`;
     return `<div class="allergen-block"><h3>${escapeHtml(title)}</h3>${confirmed ? `<h4>Confirmados</h4><ul>${confirmed}</ul>` : ''}${pending ? `<h4>Pendientes de verificación</h4><ul class="pending">${pending}</ul>` : ''}${may ? `<h4>Puede contener / trazas declaradas</h4><ul class="may-contain">${may}</ul>` : ''}<p class="allergen-note">Bloque limitado a los 14 grupos normativos. Las categorías internas/no estándar no se mezclan con esta declaración.</p></div>`;
+}
+function allergenEmptyMessage(title = '') {
+    const t = normalize(title || '');
+    if (t.includes('pedido'))
+        return 'No se detectan alérgenos normativos confirmados en las líneas del pedido.';
+    if (t.includes('adicional') || t.includes('base tecnica plegada'))
+        return 'No se detectan alérgenos normativos adicionales derivados de subrecetas o bases vinculadas.';
+    return 'No se detectan alérgenos normativos confirmados en los ingredientes vinculados.';
 }
 function optionalComponentAllergensHtml(optional) {
     const rows = (optional || []).filter(o => allergenDataHasContent(o.data));
@@ -2010,15 +2212,10 @@ function allergenBlockInnerHtml(data) {
     const pending = allergenListHtml(data.pending);
     const may = allergenListHtml(data.mayContain);
     if (!confirmed && !pending && !may)
-        return `<p class="muted">No se detectan alérgenos normativos confirmados.</p>`;
+        return `<p class="muted">No se detectan alérgenos normativos confirmados en este bloque.</p>`;
     return `${confirmed ? `<p><b>Confirmados:</b></p><ul>${confirmed}</ul>` : ''}${pending ? `<p><b>Pendientes:</b></p><ul class="pending">${pending}</ul>` : ''}${may ? `<p><b>Puede contener / trazas:</b></p><ul class="may-contain">${may}</ul>` : ''}`;
 }
 
-function recipeSteps(sourceType, sourceId) {
-    if (sourceType === 'culinary')
-        return db.query('SELECT instruction, notes FROM v_elaboration_steps_unified WHERE source_type=$type AND source_id=$id ORDER BY step_order', { $type: sourceType, $id: sourceId });
-    return db.query('SELECT instruction, notes FROM bakery_process_steps WHERE recipe_id=$id ORDER BY CASE block WHEN \'preferment\' THEN 10 WHEN \'final_dough\' THEN 20 WHEN \'other\' THEN 60 WHEN \'baking\' THEN 80 WHEN \'cooling\' THEN 90 ELSE 99 END, step_number', { $id: sourceId });
-}
 function recipeDetail(sourceType, sourceId) {
     if (sourceType === 'culinary')
         return db.query('SELECT id, name, release_status, process, service_notes, appcc_notes, notes FROM culinary_recipes WHERE id=$id', { $id: sourceId })[0] || {};
@@ -2071,11 +2268,20 @@ function appccStructuredRowsHtml(rows) {
       <tr><th>Conservación / servicio</th><td>${appccCell(r.service_conservation)}</td></tr>
     </tbody></table>${r.notes ? `<p class="appcc-note">${escapeHtml(r.notes)}</p>` : ''}</section>`).join('');
 }
-function appccBlock(detail, sourceType) {
+function appccBriefRowsHtml(rows) {
+    return rows.map(r => `<section class="appcc-row-block appcc-brief"><h4>${escapeHtml(r.risk_family || 'APPCC docente')}</h4>
+    <table class="appcc-table"><tbody>
+      <tr><th>Peligro</th><td>${appccCell([r.hazard_type, r.main_hazard].filter(Boolean).join(' · '))}</td></tr>
+      <tr><th>Medida clave</th><td>${appccCell(r.preventive_measure || r.service_conservation || '')}</td></tr>
+    </tbody></table></section>`).join('');
+}
+function appccBlock(detail, sourceType, opts = {}) {
     const rows = appccRowsFor(sourceType, detail === null || detail === void 0 ? void 0 : detail.id);
     if (rows.length) {
         const title = sourceType === 'bakery' ? 'APPCC docente mínimo · Panadería/Pastelería' : 'APPCC docente mínimo · Cocina';
-        return `<div class="appcc-block structured-appcc"><h3>${title}</h3><p class="appcc-disclaimer"><b>Modelo docente:</b> no sustituye el manual APPCC del centro ni la ficha técnica del proveedor. Los parámetros concretos deben verificarse según el procedimiento del centro.</p>${appccStructuredRowsHtml(rows)}</div>`;
+        const content = isCompactProfile(opts) ? appccBriefRowsHtml(rows) : appccStructuredRowsHtml(rows);
+        const brief = isCompactProfile(opts) ? ' · breve' : '';
+        return `<div class="appcc-block structured-appcc"><h3>${title}${brief}</h3><p class="appcc-disclaimer"><b>Modelo docente:</b> no sustituye el manual APPCC del centro ni la ficha técnica del proveedor. Los parámetros concretos deben verificarse según el procedimiento del centro.</p>${content}</div>`;
     }
     const sources = sourceType === 'bakery'
         ? [detail.appcc_notes, detail.service_notes, detail.notes]
@@ -2085,6 +2291,12 @@ function appccBlock(detail, sourceType) {
         return '';
     const title = sourceType === 'bakery' ? 'Notas higiénico-sanitarias pendientes de estructurar' : 'Notas APPCC pendientes de estructurar';
     return `<div class="appcc-block appcc-unstructured"><h3>${title}</h3><p class="appcc-disclaimer"><b>Aviso:</b> bloque no estructurado; debe verificarse según manual APPCC del centro.</p><div class="prose">${paragraphs(text)}</div></div>`;
+}
+function minimalSafetyNoticeHtml(sourceType) {
+    return `<div class="appcc-block appcc-minimal-notice"><h3>Aviso mínimo de seguridad alimentaria</h3><p>El APPCC docente detallado está oculto por opción de impresión. El documento no sustituye el manual APPCC del centro ni la ficha técnica del proveedor; mantener alérgenos y avisos críticos visibles.</p></div>`;
+}
+function appccPrintHtml(detail, sourceType, opts = {}) {
+    return opts.includeAppcc ? appccBlock(detail, sourceType, opts) : minimalSafetyNoticeHtml(sourceType);
 }
 function linesTable(lines, includeCosts) {
     const tableClass = includeCosts ? 'lines-table with-costs with-origin' : 'lines-table with-origin';
@@ -2116,13 +2328,14 @@ function formatLineOrigin(note) {
     const publicFirst = parts.find(p => !['elaboración', 'elaboracion'].includes(normalize(p))) || parts[0];
     return publicFirst.replace(/\s*\|\s*/g, '').trim() || 'elaboración';
 }
+// Pedido consolidado
 async function orderHtml(items, opts) {
     const rows = [];
     for (const item of items)
         rows.push(...orderLinesForItem(item, opts));
     const grouped = aggregateOrder(rows);
     const orderAllergens = allergenDataFromIngredientIds(rows.map(r => r.ingredient_id));
-    return `<section class="print-order page-break"><h2>Pedido</h2>${allergenBlockHtml(orderAllergens, 'Alérgenos derivados del pedido')}${grouped.map(group => `<h3>${escapeHtml(group.name)}</h3><table class="order-table ${opts.includeCosts ? 'with-costs' : ''}"><thead><tr><th>Ingrediente</th><th>Total</th><th>Zona</th><th>Usado en</th>${opts.includeCosts ? '<th>Coste</th>' : ''}</tr></thead><tbody>${group.rows.map(r => { const q = displayQuantity(r.quantity, r.unit); return `<tr><td>${escapeHtml(r.name)}</td><td class="qty">${escapeHtml(q.text)}</td><td>${escapeHtml(r.storage_zone || '')}</td><td>${escapeHtml([...r.usedIn].join(', '))}</td>${opts.includeCosts ? `<td class="money-cell">${money(r.cost || 0)}</td>` : ''}</tr>`; }).join('')}</tbody></table>`).join('')}</section>`;
+    return `<section class="print-order page-break"><h2>Pedido consolidado</h2><p class="footer-note">Documento operativo de compra/economato: ingredientes expandidos y agrupados. Los alérgenos globales se mantienen visibles.</p>${allergenBlockHtml(orderAllergens, 'Alérgenos globales del pedido')}${grouped.map(group => `<h3>${escapeHtml(group.name)}</h3><table class="order-table ${opts.includeCosts ? 'with-costs' : ''}"><thead><tr><th>Ingrediente</th><th>Total</th><th>Zona</th><th>Usado en</th>${opts.includeCosts ? '<th>Coste</th>' : ''}</tr></thead><tbody>${group.rows.map(r => { const q = displayQuantity(r.quantity, r.unit); return `<tr><td>${escapeHtml(r.name)}</td><td class="qty">${escapeHtml(q.text)}</td><td>${escapeHtml(r.storage_zone || '')}</td><td>${escapeHtml([...r.usedIn].join(', '))}</td>${opts.includeCosts ? `<td class="money-cell">${money(r.cost || 0)}</td>` : ''}</tr>`; }).join('')}</tbody></table>`).join('')}</section>`;
 }
 function orderLinesForItem(item, opts, visited = new Set()) {
     var _a;
@@ -2198,7 +2411,7 @@ function aggregateOrder(lines) {
 function printDocumentShell(content) {
     const baseHref = new URL('./', window.location.href).href;
     return `<!doctype html><html lang="es"><head><meta charset="utf-8"><base href="${escapeAttr(baseHref)}"><title>ObradORR · Documento</title><style>
-    @page{size:A4;margin:14mm}body{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#1f2933;line-height:1.35}h1{font-size:30px;margin:0 0 4px}h2{font-size:22px;margin:0 0 8px}h3{margin:18px 0 8px;color:#7c3f1d}.doc-cover{border-bottom:3px solid #7c3f1d;padding-bottom:18px;margin-bottom:18px}.doc-cover dl{display:grid;grid-template-columns:140px 1fr;gap:5px 12px}.doc-cover dt{font-weight:800}.doc-cover dd{margin:0}.sheet-head{display:grid;grid-template-columns:1fr minmax(110px,150px);gap:14px;align-items:start;border-bottom:1px solid #ddd;padding-bottom:10px}.sheet-head img,.sheet-photo{max-width:150px;max-height:105px;width:auto;height:auto;object-fit:contain;border-radius:12px;justify-self:end;background:#faf7f0}.sheet-head:not(:has(img)){grid-template-columns:1fr}table{width:100%;border-collapse:collapse;margin:8px 0 14px;table-layout:fixed}th,td{border:1px solid #ddd;padding:6px 7px;text-align:left;vertical-align:top;overflow-wrap:break-word;word-break:normal;hyphens:auto}th{background:#f4efe6;font-size:11px;text-transform:uppercase}.lines-table th:nth-child(1){width:48%}.lines-table th:nth-child(2){width:18%}.lines-table th:nth-child(3){width:34%}.lines-table.with-costs th:nth-child(1){width:43%}.lines-table.with-costs th:nth-child(2){width:17%}.lines-table.with-costs th:nth-child(3){width:14%}.lines-table.with-costs th:nth-child(4){width:26%}.order-table th:nth-child(1){width:36%}.order-table th:nth-child(2){width:14%}.order-table th:nth-child(3){width:15%}.order-table th:nth-child(4){width:35%}.order-table.with-costs th:nth-child(1){width:33%}.order-table.with-costs th:nth-child(2){width:13%}.order-table.with-costs th:nth-child(3){width:14%}.order-table.with-costs th:nth-child(4){width:30%}.order-table.with-costs th:nth-child(5){width:10%}.qty,.money-cell{white-space:nowrap}.money-cell{text-align:right}.note-cell{font-size:12px}.page-break{break-before:page}.print-sheet:first-of-type{break-before:auto}.print-sheet,.print-order,.process-block,.appcc-block{break-inside:avoid-page;page-break-inside:avoid}.prose{max-width:100%;display:block}.prose p{margin:.45rem 0;break-inside:avoid;page-break-inside:avoid;overflow-wrap:normal;word-break:normal}.cost-line{background:#f6f0e6;padding:8px;border-radius:8px}.subrecipe-summary,.formula-meta,.component-block,.bakery-block,.sub-sheet,.warning-block{border:1px solid #e2d8c7;border-radius:10px;padding:9px 11px;margin:10px 0;break-inside:avoid-page;page-break-inside:avoid}.sub-sheet{background:#fffaf2}.sub-sheet .sub-sheet-head{display:grid;grid-template-columns:1fr minmax(90px,115px);gap:10px;align-items:start}.sub-sheet img,.sub-sheet-photo{max-width:115px;max-height:80px;width:auto;height:auto;object-fit:contain;border-radius:10px;justify-self:end;background:#faf7f0}.sub-sheet .sub-sheet-head:not(:has(img)){grid-template-columns:1fr}.formula-meta dl{display:grid;grid-template-columns:160px 1fr;gap:4px 10px;margin:0}.formula-meta dt{font-weight:800}.formula-meta dd{margin:0}.warning-block{background:#fff7ed;border-color:#fdba74}.allergen-block{border:1px solid #f0c36b;background:#fff8e8;border-radius:10px;padding:9px 11px;margin:10px 0;break-inside:avoid-page;page-break-inside:avoid}.allergen-block h3{margin-top:0}.allergen-block h4{margin:8px 0 4px;color:#7c3f1d}.allergen-block ul{margin:4px 0 8px 18px;padding:0}.allergen-block .pending{color:#9a3412}.allergen-block .may-contain{color:#6b4e16}.allergen-source{font-size:11px;color:#5b6472}.allergen-note{font-size:11px;color:#5b6472;margin:6px 0 0}.optional-allergens{background:#fffaf2}.structured-appcc{border:1px solid #b7c8a9;background:#f8fff2;border-radius:10px;padding:10px 12px;margin:10px 0}.appcc-disclaimer,.appcc-note{font-size:11px;color:#4f5d43;margin:6px 0 8px}.appcc-row-block{break-inside:avoid-page;page-break-inside:avoid;margin:8px 0 12px}.appcc-table th{width:24%;background:#eaf4df}.appcc-table td{width:76%}.appcc-cell p{margin:.25rem 0}.appcc-unstructured{background:#fff7ed;border-color:#fdba74}.warn{color:#9a3412;font-weight:700}h4{margin:10px 0 4px;color:#7c3f1d}.bakery-block h3,.component-block h3{margin-top:0}.print-legal-footer{border-top:1px solid #ddd;margin-top:18px;padding-top:8px;color:#5b6472;font-size:10.5px;text-align:center}.print-legal-footer strong{color:#1f2933}@media(max-width:760px){.sheet-head{grid-template-columns:1fr}.sheet-head img,.sheet-photo{justify-self:start;max-width:100%;max-height:90px}.sub-sheet .sub-sheet-head{grid-template-columns:1fr}.sub-sheet img,.sub-sheet-photo{justify-self:start;max-width:100%;max-height:70px}}@media print{button{display:none}}
+    @page{size:A4;margin:14mm}body{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#1f2933;line-height:1.35}h1{font-size:30px;margin:0 0 4px}h2{font-size:22px;margin:0 0 8px}h3{margin:18px 0 8px;color:#7c3f1d}.doc-cover{border-bottom:3px solid #7c3f1d;padding-bottom:18px;margin-bottom:18px}.doc-cover dl{display:grid;grid-template-columns:140px 1fr;gap:5px 12px}.doc-cover dt{font-weight:800}.doc-cover dd{margin:0}.sheet-head{display:grid;grid-template-columns:1fr minmax(110px,150px);gap:14px;align-items:start;border-bottom:1px solid #ddd;padding-bottom:10px}.sheet-head img,.sheet-photo{max-width:150px;max-height:105px;width:auto;height:auto;object-fit:contain;border-radius:12px;justify-self:end;background:#faf7f0}.sheet-head:not(:has(img)){grid-template-columns:1fr}table{width:100%;border-collapse:collapse;margin:8px 0 14px;table-layout:fixed}th,td{border:1px solid #ddd;padding:6px 7px;text-align:left;vertical-align:top;overflow-wrap:break-word;word-break:normal;hyphens:auto}th{background:#f4efe6;font-size:11px;text-transform:uppercase}.lines-table th:nth-child(1){width:48%}.lines-table th:nth-child(2){width:18%}.lines-table th:nth-child(3){width:34%}.lines-table.with-costs th:nth-child(1){width:43%}.lines-table.with-costs th:nth-child(2){width:17%}.lines-table.with-costs th:nth-child(3){width:14%}.lines-table.with-costs th:nth-child(4){width:26%}.order-table th:nth-child(1){width:36%}.order-table th:nth-child(2){width:14%}.order-table th:nth-child(3){width:15%}.order-table th:nth-child(4){width:35%}.order-table.with-costs th:nth-child(1){width:33%}.order-table.with-costs th:nth-child(2){width:13%}.order-table.with-costs th:nth-child(3){width:14%}.order-table.with-costs th:nth-child(4){width:30%}.order-table.with-costs th:nth-child(5){width:10%}.qty,.money-cell{white-space:nowrap}.money-cell{text-align:right}.note-cell{font-size:12px}.page-break{break-before:page}.print-sheet:first-of-type{break-before:auto}.print-sheet,.print-order,.process-block,.appcc-block{break-inside:auto;page-break-inside:auto}.prose{max-width:100%;display:block}.prose p{margin:.45rem 0;break-inside:avoid;page-break-inside:avoid;overflow-wrap:normal;word-break:normal}.cost-line{background:#f6f0e6;padding:8px;border-radius:8px}.subrecipe-summary,.formula-meta,.component-block,.bakery-block,.sub-sheet,.warning-block{border:1px solid #e2d8c7;border-radius:10px;padding:9px 11px;margin:10px 0;break-inside:avoid;page-break-inside:avoid}.sub-sheet{background:#fffaf2}.sub-sheet .sub-sheet-head{display:grid;grid-template-columns:1fr minmax(90px,115px);gap:10px;align-items:start}.sub-sheet img,.sub-sheet-photo{max-width:115px;max-height:80px;width:auto;height:auto;object-fit:contain;border-radius:10px;justify-self:end;background:#faf7f0}.sub-sheet .sub-sheet-head:not(:has(img)){grid-template-columns:1fr}.formula-meta dl{display:grid;grid-template-columns:160px 1fr;gap:4px 10px;margin:0}.formula-meta dt{font-weight:800}.formula-meta dd{margin:0}.warning-block{background:#fff7ed;border-color:#fdba74}.sub-sheet-reference{background:#f8fafc;border-style:dashed}.technical-base-collapsed{background:#fafafa}.doc-cover dl{font-size:13px}.appcc-brief .appcc-table th{width:22%}.allergen-block{border:1px solid #f0c36b;background:#fff8e8;border-radius:10px;padding:9px 11px;margin:10px 0;break-inside:avoid;page-break-inside:avoid}.allergen-block h3{margin-top:0}.allergen-block h4{margin:8px 0 4px;color:#7c3f1d}.allergen-block ul{margin:4px 0 8px 18px;padding:0}.allergen-block .pending{color:#9a3412}.allergen-block .may-contain{color:#6b4e16}.allergen-source{font-size:11px;color:#5b6472}.allergen-note{font-size:11px;color:#5b6472;margin:6px 0 0}.optional-allergens{background:#fffaf2}.structured-appcc{border:1px solid #b7c8a9;background:#f8fff2;border-radius:10px;padding:10px 12px;margin:10px 0}.appcc-disclaimer,.appcc-note{font-size:11px;color:#4f5d43;margin:6px 0 8px}.appcc-row-block{break-inside:auto;page-break-inside:auto;margin:8px 0 12px}.appcc-table th{width:24%;background:#eaf4df}.structured-appcc h3{break-after:avoid-page}.structured-appcc table{break-inside:auto;page-break-inside:auto}.appcc-table td{width:76%}.appcc-cell p{margin:.25rem 0}.appcc-unstructured{background:#fff7ed;border-color:#fdba74}.warn{color:#9a3412;font-weight:700}h4{margin:10px 0 4px;color:#7c3f1d}.bakery-block h3,.component-block h3{margin-top:0}.print-legal-footer{border-top:1px solid #ddd;margin-top:18px;padding-top:8px;color:#5b6472;font-size:10.5px;text-align:center}.print-legal-footer strong{color:#1f2933}@media(max-width:760px){.sheet-head{grid-template-columns:1fr}.sheet-head img,.sheet-photo{justify-self:start;max-width:100%;max-height:90px}.sub-sheet .sub-sheet-head{grid-template-columns:1fr}.sub-sheet img,.sub-sheet-photo{justify-self:start;max-width:100%;max-height:70px}}@media print{button{display:none}}
   </style></head><body>${content}<footer class="print-legal-footer"><strong>ObradORR</strong> · ${escapeHtml(LEGAL_NOTICE)}</footer></body></html>`;
 }
 function saveCurrentSession() {
@@ -2463,12 +2676,6 @@ function updateStatusIndicator() {
             banner.replaceWith(wrap.firstElementChild);
     }
 }
-function markDataChanged(reason = 'Cambios sin guardar') {
-    state.dataDirty = true;
-    state.dataRevision += 1;
-    state.dataStatus = reason;
-    updateStatusIndicator();
-}
 function scheduleDbAutosave(reason = 'Cambios pendientes de guardar', options = {}) {
     state.dataDirty = true;
     state.dataRevision += 1;
@@ -2611,7 +2818,7 @@ function clearLocalUiData() {
     state.selection = [];
     state.sessions = [];
     state.printOptions = {
-        documentType: 'fichas_pedido', includeTeachingData: false, includeCosts: false, subrecipeMode: 'sheets', expandSubrecipes: true, includeProcess: true, includeAppcc: true,
+        documentType: 'fichas_pedido', documentProfile: 'aula_taller', includeTeachingData: false, includeCosts: false, subrecipeMode: 'sheets', expandSubrecipes: true, includeProcess: true, includeAppcc: true,
         teaching: { title: '', cycle: '', module: '', group: '', date: new Date().toISOString().slice(0, 10), responsible: '', notes: '' }
     };
     scheduleDbAutosave('Selección y sesiones limpiadas');
@@ -2749,7 +2956,7 @@ function addField(arr, key, val) {
     if (String(val || '').trim())
         arr.push([key, String(val).trim()]);
 }
-function docTitle(t) { return t === 'fichas' ? 'Fichas técnicas' : t === 'pedido' ? 'Pedido' : 'Fichas técnicas + pedido'; }
+function docTitle(t) { return t === 'fichas' ? 'Fichas técnicas' : t === 'pedido' ? 'Pedido consolidado' : 'Fichas técnicas + pedido'; }
 function moduleLabel(m) { return [m.module_code, m.module_name].filter(Boolean).join(' · '); }
 function sum(a) { return a.reduce((x, y) => x + Number(y || 0), 0); }
 function round2(n) { return Math.round(Number(n || 0) * 100) / 100; }
@@ -2778,13 +2985,8 @@ function displayQuantity(quantity, unit) {
 }
 function money(n) { return `${(Number(n || 0)).toFixed(2).replace('.', ',')} €`; }
 function normalize(s) { return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim(); }
-function displayRecipeCategory(item, recipe) {
-    if (((item === null || item === void 0 ? void 0 : item.sourceType) || (recipe === null || recipe === void 0 ? void 0 : recipe.source_type)) === 'bakery')
-        return 'Panadería/Pastelería';
-    return 'Cocina';
-}
 function publicText(text) {
-    const internalMarkers = ['migrado', 'le' + 'gacy', 'fa' + 'se\\s*\\d', 'auditor[ií]a', 'mejora\\s*\\d', 'ap' + 'p6', 'r' + 'c2', 'swift' + 'remo'];
+    const internalMarkers = ['migrado', 'le' + 'gacy', 'fa' + 'se\\s*\\d', 'auditor[ií]a', 'mejora\\s*\\d', 'ap' + 'p6', 'r\\s*c\\s*\\d+', 'p0[a-z]?', '\\bfix\\b', 'swift' + 'remo'];
     const internalRe = new RegExp(internalMarkers.join('|'), 'i');
     return String(text || '')
         .split(/\n+/)

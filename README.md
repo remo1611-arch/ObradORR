@@ -1,42 +1,18 @@
-# ObradORR 1.0.0-rc.9
+# ObradORR 1.0.0-rc.28-stable-candidate
+
+> RC28-STABLE-CANDIDATE / RC1 docente cierra la primera versión funcional para prueba real. No valida recetas en obrador: todas las fichas activas se mantienen como `pendiente` salvo `no_apta` justificada.
 
 Aplicación web local/offline para uso docente en Formación Profesional de Cocina, Pastelería y Panadería.
-
-## Usar ObradORR online
-
-Abrir directamente desde GitHub Pages:
-
-https://remo1611-arch.github.io/ObradORR/
-
-Esta URL carga la versión publicada actualmente en la rama `main`.
-
-Si la app no arranca después de haber probado versiones anteriores, usa primero el reset local:
-
-https://remo1611-arch.github.io/ObradORR/app/reset_local_data.html
-
-Después vuelve a abrir:
-
-https://remo1611-arch.github.io/ObradORR/
-
-## Uso local/offline recomendado
-
-También puedes descargar el ZIP de la release, descomprimirlo y ejecutar ObradORR desde tu propio dispositivo.
-
-Desde la raíz del proyecto:
-
-    python -m http.server 8807 --bind 127.0.0.1
-
-Después abrir:
-
-    http://127.0.0.1:8807/app/obradorr.html
-
-La dirección `127.0.0.1` solo funciona en el dispositivo donde se ha arrancado el servidor local. No es una URL pública.
 
 ## Autoría y uso
 
 © 2026 Remo José Pereira González · Uso docente personal autorizado · Sin licencia abierta de redistribución o explotación comercial.
 
-Esta versión es una release candidate. No es versión estable final.
+## Estado de la versión
+
+Versión actual: `1.0.0-rc.28-stable-candidate`  
+Canal: `stable-candidate / RC1 docente`  
+Release tag: `rc28-stable-candidate`
 
 ## Núcleo funcional
 
@@ -44,44 +20,30 @@ Elaboraciones → selección docente → cálculo → ficha técnica / pedido �
 
 ObradORR no es un ERP, TPV, sistema de stock real, SaaS ni plataforma con login. Está pensado para aula-taller, Windows, Android/Termux y trabajo offline.
 
-## Estado de la versión
+## Política documental
 
-Versión actual:
+Todas las fichas gastronómicas se consideran **propuestas técnicas documentales**. El estado `validada` queda reservado a fichas probadas posteriormente en obrador/aula-taller y documentadas por el profesorado.
 
-    1.0.0-rc.9
+## Cierre RC28
 
-Canal:
+RC28 no añade nuevas correcciones gastronómicas sobre RC27-DATA5-7. Es un cierre de primera versión: metadatos, documentación, guías, matriz de validación y paquete listo para prueba real.
 
-    release candidate / pre-release
+Documentos clave:
 
-No debe considerarse versión estable final hasta completar prueba real de uso docente.
-
-## Cambios principales de rc.6
-
-- Corrección gastronómica-documental P0 derivada de auditoría de los Lotes 1A + 1B.
-- APPCC de Bavaroise, Panna cotta y Tarta fría reclasificado como frío lácteo/semifrío, no como pescado cocinado.
-- Gelatina “cola de pescado” mantiene pescado como alérgeno pendiente, separado del APPCC.
-- Ceviche y Maki mantienen estado pendiente por materia prima apta para crudo/control anisakis.
-- Pan integral sin gluten con semillas elimina residuos textuales de cerveza/gluten como ingrediente incorporado.
-- Fichas no aptas permanecen bloqueadas: Pad thai, Quiche lorraine y Mezcla de harinas sin gluten base.
-- Frituras documentan aceite como medio de fritura/pedido y absorción pendiente de prueba de obrador.
-- Torta de nata, Croissant con poolish y Panettone modernista simplificado siguen pendientes fuertes por prefermento/rendimiento.
-- La impresión muestra avisos de ficha pendiente/no apta, rendimiento pendiente y prefermento pendiente.
+- `RELEASE_NOTES_RC28_STABLE_CANDIDATE.md`
+- `docs/RC28_CIERRE_PRIMERA_VERSION.md`
+- `docs/RC28_LIMITACIONES_Y_ESTADOS.md`
+- `docs/RC28_MATRIZ_VALIDACION.md`
+- `docs/RC28_GUIA_TERMUX.md`
+- `docs/RC28_GUIA_WINDOWS.md`
+- `docs/RC28_DATA8_HOJA_DE_PRUEBA_OBRADOR.md`
 
 ## Límites conocidos
 
-No se han inventado pesos cocidos, mermas, absorciones de aceite, tiempos/temperaturas de prefermentos, Bloom de gelatina ni datos de proveedor.
-
-Los rendimientos panaderos y algunos prefermentos siguen marcados como pendientes de prueba de obrador cuando no hay datos reales suficientes.
-
-El APPCC incluido es un modelo docente mínimo. No sustituye el manual APPCC del centro ni las fichas técnicas de proveedor.
+La bibliografía, normativa y revisión documental sirven para formular y revisar técnicamente. No sustituyen la prueba real de obrador, la ficha técnica de proveedor, el manual APPCC del centro ni la validación docente en aula-taller.
 
 ## Releases
 
-Las versiones descargables están disponibles en:
+Las versiones descargables pueden publicarse en:
 
 https://github.com/remo1611-arch/ObradORR/releases
-
-## Nota RC9
-
-RC9 refuerza el saneamiento documental del Lote 3: centenos altos, panes formulados sin ingredientes con gluten, contacto cruzado, Dosa/Idli como batidos fermentados y fermentación espontánea pendiente de control docente. No valida fórmulas ni rendimientos.
