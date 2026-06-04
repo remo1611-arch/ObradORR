@@ -1,11 +1,11 @@
-# MIGRATIONS · ObradORR 1.0.0-rc.4
+# MIGRATIONS · ObradORR 1.0.0-rc.5
 
-La versión incluye tabla `schema_migrations` y metadatos `app_meta` actualizados a `1.0.0-rc.4`.
+La versión incluye tabla `schema_migrations` y metadatos `app_meta` actualizados a `1.0.0-rc.5`.
 
 ## Política
 
 - Las copias de trabajo deben pertenecer a ObradORR.
-- Deben coincidir `release_tag` y `cache_tag` con `obradorr-100-rc4`.
+- Deben coincidir `release_tag` y `cache_tag` con `obradorr-100-rc5`.
 - Si una copia no coincide, la app la bloquea para evitar corrupción silenciosa.
 - Futuras migraciones deben ser idempotentes y registrarse en `schema_migrations`.
 

@@ -4,19 +4,19 @@ const ObradORRDatabase = window.ObradORRDatabase;
 if (!ObradORRDatabase)
     throw new Error("No se cargó la capa SQLite de ObradORR.");
 window.__OBRADORR_MODULE_STARTED = true;
-window.__OBRADORR_MODULE_VERSION = 'obradorr-100-rc4';
+window.__OBRADORR_MODULE_VERSION = 'obradorr-100-rc5';
 const DB_URL = '../db/obradorr.sqlite';
 const WORK_SELECTION_ID = 'WORK_CURRENT';
 const STORAGE_PRINT_OPTIONS = 'obradorr_ui_print_options_v1';
-const IDB_DATA_DB = 'obradorr-data-100-rc4';
+const IDB_DATA_DB = 'obradorr-data-100-rc5';
 const IDB_DATA_STORE = 'snapshots';
 const IDB_CURRENT_KEY = 'current-db';
-const VERSION = '1.0.0-rc.4';
+const VERSION = '1.0.0-rc.5';
 const INGREDIENT_SEARCH_LIMIT = 220;
 const PRINT_SEARCH_LIMIT = 60;
 const LEGAL_NOTICE = '© 2026 Remo José Pereira González · Uso docente personal autorizado · Sin licencia abierta de redistribución o explotación comercial.';
-const EXPECTED_RELEASE_TAG = 'rc4';
-const EXPECTED_CACHE_TAG = 'obradorr-100-rc4';
+const EXPECTED_RELEASE_TAG = 'rc5';
+const EXPECTED_CACHE_TAG = 'obradorr-100-rc5';
 const db = new ObradORRDatabase();
 const state = {
     ready: false,
@@ -210,13 +210,15 @@ function releaseStatusLabel(status) {
 }
 function recipeCard(recipe) {
     const releaseStatus = recipe.release_status || (recipe.status === 'validated' ? 'validada' : recipe.status || 'borrador');
-    return `<article class="recipe-card">
-    <header><div><b>${escapeHtml(recipe.name)}</b><br><small class="muted">${escapeHtml(recipe.category_label || recipe.source_type)} · ${escapeHtml(recipe.family || 'Sin familia')}</small></div><div class="pill-stack"><span class="pill">${recipe.source_type === 'bakery' ? 'Panadería' : 'Cocina'}</span><span class="pill">${escapeHtml(releaseStatusLabel(releaseStatus))}</span></div></header>
+    const blocked = releaseStatus === 'no_apta' || releaseStatus === 'bloqueante';
+    return `<article class="recipe-card ${blocked ? 'recipe-card-blocked' : ''}">
+    <header><div><b>${escapeHtml(recipe.name)}</b><br><small class="muted">${escapeHtml(recipe.category_label || recipe.source_type)} · ${escapeHtml(recipe.family || 'Sin familia')}</small></div><div class="pill-stack"><span class="pill">${recipe.source_type === 'bakery' ? 'Panadería' : 'Cocina'}</span><span class="pill ${blocked ? 'danger-pill' : ''}">${escapeHtml(releaseStatusLabel(releaseStatus))}</span></div></header>
     <small class="muted">${escapeHtml(recipe.base_label || defaultQuantityLabel(recipe))}</small>
+    ${blocked ? '<small class="warn">Ficha no apta para uso docente final. Puede revisarse, pero no se añade a práctica como ficha normal.</small>' : ''}
     <div class="actions">
       <button class="btn" data-preview-recipe="${recipe.uid}">Vista previa</button>
       <button class="btn" data-edit-recipe="${recipe.uid}">Editar</button>
-      <button class="btn primary" data-add-recipe="${recipe.uid}">Añadir</button>
+      ${blocked ? '<button class="btn" disabled>No apta</button>' : `<button class="btn primary" data-add-recipe="${recipe.uid}">Añadir</button>`}
     </div>
   </article>`;
 }
@@ -245,7 +247,10 @@ function ingredientRowHtml(i) {
     return `<tr><td><b>${escapeHtml(i.name)}</b><br><small class="muted">${escapeHtml(i.id)}</small></td><td>${escapeHtml(i.family || '')}</td><td>${escapeHtml(i.order_group || '')}</td><td>${escapeHtml(i.storage_zone || '')}</td><td>${money(i.cost_per_base_unit_after_waste)} / ${escapeHtml(i.base_unit || '')}</td><td><button class="btn" data-edit-ingredient="${i.id}">Editar</button></td></tr>`;
 }
 function printSearchResultsHtml(results) {
-    return results.map(r => `<div class="result-row"><div><b>${escapeHtml(r.name)}</b><br><small class="muted">${escapeHtml(defaultQuantityLabel(r))}</small></div><button class="btn primary" data-add-recipe="${r.uid}">Añadir</button></div>`).join('');
+    return results.map(r => {
+        const blocked = r.release_status === 'no_apta' || r.release_status === 'bloqueante';
+        return `<div class="result-row ${blocked ? 'result-row-blocked' : ''}"><div><b>${escapeHtml(r.name)}</b><br><small class="muted">${escapeHtml(defaultQuantityLabel(r))}${blocked ? ' · Ficha no apta' : ''}</small></div>${blocked ? '<button class="btn" disabled>No apta</button>' : `<button class="btn primary" data-add-recipe="${r.uid}">Añadir</button>`}</div>`;
+    }).join('');
 }
 function bindDynamicActionButtons(scope = document) {
     scope.querySelectorAll('[data-add-recipe]').forEach(b => {
@@ -512,6 +517,11 @@ function addRecipeToSelection(uid) {
     const recipe = state.recipes.find(r => r.uid === uid);
     if (!recipe)
         return;
+    const releaseStatus = recipe.release_status || '';
+    if (releaseStatus === 'no_apta' || releaseStatus === 'bloqueante') {
+        alert('Ficha no apta para uso docente final. No se añade a la práctica como ficha normal.');
+        return;
+    }
     const existing = state.selection.find(i => i.uid === uid);
     if (existing) {
         existing.qty = round2(Number(existing.qty || 0) + Number(defaultQuantity(recipe).qty || 1));
@@ -1337,6 +1347,28 @@ function presentPrintDocument(html, title = 'Documento') {
         w.print();
     });
 }
+function sheetStatusWarningHtml(detail, kind) {
+    if (!detail)
+        return '';
+    const warnings = [];
+    const releaseStatus = detail.release_status || '';
+    if (releaseStatus === 'no_apta')
+        warnings.push('<b>Ficha no apta:</b> no usar como ficha final de aula-taller sin corrección previa.');
+    else if (releaseStatus === 'pendiente')
+        warnings.push('<b>Ficha pendiente:</b> requiere validación técnica, documental o de obrador antes de considerarse cerrada.');
+    else if (releaseStatus === 'bloqueante')
+        warnings.push('<b>Ficha bloqueante:</b> no utilizar hasta resolver la incidencia.');
+    if (kind === 'bakery' && detail.yield_status === 'pending')
+        warnings.push('<b>Rendimiento pendiente:</b> peso cocido, merma o piezas deben validarse en obrador; los valores actuales son orientativos.');
+    if (kind === 'bakery' && detail.preferment_validation_status === 'pending')
+        warnings.push('<b>Prefermento pendiente:</b> tiempo, temperatura, levadura/madurez o método requieren prueba de obrador.');
+    if (String(detail.notes || '').toLowerCase().includes('aceite como medio de fritura'))
+        warnings.push('<b>Aceite de fritura:</b> se trata como medio de cocción/pedido; la absorción real no está validada y no debe interpretarse todo el aceite como rendimiento comestible.');
+    if (!warnings.length)
+        return '';
+    return `<div class="warning-block rc5-status-warning"><h3>Estado documental RC5</h3><ul>${warnings.map(w => `<li>${w}</li>`).join('')}</ul></div>`;
+}
+
 function printHeader(opts) {
     const fields = [];
     if (opts.includeTeachingData) {
@@ -1369,6 +1401,7 @@ async function culinarySheetHtml(item, opts, pageBreak, ctx = {}) {
     const directNotice = mode === 'sheets' ? culinarySubrecipeSummaryHtml(item.sourceId, scale) : '';
     return `<section class="print-sheet ${pageBreak ? 'page-break' : ''}">
     <header class="sheet-head"><div><h2>${escapeHtml(item.name || recipe.name)}</h2><p>Cocina · ${formatQty(item.qty)} ${escapeHtml(item.unitLabel || '')}</p></div>${photo ? `<img class="sheet-photo" src="${photo}" alt="${escapeAttr(item.name || recipe.name)}" />` : ''}</header>
+    ${sheetStatusWarningHtml(detail, 'culinary')}
     <h3>Ingredientes y cantidades</h3>
     ${linesTable(lines, opts.includeCosts)}
     ${opts.includeCosts ? `<p class="cost-line"><b>Coste estimado:</b> ${money(totalCost)}</p>` : ''}
@@ -1415,6 +1448,7 @@ async function culinarySubrecipeSheetHtml(row, opts, ctx) {
     const nested = await culinarySubrecipeSectionsHtml(row.id, row.factor, opts, ctx);
     const totalCost = sum(lines.map(l => l.cost || 0));
     return `<section class="sub-sheet"><header class="sub-sheet-head"><div><h3>Subelaboración: ${escapeHtml(row.name)}</h3><p>Cantidad necesaria: ${escapeHtml(displayQuantity(row.requiredQty, row.requiredUnit).text)} · Rendimiento base: ${escapeHtml(displayQuantity(row.yieldQty, row.yieldUnit).text)} · factor ${formatQty(row.factor)}</p></div>${photo ? `<img class="sub-sheet-photo" src="${photo}" alt="${escapeAttr(row.name)}" />` : ''}</header>
+    ${sheetStatusWarningHtml(detail, 'culinary')}
     ${linesTable(lines, opts.includeCosts)}
     ${opts.includeCosts ? `<p class="cost-line"><b>Coste subelaboración:</b> ${money(totalCost)}</p>` : ''}
     ${allergenBlockHtml(allergenData, 'Alérgenos de la subelaboración')}
@@ -1492,6 +1526,7 @@ function bakerySheetHtml(item, opts, pageBreak, ctx = {}) {
     const componentSections = bakeryComponentsSectionsHtml(components, opts, ctx);
     return `<section class="print-sheet ${pageBreak ? 'page-break' : ''}">
     <header class="sheet-head"><div><h2>${escapeHtml(item.name || recipe.name)}</h2><p>Panadería/Pastelería · ${formatQty(item.qty)} ${escapeHtml(item.unitLabel || '')}</p></div>${photo ? `<img class="sheet-photo" src="${photo}" alt="${escapeAttr(item.name || recipe.name)}" />` : ''}</header>
+    ${sheetStatusWarningHtml(detail, 'bakery')}
     ${bakeryMetaHtml(detail, item, recipe, blocks)}
     ${blocks.map(bakeryBlockHtml(opts.includeCosts)).join('\n')}
     ${componentSections}

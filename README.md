@@ -1,4 +1,4 @@
-# ObradORR 1.0.0-rc.4
+# ObradORR 1.0.0-rc.5
 
 Aplicación web local/offline para uso docente en Formación Profesional de Cocina, Pastelería y Panadería.
 
@@ -48,7 +48,7 @@ ObradORR no es un ERP, TPV, sistema de stock real, SaaS ni plataforma con login.
 
 Versión actual:
 
-    1.0.0-rc.4
+    1.0.0-rc.5
 
 Canal:
 
@@ -56,22 +56,21 @@ Canal:
 
 No debe considerarse versión estable final hasta completar prueba real de uso docente.
 
-## Cambios principales
+## Cambios principales de rc.5
 
-- Metadatos SQLite normalizados a `1.0.0-rc.4`.
-- Alérgenos derivados en fichas y pedido.
-- APPCC docente mínimo estructurado.
-- Pedido consolidado coherente entre JS/SQL.
-- Persistencia, importación y reset reforzados.
-- Componentes panaderos normalizados como obligatorios/opcionales.
-- Prefermentos y rendimientos pendientes marcados explícitamente.
-- Pie legal visible en app e impresión.
-- Corrección de coherencia interna de versión/cache/IndexedDB.
-- Fotos de ficha limitadas para no dominar la documentación.
+- Corrección gastronómica-documental P0 derivada de auditoría de los Lotes 1A + 1B.
+- APPCC de Bavaroise, Panna cotta y Tarta fría reclasificado como frío lácteo/semifrío, no como pescado cocinado.
+- Gelatina “cola de pescado” mantiene pescado como alérgeno pendiente, separado del APPCC.
+- Ceviche y Maki mantienen estado pendiente por materia prima apta para crudo/control anisakis.
+- Pan integral sin gluten con semillas elimina residuos textuales de cerveza/gluten como ingrediente incorporado.
+- Fichas no aptas permanecen bloqueadas: Pad thai, Quiche lorraine y Mezcla de harinas sin gluten base.
+- Frituras documentan aceite como medio de fritura/pedido y absorción pendiente de prueba de obrador.
+- Torta de nata, Croissant con poolish y Panettone modernista simplificado siguen pendientes fuertes por prefermento/rendimiento.
+- La impresión muestra avisos de ficha pendiente/no apta, rendimiento pendiente y prefermento pendiente.
 
 ## Límites conocidos
 
-Esta versión mantiene el cargador clásico monolítico por compatibilidad.
+No se han inventado pesos cocidos, mermas, absorciones de aceite, tiempos/temperaturas de prefermentos, Bloom de gelatina ni datos de proveedor.
 
 Los rendimientos panaderos y algunos prefermentos siguen marcados como pendientes de prueba de obrador cuando no hay datos reales suficientes.
 

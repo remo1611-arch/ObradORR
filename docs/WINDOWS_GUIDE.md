@@ -1,9 +1,9 @@
-# WINDOWS_GUIDE · ObradORR 1.0.0-rc.4
+# WINDOWS_GUIDE · ObradORR 1.0.0-rc.5
 
 ## Proba local en PowerShell
 
 ```powershell
-$ZipName = "ObradORR_1_0_0_RC4.zip"
+$ZipName = "ObradORR_1_0_0_RC5.zip"
 $ZipPath = Join-Path $env:USERPROFILE "Downloads\$ZipName"
 $TestDir = Join-Path $env:USERPROFILE "Desktop\ObradORR_RC2_TEST"
 Remove-Item $TestDir -Recurse -Force -ErrorAction SilentlyContinue
@@ -21,5 +21,5 @@ python -m http.server 8807 --bind 127.0.0.1
 Abrir:
 
 ```text
-http://127.0.0.1:8807/app/obradorr.html?v=obradorr-100-rc4
+http://127.0.0.1:8807/app/obradorr.html?v=obradorr-100-rc5
 ```

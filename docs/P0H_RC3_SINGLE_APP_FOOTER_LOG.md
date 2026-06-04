@@ -1,4 +1,4 @@
-# ObradORR 1.0.0-rc.4 · Corrección de pie duplicado
+# ObradORR 1.0.0-rc.5 · Corrección de pie duplicado
 
 ## Corrección
 
@@ -16,4 +16,4 @@ No se modifican recetas, ingredientes, alérgenos, APPCC, pedido, persistencia n
 
 ## Versión
 
-`1.0.0-rc.4` · release candidate.
+`1.0.0-rc.5` · release candidate.

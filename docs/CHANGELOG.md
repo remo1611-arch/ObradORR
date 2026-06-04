@@ -1,6 +1,6 @@
 # CHANGELOG · ObradORR
 
-## 1.0.0-rc.4 PUBLIC
+## 1.0.0-rc.5 PUBLIC
 
 - Actualización de metadatos y cache tag.
 - Incorporación de `schema_migrations`.
@@ -15,8 +15,17 @@
 - QA de release con `tools/validate_release.py`.
 
 
-## ObradORR 1.0.0-rc.4 · Autoría visible
+## ObradORR 1.0.0-rc.5 · Autoría visible
 
 © 2026 Remo José Pereira González · Uso docente personal autorizado · Sin licencia abierta de redistribución o explotación comercial.
 
 Las fichas impresas incorporan este aviso en el pie documental.
+
+## 1.0.0-rc.5
+
+- Corrección P0 gastronómica-documental Lotes 1A + 1B.
+- APPCC de semifríos/tartas frías reclasificado como frío lácteo/semifrío.
+- Gelatina mantiene pescado como alérgeno pendiente separado del APPCC.
+- Pan integral sin gluten elimina residuos de cerveza/gluten textual.
+- Fichas no aptas y pendientes muestran advertencia documental más clara.
+- Aceite de fritura documentado como medio/pedido con absorción pendiente.
