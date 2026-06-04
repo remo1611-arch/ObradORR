@@ -1,6 +1,6 @@
-# RC5 · Corrección P0 gastronómica y documental
+# RC6 · Corrección P0 gastronómica y documental
 
-Versión: ObradORR 1.0.0-rc.5
+Versión: ObradORR 1.0.0-rc.6
 
 ## Alcance
 
@@ -15,7 +15,7 @@ Corrección quirúrgica derivada de auditoría de Lotes 1A + 1B. No se declaran 
 - Pad thai, Quiche lorraine y Mezcla de harinas sin gluten base quedan claramente como no aptas para ficha final.
 - Cordon bleu, Pechuga villeroy, Berenjenas fritas y Falafel documentan el aceite como medio de fritura/pedido, no como aceite consumido íntegramente.
 - Torta de nata, Croissant con poolish y Panettone modernista simplificado siguen pendientes fuertes por prefermento/rendimiento.
-- Impresión y vista previa muestran aviso de estado documental RC5.
+- Impresión y vista previa muestran aviso de estado documental RC6.
 
 ## Límites
 

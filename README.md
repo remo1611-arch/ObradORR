@@ -1,4 +1,4 @@
-# ObradORR 1.0.0-rc.5
+# ObradORR 1.0.0-rc.6
 
 Aplicación web local/offline para uso docente en Formación Profesional de Cocina, Pastelería y Panadería.
 
@@ -48,7 +48,7 @@ ObradORR no es un ERP, TPV, sistema de stock real, SaaS ni plataforma con login.
 
 Versión actual:
 
-    1.0.0-rc.5
+    1.0.0-rc.6
 
 Canal:
 
@@ -56,7 +56,7 @@ Canal:
 
 No debe considerarse versión estable final hasta completar prueba real de uso docente.
 
-## Cambios principales de rc.5
+## Cambios principales de rc.6
 
 - Corrección gastronómica-documental P0 derivada de auditoría de los Lotes 1A + 1B.
 - APPCC de Bavaroise, Panna cotta y Tarta fría reclasificado como frío lácteo/semifrío, no como pescado cocinado.

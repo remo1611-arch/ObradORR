@@ -1,10 +1,10 @@
-# ObradORR 1.0.0-rc.5
+# ObradORR 1.0.0-rc.6
 
 Release candidate de ObradORR.
 
 ## Corrección principal
 
-Corrección gastronómica-documental P0 derivada de la auditoría de los Lotes 1A + 1B.
+Corrección gastronómica-documental P0 derivada de la auditoría de los Lotes 1A + 1B + 2.
 
 ## Cambios incluidos
 
@@ -15,7 +15,8 @@ Corrección gastronómica-documental P0 derivada de la auditoría de los Lotes 1
 - Pad thai, Quiche lorraine y Mezcla de harinas sin gluten base siguen no aptas para uso docente final.
 - Cordon bleu, Pechuga villeroy, Berenjenas fritas y Falafel documentan el aceite como medio de fritura/pedido, con absorción pendiente.
 - Torta de nata, Croissant con poolish y Panettone modernista simplificado mantienen prefermento/rendimiento pendiente sin inventar datos.
-- La impresión muestra avisos de ficha pendiente/no apta, rendimiento pendiente y prefermento pendiente.
+- La impresión muestra avisos de ficha pendiente/no apta, rendimiento pendiente, prefermento pendiente, aceite como medio de fritura y versión docente no IGP en panes gallegos.
+- Panes base/poolish/masa madre del Lote 2 quedan como pendientes visibles sin inventar pesos cocidos ni datos de fermentación.
 
 ## Estado
 

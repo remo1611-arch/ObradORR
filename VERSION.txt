@@ -1,6 +1,6 @@
-ObradORR 1.0.0-rc.5
+ObradORR 1.0.0-rc.6
 Canal: release-candidate
 Entrada: app/obradorr.html
-Cache tag: obradorr-100-rc5
+Cache tag: obradorr-100-rc6
 SQLite: db/obradorr.sqlite
 Aviso: © 2026 Remo José Pereira González · Uso docente personal autorizado · Sin licencia abierta de redistribución o explotación comercial.

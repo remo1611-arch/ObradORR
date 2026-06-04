@@ -1,4 +1,4 @@
-# TEST_MATRIX · ObradORR 1.0.0-rc.5
+# TEST_MATRIX · ObradORR 1.0.0-rc.6
 
 | ID | Caso | Estado esperado | Validación |
 |---|---|---|---|

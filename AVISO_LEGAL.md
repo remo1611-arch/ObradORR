@@ -33,7 +33,7 @@ Solo deben incorporarse imágenes propias, generadas específicamente para el pr
 Este aviso es una medida documental básica de protección y claridad de uso. No sustituye asesoramiento jurídico específico.
 
 
-## ObradORR 1.0.0-rc.5 · Autoría visible
+## ObradORR 1.0.0-rc.6 · Autoría visible
 
 © 2026 Remo José Pereira González · Uso docente personal autorizado · Sin licencia abierta de redistribución o explotación comercial.
 
