@@ -1,6 +1,6 @@
 (function(){
   "use strict";
-  const VERSION = "2.0.0-stable-candidate";
+  const VERSION = "2.0.0";
   function n(v, fb=0){ const x=Number(v); return Number.isFinite(x)?x:fb; }
   function q(db, sql, bind){ return db.query(sql, bind || {}); }
   function val(db, sql, bind){ return db.value(sql, bind || {}); }
@@ -144,7 +144,7 @@
   async function saveBackupZip(db,state,opts){
     if(!window.ObradORRFileTools) return alert('Módulo de archivos no cargado.');
     const files = [
-      {name:'README_BACKUP.txt', bytes: encodeText('Backup completo ObradORR RC2. No acredita validación de obrador. Generado: '+new Date().toISOString()+'\n')},
+      {name:'README_BACKUP.txt', bytes: encodeText('Backup completo ObradORR 2.0. No acredita validación de obrador. Generado: '+new Date().toISOString()+'\n')},
       {name:'obradorr.sqlite', bytes: db.exportBytes()},
       {name:'tecnico.json', bytes: encodeText(JSON.stringify(technicalJson(db,state),null,2))},
       {name:'practica_actual.json', bytes: encodeText(JSON.stringify(currentPracticeJson(db,state,opts || {}),null,2))},

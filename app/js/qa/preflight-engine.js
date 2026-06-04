@@ -23,7 +23,7 @@
   }
   function hasAllergen(allergens, words) { const t = norm((allergens || []).map(a => a.allergen + ' ' + a.ingredient).join(' | ')); return words.some(w => t.includes(norm(w))); }
   function run({ db, items, options }) {
-    const out = { version: "2.0.0-stable-candidate", generatedAt: new Date().toISOString(), warnings: [], byRecipe: {}, summary: { CRITICO: 0, ALTO: 0, MEDIO: 0, BAJO: 0 }, meta: { pendingRecipes: 0 } };
+    const out = { version: "2.0.0", generatedAt: new Date().toISOString(), warnings: [], byRecipe: {}, summary: { CRITICO: 0, ALTO: 0, MEDIO: 0, BAJO: 0 }, meta: { pendingRecipes: 0 } };
     for (const item of items || []) {
       const uid = item.uid || `${item.sourceType}:${item.sourceId}`;
       const d = detail(db, item);
@@ -53,5 +53,5 @@
     for (const w of out.warnings) out.summary[w.severity] = (out.summary[w.severity] || 0) + 1;
     return out;
   }
-  window.ObradORRPreflight = { version: "2.0.0-stable-candidate", run };
+  window.ObradORRPreflight = { version: "2.0.0", run };
 })();

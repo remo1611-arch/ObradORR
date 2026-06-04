@@ -1,6 +1,6 @@
 (function(){
   "use strict";
-  const VERSION = "2.0.0-stable-candidate";
+  const VERSION = "2.0.0";
   const CORE_TABLES = ['ingredients','ingredient_allergens','culinary_recipes','culinary_recipe_lines','bakery_recipes','bakery_preferments','bakery_recipe_lines','bakery_process_steps','bakery_recipe_components','class_sessions','class_session_items'];
   function q(db, sql, bind){ return db.query(sql, bind || {}); }
   function val(db, sql, bind){ return db.value(sql, bind || {}); }
@@ -138,7 +138,7 @@
         }
       }
       const logId = `IMPORT-${suffix}`;
-      currentDb.exec("INSERT INTO import_log (id,source_name,source_schema,summary_json,notes) VALUES ($id,$src,$schema,$summary,$notes)", {$id:logId,$src:sourceName || '',$schema:summary.sourceVersion,$summary:JSON.stringify(summary),$notes:'Importación combinada segura RC2: sin sobreescritura; conflictos como variantes.'});
+      currentDb.exec("INSERT INTO import_log (id,source_name,source_schema,summary_json,notes) VALUES ($id,$src,$schema,$summary,$notes)", {$id:logId,$src:sourceName || '',$schema:summary.sourceVersion,$summary:JSON.stringify(summary),$notes:'Importación combinada segura: sin sobreescritura; conflictos como variantes.'});
       currentDb.exec('COMMIT;');
       return summary;
     } catch(error){ try{currentDb.exec('ROLLBACK;')}catch(_){} throw error; }

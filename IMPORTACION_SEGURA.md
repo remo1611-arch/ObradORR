@@ -1,6 +1,6 @@
-# Importación combinada segura RC2
+# Importación combinada segura
 
-La nueva acción **Importar y combinar SQLite** no sustituye la base actual.
+La acción **Importar y combinar SQLite** no sustituye la base actual.
 
 Flujo:
 
@@ -13,7 +13,7 @@ Flujo:
 7. Conflictos como variantes con sufijo `IMPORT-YYYY-MM-DDTHH-MM-SS`.
 8. Validación posterior.
 
-Política RC2:
+Política:
 
 - Duplicado idéntico: se omite.
 - Registro nuevo: se importa.

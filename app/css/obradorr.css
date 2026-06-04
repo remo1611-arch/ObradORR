@@ -150,3 +150,12 @@ textarea[data-step-instruction], textarea[data-step-notes]{min-width:240px;min-h
 
 /* Sistema · claridad de uso */
 .system-page .card{align-self:start}.system-state-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:12px 0}.system-state-card{border:1px solid var(--line);background:#fff;border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:4px}.system-state-card b{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:#6b4e16}.system-state-card span{font-weight:900}.system-state-card small{color:var(--muted)}.system-state-card.ok{border-color:#bbf7d0;background:#f0fdf4}.system-state-card.warning{border-color:#fde68a;background:#fffbeb}.system-state-card.saving{border-color:#bfdbfe;background:#eff6ff}.system-state-card.error{border-color:#fecaca;background:#fff1f2}.system-help-card{border:1px solid #e2d8c7;background:#fffaf2;border-radius:16px;padding:12px;margin:12px 0}.system-help-card>b{display:block;margin-bottom:8px}.system-help-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px}.system-help-grid span{border:1px solid var(--line);background:#fff;border-radius:12px;padding:9px;display:flex;flex-direction:column;gap:2px}.system-help-grid small{color:var(--muted)}.summary-list.compact{gap:8px}.summary-list.compact .summary-row{padding:10px}.system-actions-group{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}.system-actions-group h3{margin:0 0 4px}.system-actions-group p{margin:0 0 10px}.system-mobile-note{margin-top:14px}.system-origin-note{border:1px dashed #d8ccb9;border-radius:14px;padding:12px;background:#fff;margin-top:14px}.system-origin-note code{display:block;margin:6px 0;padding:8px;background:#f8fafc;border-radius:10px;overflow:auto}.system-origin-note small{display:block;color:var(--muted)}@media(max-width:900px){.system-state-grid{grid-template-columns:1fr}.system-help-grid{grid-template-columns:1fr}}
+
+/* Hotfix escalado de producción: controles de ficha vs formulación */
+.production-scaling-item{align-items:start;gap:12px}
+.scaling-controls{display:grid;grid-template-columns:repeat(2,minmax(130px,1fr));gap:8px;min-width:280px}
+.scaling-field{display:flex;flex-direction:column;gap:4px;font-size:.86rem;color:var(--muted)}
+.scaling-field input,.scaling-field select{width:100%}
+.scaling-mode{grid-column:1/-1}
+.scaling-note{grid-column:1/-1;line-height:1.25}
+@media(max-width:760px){.production-scaling-item{grid-template-columns:1fr}.scaling-controls{grid-template-columns:1fr;min-width:0}}

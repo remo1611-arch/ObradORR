@@ -9,5 +9,6 @@ La validación automatizada comprueba:
 - ausencia de fichas activas marcadas como `validada`;
 - `yield_status` panadero pendiente;
 - Quiche sin masa quebrada dulce;
+- Pasta choux con APPCC de masa escaldada;
 - backup/import/export presentes;
-- hotfix de duplicados presente.
+- correcciones de duplicados y escalado de producción presentes.

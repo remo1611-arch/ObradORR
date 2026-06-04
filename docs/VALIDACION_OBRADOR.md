@@ -1,4 +1,4 @@
-# DATA8 · Validación de obrador
+# Validación de obrador
 
 La validación real corresponde al profesorado en aula-taller.
 

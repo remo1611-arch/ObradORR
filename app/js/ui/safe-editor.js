@@ -52,5 +52,5 @@
     const risky = c.component_status === 'required' || Number(c.include_in_order) || Number(c.include_in_cost);
     return confirm(risky ? 'Componente requerido o incluido en pedido/coste. Eliminarlo alterará pedido, coste y alérgenos derivados. ¿Continuar?' : '¿Eliminar este componente elaborado?');
   }
-  window.ObradORRSafeEditor = { version: "2.0.0-stable-candidate", usageImpact, riskSummary, warningHtml, confirmRiskySave, confirmDeleteLine, confirmDeleteComponent };
+  window.ObradORRSafeEditor = { version: "2.0.0", usageImpact, riskSummary, warningHtml, confirmRiskySave, confirmDeleteLine, confirmDeleteComponent };
 })();

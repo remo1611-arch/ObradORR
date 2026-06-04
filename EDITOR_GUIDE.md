@@ -1,6 +1,6 @@
-# Guía de editor · RC1
+# Guía de editor
 
-El editor se ha reorganizado para escritura cómoda:
+El editor está organizado para escritura cómoda y trabajo local:
 
 - Pantalla amplia.
 - Secciones plegables.
@@ -8,7 +8,7 @@ El editor se ha reorganizado para escritura cómoda:
 - Guardar y seguir sin cerrar.
 - Borrador local en navegador.
 - Duplicar ficha y crear variante.
-- Preflight desde la ficha.
+- Comprobación documental desde la ficha.
 - Vista de impacto de subrecetas/uso por otras fichas.
 
 La edición sigue siendo local-first. Para conservar trabajo fuera del navegador, descarga copia SQLite o exportación JSON/ZIP.

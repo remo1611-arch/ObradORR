@@ -4,9 +4,8 @@ const ObradORRDatabase = window.ObradORRDatabase;
 if (!ObradORRDatabase)
     throw new Error("No se cargó la capa SQLite de ObradORR.");
 window.__OBRADORR_MODULE_STARTED = true;
-window.__OBRADORR_MODULE_VERSION = 'obradorr-200-public-github-ready';
+window.__OBRADORR_MODULE_VERSION = 'obradorr-200-public-release';
 // previous boot token: stable
-// public_github_ready
 const DB_URL = '../db/obradorr.sqlite';
 const WORK_SELECTION_ID = 'WORK_CURRENT';
 const STORAGE_PRINT_OPTIONS = 'obradorr_ui_print_options_v1';
@@ -205,7 +204,7 @@ function selectionSummaryHtml() {
     if (!state.selection.length)
         return `<div class="empty">Todavía no hay elaboraciones. Entra en <b>Imprimir / exportar</b> y añádelas de forma rápida.</div>`;
     return `<div class="summary-list">${state.selection.slice(0, 6).map(item => `
-    <div class="summary-row"><div><b>${escapeHtml(item.name)}</b><br><small>${formatQty(item.qty)} ${escapeHtml(item.unitLabel)}</small></div><button class="btn ghost" data-remove-selection="${item.uid}">Quitar</button></div>
+    <div class="summary-row"><div><b>${escapeHtml(item.name)}</b><br><small>${escapeHtml(selectionQuantityLabel(item))}</small></div><button class="btn ghost" data-remove-selection="${item.uid}">Quitar</button></div>
   `).join('')}${state.selection.length > 6 ? `<small class="muted">...y ${state.selection.length - 6} más.</small>` : ''}</div>`;
 }
 function recipesView() {
@@ -373,12 +372,115 @@ function printWorkspaceView() {
 function selectionEditorHtml() {
     if (!state.selection.length)
         return `<div class="empty">Añade elaboraciones desde el buscador de la izquierda. Puedes seguir añadiendo y ajustando cantidades antes de imprimir.</div>`;
-    return state.selection.map(item => `<div class="selection-item">
-    <div><b>${escapeHtml(item.name)}</b><br><small class="muted">${escapeHtml(item.categoryLabel || '')}</small></div>
-    <label><input class="input" type="number" min="0" step="0.01" value="${escapeAttr(item.qty)}" data-update-qty="${item.uid}" /> <small>${escapeHtml(item.unitLabel)}</small></label>
+    return state.selection.map(item => `<div class="selection-item production-scaling-item">
+    <div><b>${escapeHtml(item.name)}</b><br><small class="muted">${escapeHtml(item.categoryLabel || '')}</small><br><small class="muted">${escapeHtml(selectionQuantityLabel(item))}</small></div>
+    ${selectionScalingControlsHtml(item)}
     <button class="btn danger" data-remove-selection="${item.uid}">Quitar</button>
   </div>`).join('');
+} 
+function selectionScalingControlsHtml(item) {
+    if (item.sourceType !== 'bakery') {
+        return `<label class="scaling-field"><span>${item.baseMode === 'yield' ? 'Rendimiento' : 'Raciones'}</span><input class="input" type="number" min="0" step="0.01" value="${escapeAttr(item.qty)}" data-update-qty="${item.uid}" /> <small>${escapeHtml(item.unitLabel)}</small></label>`;
+    }
+    const mode = bakeryScalingMode(item);
+    const pieces = Number(item.qty || item.targetPieces || 0);
+    const pieceWeight = Number(item.pieceWeightG || 0);
+    const rawDough = Number(item.rawDoughG || (mode === 'pieces_weight' ? pieces * pieceWeight : item.qty) || 0);
+    const flour = Number(item.flourG || (mode === 'flour_g' ? item.qty : 0) || 0);
+    const modeSelect = `<label class="scaling-field scaling-mode"><span>Modo de cálculo</span><select data-update-scaling-mode="${item.uid}">
+      <option value="pieces_weight" ${mode === 'pieces_weight' ? 'selected' : ''}>Piezas + peso unitario</option>
+      <option value="raw_dough" ${mode === 'raw_dough' ? 'selected' : ''}>Masa/pasta total</option>
+      <option value="flour_g" ${mode === 'flour_g' ? 'selected' : ''}>Harina total</option>
+    </select></label>`;
+    if (mode === 'pieces_weight') {
+        return `<div class="scaling-controls">${modeSelect}<label class="scaling-field"><span>Piezas</span><input class="input" type="number" min="0" step="1" value="${escapeAttr(pieces)}" data-update-selection-field="${item.uid}" data-field="qty" /></label><label class="scaling-field"><span>Peso unitario crudo/escudillado (g)</span><input class="input" type="number" min="0" step="0.1" value="${escapeAttr(pieceWeight)}" data-update-selection-field="${item.uid}" data-field="pieceWeightG" /></label><small class="muted scaling-note">Masa/pasta objetivo: ${formatQty(pieces * pieceWeight)} g. No se declara peso cocido ni merma.</small></div>`;
+    }
+    if (mode === 'raw_dough') {
+        return `<div class="scaling-controls">${modeSelect}<label class="scaling-field"><span>Masa/pasta total cruda (g)</span><input class="input" type="number" min="0" step="1" value="${escapeAttr(rawDough)}" data-update-selection-field="${item.uid}" data-field="rawDoughG" /></label><small class="muted scaling-note">Escalado por masa o pasta total objetivo.</small></div>`;
+    }
+    return `<div class="scaling-controls">${modeSelect}<label class="scaling-field"><span>Harina total (g)</span><input class="input" type="number" min="0" step="1" value="${escapeAttr(flour)}" data-update-selection-field="${item.uid}" data-field="flourG" /></label><small class="muted scaling-note">Escalado panadero por harina base 100&nbsp;%.</small></div>`;
 }
+function bakeryScalingMode(item) {
+    if (!item || item.sourceType !== 'bakery')
+        return item && item.baseMode || 'servings';
+    if (item.baseMode === 'pieces_weight' || item.baseMode === 'raw_dough' || item.baseMode === 'flour_g')
+        return item.baseMode;
+    if (item.baseMode === 'pieces' && Number(item.pieceWeightG || 0) > 0)
+        return 'pieces_weight';
+    if (item.baseMode === 'raw_dough')
+        return 'raw_dough';
+    return 'flour_g';
+}
+function updateScalingMode(uid, mode) {
+    const item = state.selection.find(i => i.uid === uid);
+    if (!item || item.sourceType !== 'bakery')
+        return;
+    const recipe = state.recipes.find(r => r.uid === uid) || item;
+    const baseFlour = Number(recipe.base_flour_g || item.baseFlourG || item.flourG || 1000) || 1000;
+    const baseRaw = Number(recipe.base_raw_weight_g || item.baseRawDoughG || 0) || bakeryRawDoughForFlour(item, recipe, baseFlour);
+    const basePieces = Number(recipe.base_pieces || item.basePieces || 0) || 1;
+    const basePieceWeight = Number(recipe.base_raw_piece_weight_g || item.pieceWeightG || (baseRaw && basePieces ? baseRaw / basePieces : 0));
+    if (mode === 'pieces_weight') {
+        item.baseMode = 'pieces_weight';
+        item.qty = Number(item.qty || basePieces || 1);
+        item.pieceWeightG = Number(item.pieceWeightG || basePieceWeight || 1);
+        item.rawDoughG = round2(Number(item.qty || 0) * Number(item.pieceWeightG || 0));
+        item.unitLabel = 'piezas × g/pieza';
+    }
+    else if (mode === 'raw_dough') {
+        item.baseMode = 'raw_dough';
+        item.rawDoughG = Number(item.rawDoughG || baseRaw || 1000);
+        item.qty = item.rawDoughG;
+        item.unitLabel = 'g masa/pasta';
+    }
+    else {
+        item.baseMode = 'flour_g';
+        item.flourG = Number(item.flourG || baseFlour || 1000);
+        item.qty = item.flourG;
+        item.unitLabel = 'g harina';
+    }
+    saveSelection();
+    scheduleDbAutosave('Modo de cálculo actualizado', { delay: 1200 });
+    render();
+}
+function updateSelectionField(uid, field, value) {
+    const item = state.selection.find(i => i.uid === uid);
+    if (!item)
+        return;
+    const n = Number(value || 0);
+    const v = n > 0 ? n : 0;
+    if (field === 'pieceWeightG')
+        item.pieceWeightG = v;
+    else if (field === 'rawDoughG') {
+        item.rawDoughG = v;
+        item.qty = v;
+    }
+    else if (field === 'flourG') {
+        item.flourG = v;
+        item.qty = v;
+    }
+    else if (field === 'qty')
+        item.qty = v;
+    if (item.sourceType === 'bakery') {
+        const mode = bakeryScalingMode(item);
+        item.baseMode = mode;
+        if (mode === 'pieces_weight') {
+            item.rawDoughG = round2(Number(item.qty || 0) * Number(item.pieceWeightG || 0));
+            item.unitLabel = 'piezas × g/pieza';
+        }
+        else if (mode === 'raw_dough') {
+            item.qty = Number(item.rawDoughG || item.qty || 0);
+            item.unitLabel = 'g masa/pasta';
+        }
+        else {
+            item.qty = Number(item.flourG || item.qty || 0);
+            item.unitLabel = 'g harina';
+        }
+    }
+    saveSelection();
+    scheduleDbAutosave('Cantidad actualizada', { delay: 1200 });
+}
+
 function docRadio(value, title, help) {
     return `<label class="radio-card"><input type="radio" name="documentType" value="${value}" ${state.printOptions.documentType === value ? 'checked' : ''}/><b>${title}</b><br><small class="muted">${help}</small></label>`;
 }
@@ -603,6 +705,8 @@ function bindCurrentView() {
     (_b = document.querySelector('[data-new-ingredient]')) === null || _b === void 0 ? void 0 : _b.addEventListener('click', () => showIngredientCreator());
     document.querySelectorAll('[data-remove-selection]').forEach(b => b.addEventListener('click', () => removeSelection(b.dataset.removeSelection)));
     document.querySelectorAll('[data-update-qty]').forEach(input => input.addEventListener('input', () => updateQty(input.dataset.updateQty, input.value)));
+    document.querySelectorAll('[data-update-scaling-mode]').forEach(select => select.addEventListener('change', () => updateScalingMode(select.dataset.updateScalingMode, select.value)));
+    document.querySelectorAll('[data-update-selection-field]').forEach(input => input.addEventListener('input', () => updateSelectionField(input.dataset.updateSelectionField, input.dataset.field, input.value)));
     document.querySelectorAll('input[name="documentType"]').forEach(r => r.addEventListener('change', () => { state.printOptions.documentType = r.value; savePrintOptions(); render(); }));
     document.querySelectorAll('input[name="documentProfile"]').forEach(r => r.addEventListener('change', () => { state.printOptions.documentProfile = r.value; applyProfileDefaultsToState(r.value); savePrintOptions(); render(); }));
     document.querySelectorAll('input[name="subrecipeMode"]').forEach(r => r.addEventListener('change', () => { state.printOptions.subrecipeMode = r.value; state.printOptions.expandSubrecipes = r.value !== 'none'; savePrintOptions(); render(); }));
@@ -688,6 +792,15 @@ function updateQty(uid, value) {
         return;
     const qty = Number(value || 0);
     item.qty = qty > 0 ? qty : 0;
+    if (item.sourceType === 'bakery') {
+        const mode = bakeryScalingMode(item);
+        if (mode === 'pieces_weight')
+            item.rawDoughG = round2(Number(item.qty || 0) * Number(item.pieceWeightG || 0));
+        else if (mode === 'raw_dough')
+            item.rawDoughG = item.qty;
+        else if (mode === 'flour_g')
+            item.flourG = item.qty;
+    }
     saveSelection();
     scheduleDbAutosave('Cantidad actualizada', { delay: 1800 });
 }
@@ -721,25 +834,46 @@ function saveSelection() {
             const payload = selectionDbPayload(item, recipe, idx);
             db.exec(`INSERT INTO work_selection_items
         (id,selection_id,item_type,culinary_recipe_id,bakery_recipe_id,production_mode,main_qty,servings,pieces,piece_weight_g,flour_g,raw_dough_g,baking_loss_pct,print_a4,sort_order,notes)
-        VALUES ($id,$selection,$type,$culinary,$bakery,$mode,$main,$servings,$pieces,NULL,$flour,NULL,$loss,1,$sort,$notes)`, Object.assign({ $id: id, $selection: WORK_SELECTION_ID }, payload));
+        VALUES ($id,$selection,$type,$culinary,$bakery,$mode,$main,$servings,$pieces,$pieceWeight,$flour,$rawDough,$loss,1,$sort,$notes)`, Object.assign({ $id: id, $selection: WORK_SELECTION_ID }, payload));
         });
         db.exec('UPDATE work_selections SET updated_at=CURRENT_TIMESTAMP, context_json=$ctx WHERE id=$id', { $id: WORK_SELECTION_ID, $ctx: JSON.stringify({ printOptions: state.printOptions }) });
     });
 }
 function selectionDbPayload(item, recipe, idx) {
     const type = item.sourceType;
-    const mode = type === 'bakery'
-        ? (item.baseMode === 'pieces' ? 'pieces' : item.baseMode === 'raw_dough' ? 'raw_dough' : 'flour')
-        : (item.baseMode === 'yield' ? 'yield' : 'servings');
+    let mode = type === 'bakery' ? 'flour' : (item.baseMode === 'yield' ? 'yield' : 'servings');
+    let main = Number(item.qty || 0), pieces = null, pieceWeight = null, flour = null, rawDough = null;
+    if (type === 'bakery') {
+        const bakeryMode = bakeryScalingMode(item);
+        if (bakeryMode === 'pieces_weight') {
+            mode = 'pieces';
+            pieces = Number(item.qty || 0);
+            pieceWeight = Number(item.pieceWeightG || 0) || null;
+            rawDough = round2(pieces * Number(pieceWeight || 0)) || null;
+            main = pieces;
+        }
+        else if (bakeryMode === 'raw_dough') {
+            mode = 'raw_dough';
+            rawDough = Number(item.rawDoughG || item.qty || 0);
+            main = rawDough;
+        }
+        else {
+            mode = 'flour';
+            flour = Number(item.flourG || item.qty || 0);
+            main = flour;
+        }
+    }
     return {
         $type: type,
         $culinary: type === 'culinary' ? item.sourceId : null,
         $bakery: type === 'bakery' ? item.sourceId : null,
         $mode: mode,
-        $main: Number(item.qty || 0),
+        $main: main,
         $servings: mode === 'servings' ? Number(item.qty || 0) : null,
-        $pieces: mode === 'pieces' ? Number(item.qty || 0) : null,
-        $flour: mode === 'flour' ? Number(item.qty || 0) : null,
+        $pieces: pieces,
+        $pieceWeight: pieceWeight,
+        $flour: flour,
+        $rawDough: rawDough,
         $loss: type === 'bakery' ? Number((recipe === null || recipe === void 0 ? void 0 : recipe.baking_loss_pct) || 0) : null,
         $sort: (idx + 1) * 10,
         $notes: item.notes || null
@@ -748,7 +882,7 @@ function selectionDbPayload(item, recipe, idx) {
 function loadSelectionFromSqlite() {
     ensureWorkSelection();
     const rows = db.query(`SELECT w.*, cr.name AS culinary_name, cr.base_servings, cr.yield_quantity, COALESCE(yu.symbol, yu.name, cr.yield_unit_id) AS yield_unit, cr.default_production_mode,
-      br.name AS bakery_name, br.base_flour_g, br.base_pieces, br.baking_loss_pct
+      br.name AS bakery_name, br.base_flour_g, br.base_raw_weight_g, br.base_pieces, br.base_raw_piece_weight_g, br.baking_loss_pct
     FROM work_selection_items w
     LEFT JOIN culinary_recipes cr ON cr.id=w.culinary_recipe_id
     LEFT JOIN units yu ON yu.id=cr.yield_unit_id
@@ -765,9 +899,22 @@ function selectionItemFromDbRow(row) {
     if (!recipe && !sourceId)
         return null;
     if (type === 'bakery') {
-        const mode = row.production_mode === 'pieces' ? 'pieces' : row.production_mode === 'raw_dough' ? 'raw_dough' : 'flour_g';
-        const qty = mode === 'pieces' ? Number((_c = (_b = (_a = row.pieces) !== null && _a !== void 0 ? _a : row.main_qty) !== null && _b !== void 0 ? _b : row.base_pieces) !== null && _c !== void 0 ? _c : 1) : Number((_f = (_e = (_d = row.flour_g) !== null && _d !== void 0 ? _d : row.main_qty) !== null && _e !== void 0 ? _e : row.base_flour_g) !== null && _f !== void 0 ? _f : 1000);
-        return { uid, sourceType: type, sourceId, name: (recipe === null || recipe === void 0 ? void 0 : recipe.name) || row.bakery_name || sourceId, categoryLabel: (recipe === null || recipe === void 0 ? void 0 : recipe.category_label) || 'Panadería/Pastelería', qty, unitLabel: mode === 'pieces' ? 'piezas' : 'g harina', baseMode: mode, baseValue: mode === 'pieces' ? Number(row.base_pieces || qty || 1) : Number(row.base_flour_g || qty || 1000), notes: row.notes || '' };
+        const baseFlour = Number(row.base_flour_g || (recipe === null || recipe === void 0 ? void 0 : recipe.base_flour_g) || 1000) || 1000;
+        const baseRaw = Number(row.base_raw_weight_g || (recipe === null || recipe === void 0 ? void 0 : recipe.base_raw_weight_g) || 0);
+        const basePieces = Number(row.base_pieces || (recipe === null || recipe === void 0 ? void 0 : recipe.base_pieces) || 0);
+        const basePieceWeight = Number(row.base_raw_piece_weight_g || (recipe === null || recipe === void 0 ? void 0 : recipe.base_raw_piece_weight_g) || (baseRaw && basePieces ? baseRaw / basePieces : 0));
+        if (row.production_mode === 'pieces') {
+            const qty = Number((_c = (_b = (_a = row.pieces) !== null && _a !== void 0 ? _a : row.main_qty) !== null && _b !== void 0 ? _b : basePieces) !== null && _c !== void 0 ? _c : 1);
+            const pieceWeightG = Number(row.piece_weight_g || basePieceWeight || 0);
+            const rawDoughG = Number(row.raw_dough_g || (qty * pieceWeightG) || baseRaw || 0);
+            return { uid, sourceType: type, sourceId, name: (recipe === null || recipe === void 0 ? void 0 : recipe.name) || row.bakery_name || sourceId, categoryLabel: (recipe === null || recipe === void 0 ? void 0 : recipe.category_label) || 'Panadería/Pastelería', qty, unitLabel: 'piezas × g/pieza', baseMode: 'pieces_weight', baseValue: baseRaw || rawDoughG || 1, baseFlourG: baseFlour, baseRawDoughG: baseRaw, basePieces, pieceWeightG, rawDoughG, notes: row.notes || '' };
+        }
+        if (row.production_mode === 'raw_dough') {
+            const qty = Number((_f = (_e = (_d = row.raw_dough_g) !== null && _d !== void 0 ? _d : row.main_qty) !== null && _e !== void 0 ? _e : baseRaw) !== null && _f !== void 0 ? _f : 1000);
+            return { uid, sourceType: type, sourceId, name: (recipe === null || recipe === void 0 ? void 0 : recipe.name) || row.bakery_name || sourceId, categoryLabel: (recipe === null || recipe === void 0 ? void 0 : recipe.category_label) || 'Panadería/Pastelería', qty, unitLabel: 'g masa/pasta', baseMode: 'raw_dough', baseValue: baseRaw || qty || 1, baseFlourG: baseFlour, baseRawDoughG: baseRaw, basePieces, rawDoughG: qty, pieceWeightG: basePieceWeight, notes: row.notes || '' };
+        }
+        const qty = Number((_j = (_h = (_g = row.flour_g) !== null && _g !== void 0 ? _g : row.main_qty) !== null && _h !== void 0 ? _h : baseFlour) !== null && _j !== void 0 ? _j : 1000);
+        return { uid, sourceType: type, sourceId, name: (recipe === null || recipe === void 0 ? void 0 : recipe.name) || row.bakery_name || sourceId, categoryLabel: (recipe === null || recipe === void 0 ? void 0 : recipe.category_label) || 'Panadería/Pastelería', qty, unitLabel: 'g harina', baseMode: 'flour_g', baseValue: baseFlour || qty || 1000, baseFlourG: baseFlour, baseRawDoughG: baseRaw, basePieces, flourG: qty, pieceWeightG: basePieceWeight, notes: row.notes || '' };
     }
     const mode = row.production_mode === 'yield' ? 'yield' : 'servings';
     const qty = mode === 'yield' ? Number((_h = (_g = row.main_qty) !== null && _g !== void 0 ? _g : row.yield_quantity) !== null && _h !== void 0 ? _h : 1) : Number((_l = (_k = (_j = row.servings) !== null && _j !== void 0 ? _j : row.main_qty) !== null && _k !== void 0 ? _k : row.base_servings) !== null && _l !== void 0 ? _l : 1);
@@ -780,7 +927,7 @@ function loadSessionsFromSqlite() {
 }
 function loadSessionItems(sessionId) {
     const rows = db.query(`SELECT i.*, cr.name AS culinary_name, cr.base_servings, cr.yield_quantity, COALESCE(yu.symbol, yu.name, cr.yield_unit_id) AS yield_unit, cr.default_production_mode,
-      br.name AS bakery_name, br.base_flour_g, br.base_pieces, br.baking_loss_pct
+      br.name AS bakery_name, br.base_flour_g, br.base_raw_weight_g, br.base_pieces, br.base_raw_piece_weight_g, br.baking_loss_pct
     FROM class_session_items i
     LEFT JOIN culinary_recipes cr ON cr.id=i.culinary_recipe_id
     LEFT JOIN units yu ON yu.id=cr.yield_unit_id
@@ -939,7 +1086,7 @@ function showRecipeEditor(uid) {
 
 
 // ────────────────────────────────────────────────────────────────────────────
-// RC1 Usabilidad: editor cómodo, borrador local, duplicado y variante
+// Editor cómodo, borrador local, duplicado y variante
 // ────────────────────────────────────────────────────────────────────────────
 const EDITOR_DRAFT_PREFIX = 'obradorr_editor_draft_v2_';
 function editorDraftKey(recipe) { return EDITOR_DRAFT_PREFIX + recipe.uid; }
@@ -1571,7 +1718,7 @@ function showIngredientEditor(id) {
     });
 }
 // ────────────────────────────────────────────────────────────────────────────
-// Motor de impresión RC21/RC25-DATA4: sin cambios de motor; RC25-DATA4 blinda política documental
+// Motor de impresión estable con política documental conservadora
 // Separación conservadora: datos de documento → render HTML → presentación/registro.
 // No cambia el modelo SQLite ni valida fórmulas gastronómicas.
 // ────────────────────────────────────────────────────────────────────────────
@@ -1590,7 +1737,7 @@ function buildPrintDocumentModel(items, opts = {}) {
     const preflight = window.ObradORRPreflight ? window.ObradORRPreflight.run({ db, state, items: items.slice(), options }) : { warnings: [], summary: {}, byRecipe: {} };
     const normalized = window.ObradORRDocumentModel ? window.ObradORRDocumentModel.normalizeSelection({ db, state, items: items.slice(), options, preflight }) : null;
     return {
-        schema: 'ObradORRPrintDocumentModel/2.0-experimental-final',
+        schema: 'ObradORRPrintDocumentModel/2.0',
         items: items.slice(),
         options,
         context: createPrintContext(items, options),
@@ -1609,7 +1756,7 @@ function printIndexHtml(items, opts) {
     const compact = isCompactProfile(opts);
     if (compact && printProfile(opts) !== 'cm')
         return '';
-    return `<section class="print-index"><h2>Índice de elaboraciones</h2><ol>${items.map((item, i) => `<li>${escapeHtml(item.name)} <small>${escapeHtml(item.unitLabel || '')}</small></li>`).join('')}</ol></section>`;
+    return `<section class="print-index"><h2>Índice de elaboraciones</h2><ol>${items.map((item, i) => `<li>${escapeHtml(item.name)} <small>${escapeHtml(selectionQuantityLabel(item))}</small></li>`).join('')}</ol></section>`;
 }
 
 async function renderPrintDocumentModel(model) {
@@ -1653,7 +1800,7 @@ function recordPrintJob(items, opts, html) {
                 $bakery: item.sourceType === 'bakery' ? item.sourceId : null,
                 $name: item.name,
                 $mode: item.baseMode || '',
-                $qty: `${formatQty(item.qty)} ${item.unitLabel || ''}`.trim(),
+                $qty: selectionQuantityLabel(item),
                 $sort: (index + 1) * 10
             }));
         });
@@ -2063,7 +2210,7 @@ function bakerySheetHtml(item, opts, pageBreak, ctx = {}) {
     const totalCost = sum(allLines.map(l => l.cost || 0)) + componentCost;
     const componentSections = bakeryComponentsSectionsHtml(components, opts, ctx);
     return `<section class="print-sheet ${pageBreak ? 'page-break' : ''}">
-    <header class="sheet-head ${photo ? 'has-photo' : 'no-photo'}"><div class="sheet-head-text"><h2>${escapeHtml(item.name || recipe.name)}</h2><p>Panadería/Pastelería · ${formatQty(item.qty)} ${escapeHtml(item.unitLabel || '')}</p></div>${photo ? `<figure class="sheet-head-figure"><img class="sheet-head-photo sheet-photo" src="${photo}" alt="${escapeAttr(item.name || recipe.name)}" /></figure>` : ''}</header>
+    <header class="sheet-head ${photo ? 'has-photo' : 'no-photo'}"><div class="sheet-head-text"><h2>${escapeHtml(item.name || recipe.name)}</h2><p>Panadería/Pastelería · ${escapeHtml(selectionQuantityLabel(item))}</p></div>${photo ? `<figure class="sheet-head-figure"><img class="sheet-head-photo sheet-photo" src="${photo}" alt="${escapeAttr(item.name || recipe.name)}" /></figure>` : ''}</header>
     ${sheetStatusWarningHtml(detail, 'bakery', opts)}
     ${bakeryMetaHtml(detail, item, recipe, blocks)}
     ${blocks.map(bakeryBlockHtml(opts.includeCosts)).join('\n')}
@@ -2082,6 +2229,7 @@ function bakeryDetail(recipeId) {
 function bakeryMetaHtml(detail, item, recipe, blocks) {
     const pref = detail.calculation_mode && detail.calculation_mode !== 'none';
     const fields = [];
+    addField(fields, 'Cálculo en práctica', selectionQuantityLabel(item));
     addField(fields, 'Harina base impresa', `${formatQty(bakeryFlourForItem(item, recipe))} g`);
     if (detail.base_pieces)
         addField(fields, 'Piezas base', detail.base_pieces);
@@ -2715,7 +2863,7 @@ function printDocumentShell(content, title = 'ObradORR · Documento') {
     const safeTitle = title || 'ObradORR · Documento';
     return `<!doctype html><html lang="es"><head><meta charset="utf-8"><base href="${escapeAttr(baseHref)}"><title>${escapeHtml(safeTitle)}</title><style>
     @page{size:A4;margin:11mm 12mm}*{box-sizing:border-box}body{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#1f2933;line-height:1.28;font-size:13px}h1{font-size:27px;margin:0 0 3px}h2{font-size:20px;margin:0 0 5px;break-after:avoid;page-break-after:avoid}h3{margin:11px 0 5px;color:#7c3f1d;break-after:avoid;page-break-after:avoid}h4{margin:8px 0 3px;color:#7c3f1d;break-after:avoid;page-break-after:avoid}.doc-cover{border-bottom:3px solid #7c3f1d;padding-bottom:12px;margin-bottom:12px}.doc-cover dl{display:grid;grid-template-columns:130px 1fr;gap:3px 10px;font-size:12px}.doc-cover dt{font-weight:800}.doc-cover dd{margin:0}.print-index{margin:8px 0 12px}.print-index ol{margin:4px 0 0 20px}.sheet-head{display:flex;gap:12px;align-items:flex-start;justify-content:space-between;border-bottom:1px solid #ddd;padding-bottom:7px;margin-bottom:8px;break-inside:avoid;page-break-inside:avoid}.sheet-head-text{min-width:0;flex:1 1 auto}.sheet-head h2{margin:0 0 4px}.sheet-head p{margin:0;color:#374151}.sheet-head-figure{flex:0 0 46mm;max-width:46mm;margin:0 0 0 auto;display:flex;justify-content:flex-end}.sheet-head-photo,.sheet-photo{width:46mm;max-width:46mm;height:auto;max-height:34mm;object-fit:contain;border-radius:8px;border:1px solid #ddd;background:#faf7f0}.sheet-head:not(.has-photo){display:block}.sheet-head:not(.has-photo) .sheet-head-text{width:100%}table{width:100%;border-collapse:collapse;margin:6px 0 9px;table-layout:fixed;page-break-inside:auto}thead{display:table-header-group}th,td{border:1px solid #ddd;padding:4px 6px;text-align:left;vertical-align:top;overflow-wrap:break-word;word-break:normal;hyphens:auto}th{background:#f4efe6;font-size:10.5px;text-transform:uppercase}tr{break-inside:avoid;page-break-inside:avoid}.lines-table th:nth-child(1){width:48%}.lines-table th:nth-child(2){width:18%}.lines-table th:nth-child(3){width:34%}.lines-table.with-costs th:nth-child(1){width:43%}.lines-table.with-costs th:nth-child(2){width:17%}.lines-table.with-costs th:nth-child(3){width:14%}.lines-table.with-costs th:nth-child(4){width:26%}.order-table th:nth-child(1){width:36%}.order-table th:nth-child(2){width:14%}.order-table th:nth-child(3){width:15%}.order-table th:nth-child(4){width:35%}.order-table.with-costs th:nth-child(1){width:33%}.order-table.with-costs th:nth-child(2){width:13%}.order-table.with-costs th:nth-child(3){width:14%}.order-table.with-costs th:nth-child(4){width:30%}.order-table.with-costs th:nth-child(5){width:10%}.qty,.money-cell{white-space:nowrap}.money-cell{text-align:right}.note-cell{font-size:11px}.page-break{break-before:page}.print-sheet:first-of-type{break-before:auto}.print-sheet,.print-order,.process-block,.appcc-block{break-inside:auto;page-break-inside:auto}.prose{max-width:100%;display:block}.prose p{margin:.30rem 0;break-inside:avoid;page-break-inside:avoid;overflow-wrap:normal;word-break:normal}.cost-line{background:#f6f0e6;padding:6px;border-radius:7px;margin:7px 0}.subrecipe-summary,.formula-meta,.component-block,.bakery-block,.warning-block{border:1px solid #e2d8c7;border-radius:9px;padding:7px 9px;margin:7px 0;break-inside:avoid;page-break-inside:avoid}.sub-sheet{border:1px solid #e2d8c7;border-radius:9px;padding:7px 9px;margin:8px 0;background:#fffaf2;break-inside:auto;page-break-inside:auto}.sub-sheet .sub-sheet-head{display:flex;gap:8px;align-items:flex-start;justify-content:space-between;break-inside:avoid;page-break-inside:avoid}.sub-sheet .sub-sheet-head>div{min-width:0;flex:1}.sub-sheet img,.sub-sheet-photo{max-width:26mm;max-height:20mm;width:auto;height:auto;object-fit:contain;border-radius:7px;justify-self:end;background:#faf7f0}.formula-meta dl{display:grid;grid-template-columns:150px 1fr;gap:3px 8px;margin:0}.formula-meta dt{font-weight:800}.formula-meta dd{margin:0}.warning-block{background:#fff7ed;border-color:#fdba74}.sub-sheet-reference{background:#f8fafc;border-style:dashed}.technical-base-collapsed{background:#fafafa}.appcc-brief .appcc-table th{width:22%}.allergen-block{border:1px solid #f0c36b;background:#fff8e8;border-radius:9px;padding:7px 9px;margin:8px 0;break-inside:avoid;page-break-inside:avoid}.allergen-block h3{margin-top:0}.allergen-block h4{margin:6px 0 3px;color:#7c3f1d}.allergen-block ul{margin:3px 0 5px 18px;padding:0}.allergen-block .pending{color:#9a3412}.allergen-block .may-contain{color:#6b4e16}.allergen-source,.allergen-note{font-size:10.5px;color:#5b6472}.allergen-note{margin:4px 0 0}.optional-allergens{background:#fffaf2}.structured-appcc{border:1px solid #b7c8a9;background:#f8fff2;border-radius:9px;padding:7px 9px;margin:8px 0;break-inside:auto;page-break-inside:auto}.appcc-disclaimer,.appcc-note{font-size:10.5px;color:#4f5d43;margin:4px 0 6px}.appcc-row-block{break-inside:auto;page-break-inside:auto;margin:6px 0 8px}.appcc-table th{width:24%;background:#eaf4df}.structured-appcc h3{break-after:avoid-page}.structured-appcc table{break-inside:auto;page-break-inside:auto}.appcc-table td{width:76%}.appcc-cell p{margin:.20rem 0}.appcc-unstructured{background:#fff7ed;border-color:#fdba74}.warn{color:#9a3412;font-weight:700}.bakery-block h3,.component-block h3{margin-top:0}.preflight-print{break-inside:auto;page-break-inside:auto}.preflight-print table{font-size:11px}.print-legal-footer{border-top:1px solid #ddd;margin-top:12px;padding-top:6px;color:#5b6472;font-size:10px;text-align:center}.print-legal-footer strong{color:#1f2933}@media(max-width:760px){.sheet-head{display:block}.sheet-head-figure{margin:8px 0 0;max-width:100%;justify-content:flex-start}.sheet-head-photo,.sheet-photo{width:auto;max-width:100%;max-height:38mm}.sub-sheet .sub-sheet-head{display:block}.sub-sheet img,.sub-sheet-photo{max-width:100%;max-height:18mm;margin-top:5px}}@media print{button{display:none}h1,h2,h3,h4,.section-title{break-after:avoid;page-break-after:avoid}.sheet-head,.sub-sheet-head,.allergen-block,.warning-block,.appcc-card{break-inside:avoid;page-break-inside:avoid}.sub-sheet,.structured-appcc,.process-block{break-inside:auto;page-break-inside:auto}}
-/* RC3.1 hotfix maquetacion */
+/* Maquetación de impresión final */
 .sheet-head.has-photo{display:grid;grid-template-columns:minmax(0,1fr) 46mm;gap:10px;align-items:start}
 .sheet-head-figure{grid-column:2;margin:0;max-width:46mm;justify-content:flex-end;align-self:start}
 .sheet-head-text{grid-column:1;min-width:0}
@@ -2755,7 +2903,7 @@ function insertSessionItem(sessionId, item, idx) {
     const payload = selectionDbPayload(item, recipe, idx);
     db.exec(`INSERT INTO class_session_items
     (id,session_id,item_type,culinary_recipe_id,bakery_recipe_id,production_mode,main_qty,servings,pieces,piece_weight_g,flour_g,raw_dough_g,baking_loss_pct,print_a4,sort_order,notes)
-    VALUES ($id,$session,$type,$culinary,$bakery,$mode,$main,$servings,$pieces,NULL,$flour,NULL,$loss,1,$sort,$notes)`, Object.assign({ $id: `SI-${sessionId}-${idx + 1}`, $session: sessionId }, payload));
+    VALUES ($id,$session,$type,$culinary,$bakery,$mode,$main,$servings,$pieces,$pieceWeight,$flour,$rawDough,$loss,1,$sort,$notes)`, Object.assign({ $id: `SI-${sessionId}-${idx + 1}`, $session: sessionId }, payload));
 }
 function loadSession(id) {
     const s = db.query('SELECT * FROM class_sessions WHERE id=$id', { $id: id })[0];
@@ -2796,26 +2944,66 @@ function makeSelectionItem(uid) {
     if (!recipe)
         return null;
     const q = defaultQuantity(recipe);
-    return { uid, sourceType: recipe.source_type, sourceId: recipe.source_id, name: recipe.name, categoryLabel: recipe.category_label, qty: q.qty, unitLabel: q.unitLabel, baseMode: q.baseMode, baseValue: q.baseValue };
+    return Object.assign({ uid, sourceType: recipe.source_type, sourceId: recipe.source_id, name: recipe.name, categoryLabel: recipe.category_label }, q);
 }
 function defaultQuantity(recipe) {
     if (recipe.source_type === 'bakery') {
-        if (Number(recipe.base_pieces) > 0)
-            return { qty: Number(recipe.base_pieces), unitLabel: 'piezas', baseMode: 'pieces', baseValue: Number(recipe.base_pieces) };
-        return { qty: Number(recipe.base_flour_g || 1000), unitLabel: 'g harina', baseMode: 'flour_g', baseValue: Number(recipe.base_flour_g || 1000) };
+        const baseFlour = Number(recipe.base_flour_g || 1000) || 1000;
+        const baseRaw = Number(recipe.base_raw_weight_g || 0);
+        const basePieces = Number(recipe.base_pieces || 0);
+        const pieceWeightG = Number(recipe.base_raw_piece_weight_g || (baseRaw && basePieces ? baseRaw / basePieces : 0));
+        if (basePieces > 0 && pieceWeightG > 0)
+            return { qty: basePieces, unitLabel: 'piezas × g/pieza', baseMode: 'pieces_weight', baseValue: baseRaw || basePieces * pieceWeightG, baseFlourG: baseFlour, baseRawDoughG: baseRaw, basePieces, pieceWeightG, rawDoughG: round2(basePieces * pieceWeightG) };
+        if (baseRaw > 0)
+            return { qty: baseRaw, unitLabel: 'g masa/pasta', baseMode: 'raw_dough', baseValue: baseRaw, baseFlourG: baseFlour, baseRawDoughG: baseRaw, rawDoughG: baseRaw };
+        return { qty: baseFlour, unitLabel: 'g harina', baseMode: 'flour_g', baseValue: baseFlour, baseFlourG: baseFlour, flourG: baseFlour };
     }
     if (recipe.default_production_mode === 'yield' || recipe.production_kind === 'technical_yield')
         return { qty: Number(recipe.yield_quantity || 1), unitLabel: recipe.yield_unit || 'rendimiento', baseMode: 'yield', baseValue: Number(recipe.yield_quantity || 1) };
     return { qty: Number(recipe.base_servings || 1), unitLabel: 'raciones', baseMode: 'servings', baseValue: Number(recipe.base_servings || 1) };
 }
-function defaultQuantityLabel(recipe) { const q = defaultQuantity(recipe); return `${formatQty(q.qty)} ${q.unitLabel}`; }
+function defaultQuantityLabel(recipe) { const q = defaultQuantity(recipe); return selectionQuantityLabel(Object.assign({ sourceType: recipe.source_type }, q)); }
+function selectionQuantityLabel(item) {
+    if (!item)
+        return '';
+    if (item.sourceType === 'bakery') {
+        const mode = bakeryScalingMode(item);
+        if (mode === 'pieces_weight')
+            return `${formatQty(item.qty || 0)} piezas × ${formatQty(item.pieceWeightG || 0)} g = ${formatQty((Number(item.qty || 0) * Number(item.pieceWeightG || 0)) || item.rawDoughG || 0)} g masa/pasta cruda`;
+        if (mode === 'raw_dough')
+            return `${formatQty(item.rawDoughG || item.qty || 0)} g masa/pasta total`;
+        return `${formatQty(item.flourG || item.qty || 0)} g harina total`;
+    }
+    return `${formatQty(item.qty)} ${item.unitLabel || ''}`.trim();
+}
 function scaleForItem(item, recipe) { return Number(item.qty || 0) / (Number(item.baseValue || (recipe === null || recipe === void 0 ? void 0 : recipe.base_servings) || (recipe === null || recipe === void 0 ? void 0 : recipe.yield_quantity) || 1) || 1); }
+function bakeryRawBaseForRecipe(recipeId, recipe) {
+    const row = recipeId ? (db.query('SELECT base_flour_g, base_raw_weight_g FROM bakery_recipes WHERE id=$id', { $id: recipeId })[0] || {}) : {};
+    const baseFlour = Number(row.base_flour_g || (recipe === null || recipe === void 0 ? void 0 : recipe.base_flour_g) || 1000) || 1000;
+    const raw = Number(row.base_raw_weight_g || (recipe === null || recipe === void 0 ? void 0 : recipe.base_raw_weight_g) || 0);
+    if (raw > 0)
+        return raw;
+    const totalPct = recipeId ? Number(db.value("SELECT SUM(baker_pct) FROM bakery_recipe_lines WHERE recipe_id=$id AND line_group='dough' AND include_in_dough=1", { $id: recipeId }) || 0) : 0;
+    return totalPct > 0 ? baseFlour * totalPct / 100 : baseFlour;
+}
+function bakeryRawDoughForFlour(item, recipe, flourG) {
+    const baseFlour = Number((recipe === null || recipe === void 0 ? void 0 : recipe.base_flour_g) || item.baseFlourG || 1000) || 1000;
+    const baseRaw = Number((recipe === null || recipe === void 0 ? void 0 : recipe.base_raw_weight_g) || item.baseRawDoughG || bakeryRawBaseForRecipe(item.sourceId, recipe));
+    return baseRaw * (Number(flourG || baseFlour) / baseFlour);
+}
 function bakeryFlourForItem(item, recipe) {
-    const baseFlour = Number((recipe === null || recipe === void 0 ? void 0 : recipe.base_flour_g) || item.baseValue || 1000) || 1000;
-    if (item.baseMode === 'flour_g')
-        return Number(item.qty || 0);
-    if (item.baseMode === 'pieces')
-        return baseFlour * (Number(item.qty || 0) / (Number((recipe === null || recipe === void 0 ? void 0 : recipe.base_pieces) || item.baseValue || 1) || 1));
+    const baseFlour = Number((recipe === null || recipe === void 0 ? void 0 : recipe.base_flour_g) || item.baseFlourG || item.baseValue || 1000) || 1000;
+    if (bakeryScalingMode(item) === 'flour_g')
+        return Number(item.flourG || item.qty || baseFlour);
+    const baseRaw = Number((recipe === null || recipe === void 0 ? void 0 : recipe.base_raw_weight_g) || item.baseRawDoughG || bakeryRawBaseForRecipe(item.sourceId, recipe)) || baseFlour;
+    if (bakeryScalingMode(item) === 'pieces_weight') {
+        const targetRaw = Number(item.rawDoughG || (Number(item.qty || 0) * Number(item.pieceWeightG || 0)) || 0);
+        return baseFlour * (targetRaw / (baseRaw || 1));
+    }
+    if (bakeryScalingMode(item) === 'raw_dough') {
+        const targetRaw = Number(item.rawDoughG || item.qty || baseRaw);
+        return baseFlour * (targetRaw / (baseRaw || 1));
+    }
     return baseFlour * scaleForItem(item, recipe);
 }
 function lineScaled(l, scale) { var _a, _b; return Object.assign(Object.assign({}, l), { quantity: Number(l.quantity || 0) * scale, cost: Number((_b = (_a = l.estimated_cost) !== null && _a !== void 0 ? _a : l.cost) !== null && _b !== void 0 ? _b : 0) * scale }); }
@@ -3460,7 +3648,7 @@ function printDocumentFilenameBase(items, opts = {}) {
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// RC1 Usabilidad/exportaciones: wrappers de exportación externa
+// Wrappers de exportación externa
 // ────────────────────────────────────────────────────────────────────────────
 function exportCurrentOrderCsv() {
     if (!window.ObradORRExportTools) return alert('Módulo de exportación no cargado.');

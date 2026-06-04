@@ -1,1 +1,1 @@
-2.0.0-public-github-ready
+2.0.0

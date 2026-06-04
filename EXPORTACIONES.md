@@ -1,4 +1,4 @@
-# Exportaciones externas · RC1
+# Exportaciones externas
 
 Exportaciones disponibles desde Sistema:
 
@@ -11,11 +11,11 @@ Exportaciones disponibles desde Sistema:
 - Ingredientes CSV.
 - Alérgenos CSV.
 - Práctica ZIP con:
-  - README de práctica.
-  - practica.json.
-  - pedido_consolidado.csv.
-  - pedido_consolidado.tsv.
-  - alergenos_consolidados.csv.
-  - fichas_practica.html.
+  - README de práctica;
+  - `practica.json`;
+  - `pedido_consolidado.csv`;
+  - `pedido_consolidado.tsv`;
+  - `alergenos_consolidados.csv`;
+  - `fichas_practica.html`.
 
 Las exportaciones son documentación docente operativa. No equivalen a validación de obrador.

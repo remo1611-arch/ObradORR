@@ -75,9 +75,19 @@
     return { recipeId, flourG: n(flourG, baseFlour), baseFlour, scale, rawG: rawBase * scale, bakedG: bakedBase * scale, pieces: piecesBase * scale };
   }
   function bakeryFlourForItem(db, item) {
-    const r = q(db, "SELECT base_flour_g,base_pieces FROM bakery_recipes WHERE id=$id", { $id: item.sourceId })[0] || {};
-    const baseFlour = n(r.base_flour_g, item.baseValue || 1000) || 1000;
-    if (item.baseMode === "flour_g" || item.baseMode === "flour") return n(item.qty, baseFlour);
+    const r = q(db, "SELECT base_flour_g,base_raw_weight_g,base_pieces,base_raw_piece_weight_g FROM bakery_recipes WHERE id=$id", { $id: item.sourceId })[0] || {};
+    const baseFlour = n(r.base_flour_g, item.baseFlourG || item.baseValue || 1000) || 1000;
+    const baseRaw = n(r.base_raw_weight_g, item.baseRawDoughG || 0) || baseFlour;
+    const mode = item.baseMode === "pieces_weight" || (item.baseMode === "pieces" && n(item.pieceWeightG,0) > 0) ? "pieces_weight" : (item.baseMode === "raw_dough" ? "raw_dough" : (item.baseMode === "flour_g" || item.baseMode === "flour" ? "flour_g" : item.baseMode));
+    if (mode === "flour_g") return n(item.flourG, n(item.qty, baseFlour));
+    if (mode === "pieces_weight") {
+      const targetRaw = n(item.rawDoughG, n(item.qty,0) * n(item.pieceWeightG, n(r.base_raw_piece_weight_g, 0)));
+      return baseFlour * (targetRaw / (baseRaw || 1));
+    }
+    if (mode === "raw_dough") {
+      const targetRaw = n(item.rawDoughG, n(item.qty, baseRaw));
+      return baseFlour * (targetRaw / (baseRaw || 1));
+    }
     if (item.baseMode === "pieces") return baseFlour * (n(item.qty, 0) / (n(r.base_pieces, item.baseValue || 1) || 1));
     return baseFlour * (n(item.qty, item.baseValue || 1) / (n(item.baseValue, 1) || 1));
   }
@@ -200,7 +210,7 @@
     return { lines: lines.length, aggregated: aggregate(lines).length, allergens: allergensFromLines(db, lines).length };
   }
   window.ObradORRRecursiveEngine = {
-    version: "2.0.0-stable-candidate",
+    version: "2.0.0",
     canonical: true,
     scaleForCulinary, culinaryExpandedLines, culinarySubrecipes,
     bakeryBaseMetrics, bakeryDirectLines, bakeryComponents, bakeryExpandedLines,

@@ -30,6 +30,13 @@
 [OK] token presente: pagehide
 [OK] token presente: visibilitychange
 [OK] token presente: previous-db-1
+[OK] token presente: modeSelect
+[OK] token presente: rawDoughG
+[OK] token presente: flourG
+[OK] token presente: pieceWeightG
+[OK] token presente: Piezas + peso unitario
+[OK] token presente: Masa/pasta total
+[OK] token presente: Harina total
 [OK] texto público ausente: Preflight documental experimental
 [OK] texto público ausente: Vía B ·
 [OK] texto público ausente: B1 ·
@@ -43,13 +50,14 @@
 [OK] app_meta release_tag=2.0.0-stable
 [OK] app_meta cache_tag=obradorr-200-stable
 [OK] app_meta stable=1
-[OK] app_meta public_github_ready=1
+[OK] app_meta public_release=1
 [OK] culinary_recipes activas sin validada
 [OK] bakery_recipes activas sin validada
 [OK] bakery yield_status pending
 [OK] tabla import_log presente
 [OK] tabla migrations_log presente
 [OK] Quiche sin masa quebrada dulce real
-[OK] migración limpieza pública registrada
+[OK] Pasta choux APPCC corregido
+[OK] migración pública final registrada
 
 RESULTADO: OK

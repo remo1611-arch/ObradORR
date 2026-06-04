@@ -3,9 +3,9 @@
 Cambios realizados para publicación:
 
 - Retirada de lenguaje visible de desarrollo en UI/PDF.
-- `Preflight documental experimental` renombrado como `Comprobación documental previa`.
-- `Vía B` y `B1-B4` convertidos en criterios de revisión documental comprensibles.
+- Comprobación documental con lenguaje final de usuario.
+- Criterios internos de revisión convertidos en criterios documentales comprensibles.
 - Documentación pública reducida y ordenada.
-- Historial interno de RC/lotes retirado del paquete público.
+- Historial interno de trabajo retirado del paquete público.
 
-No se han cambiado fórmulas, datos gastronómicos, APPCC, alérgenos, impresión, backup/import/export ni motor recursivo.
+No se han cambiado fórmulas, cantidades, alérgenos, relaciones de ingredientes, backup/import/export ni motor recursivo.
