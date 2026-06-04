@@ -1,5 +1,5 @@
 
-## 1.0.0-rc.7
+## 1.0.0-rc.8
 
 - Saneamiento documental del Lote 3: centenos, integrales y sin gluten.
 - Avisos de centeno alto, sin gluten no certificado, contacto cruzado y fermentación espontánea.

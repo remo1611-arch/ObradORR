@@ -4,19 +4,19 @@ const ObradORRDatabase = window.ObradORRDatabase;
 if (!ObradORRDatabase)
     throw new Error("No se cargó la capa SQLite de ObradORR.");
 window.__OBRADORR_MODULE_STARTED = true;
-window.__OBRADORR_MODULE_VERSION = 'obradorr-100-rc7';
+window.__OBRADORR_MODULE_VERSION = 'obradorr-100-rc8';
 const DB_URL = '../db/obradorr.sqlite';
 const WORK_SELECTION_ID = 'WORK_CURRENT';
 const STORAGE_PRINT_OPTIONS = 'obradorr_ui_print_options_v1';
-const IDB_DATA_DB = 'obradorr-data-100-rc7';
+const IDB_DATA_DB = 'obradorr-data-100-rc8';
 const IDB_DATA_STORE = 'snapshots';
 const IDB_CURRENT_KEY = 'current-db';
-const VERSION = '1.0.0-rc.7';
+const VERSION = '1.0.0-rc.8';
 const INGREDIENT_SEARCH_LIMIT = 220;
 const PRINT_SEARCH_LIMIT = 60;
 const LEGAL_NOTICE = '© 2026 Remo José Pereira González · Uso docente personal autorizado · Sin licencia abierta de redistribución o explotación comercial.';
-const EXPECTED_RELEASE_TAG = 'rc7';
-const EXPECTED_CACHE_TAG = 'obradorr-100-rc7';
+const EXPECTED_RELEASE_TAG = 'rc8';
+const EXPECTED_CACHE_TAG = 'obradorr-100-rc8';
 const db = new ObradORRDatabase();
 const state = {
     ready: false,
@@ -1385,12 +1385,20 @@ function sheetStatusWarningHtml(detail, kind) {
         warnings.push('<b>Sin gluten no certificado:</b> formulado sin ingredientes con gluten; requiere control de ingredientes, trazabilidad y contaminación cruzada para declararse certificado.');
     if (notes.includes('batido fermentado') || notes.includes('fermentación espontánea') || notes.includes('fermentacion espontanea'))
         warnings.push('<b>Fermentación espontánea:</b> batido fermentado pendiente de control docente; no aplicar porcentaje panadero clásico como único criterio técnico.');
-    if (notes.includes('proveedor pendiente') || notes.includes('ficha técnica de proveedor') || notes.includes('ficha tecnica de proveedor'))
+    if (notes.includes('proveedor pendiente') || notes.includes('ficha técnica de proveedor') || notes.includes('ficha tecnica de proveedor') || notes.includes('chocolate/proveedor'))
         warnings.push('<b>Proveedor pendiente:</b> composición o alérgeno pendiente de ficha técnica; no cerrar la declaración sin documentación.');
+    if (notes.includes('masa enriquecida pendiente'))
+        warnings.push('<b>Masa enriquecida pendiente:</b> TFM, fermentación, cocción, peso cocido, merma y conservación requieren prueba de obrador.');
+    if (notes.includes('laminado pendiente') || notes.includes('mantequilla de vueltas') || notes.includes('pliegues') || notes.includes('grosor'))
+        warnings.push('<b>Laminado pendiente:</b> mantequilla de vueltas, pliegues, reposos, grosor, fermentación final, cocción, peso cocido y merma no están validados.');
+    if (notes.includes('variante refrigerada') || notes.includes('ficha base distinta'))
+        warnings.push('<b>Variante refrigerada:</b> nata, chantilly, crema, trufa o relleno postcocción cambian pedido, APPCC, alérgenos, conservación y servicio.');
+    if (notes.includes('masa laminada fermentada'))
+        warnings.push('<b>Masa laminada fermentada:</b> no confundir con hojaldre clásico no fermentado; laminado, fermentación y cocción siguen pendientes.');
     if (!warnings.length)
         return '';
     const uniqueWarnings = [...new Set(warnings)];
-    return `<div class="warning-block rc7-status-warning"><h3>Estado documental RC7</h3><ul>${uniqueWarnings.map(w => `<li>${w}</li>`).join('')}</ul></div>`;
+    return `<div class="warning-block rc8-status-warning"><h3>Estado documental RC8</h3><ul>${uniqueWarnings.map(w => `<li>${w}</li>`).join('')}</ul></div>`;
 }
 
 function printHeader(opts) {

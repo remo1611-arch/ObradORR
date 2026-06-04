@@ -1,6 +1,6 @@
-# RC7 · Saneamiento documental del Lote 3
+# RC8 · Saneamiento documental del Lote 3
 
-Versión: ObradORR 1.0.0-rc.7
+Versión: ObradORR 1.0.0-rc.8
 
 ## Alcance
 

@@ -1,10 +1,10 @@
-# ObradORR 1.0.0-rc.7
+# ObradORR 1.0.0-rc.8
 
 Release candidate de ObradORR.
 
 ## Corrección principal
 
-RC7 incorpora saneamiento documental del Lote 3:
+RC8 incorpora saneamiento documental del Lote 3:
 
 - Centenos altos con aviso de masa madre/acidificación, cocción prolongada, remojos/escaldados y reposo postcocción pendientes.
 - Panes formulados sin ingredientes con gluten con aviso de no certificación sin control de ingredientes y contaminación cruzada.
