@@ -48,10 +48,10 @@ if 'iframe' in (ROOT / 'app' / 'js' / 'obradorr-app-classic.js').read_text(encod
     ok('iframe de impresión presente')
 else:
     fail('no se encontró iframe de impresión')
-if 'obradorr-100-rc8' in app_html:
-    ok('cache tag RC8 en HTML')
+if 'obradorr-100-rc9' in app_html:
+    ok('cache tag RC9 en HTML')
 else:
-    fail('cache tag RC8 ausente en HTML')
+    fail('cache tag RC9 ausente en HTML')
 
 # SQLite
 con = sqlite3.connect(ROOT / 'db' / 'obradorr.sqlite')
@@ -83,7 +83,7 @@ for label, sql in checks.items():
         fail(f'{label} vacío')
 
 meta = dict(cur.execute("SELECT key,value FROM app_meta WHERE key IN ('app_version','release_tag','cache_tag','schema_version')"))
-for key, expected in {'app_version':'1.0.0-rc.8','release_tag':'rc8','cache_tag':'obradorr-100-rc8','schema_version':'1.0.0-rc.8'}.items():
+for key, expected in {'app_version':'1.0.0-rc.9','release_tag':'rc9','cache_tag':'obradorr-100-rc9','schema_version':'1.0.0-rc.9'}.items():
     if meta.get(key) == expected:
         ok(f'app_meta {key}={expected}')
     else:
@@ -198,7 +198,7 @@ else:
     fail('metadato P0-F ausente')
 
 reset_html = (ROOT / 'app' / 'reset_local_data.html').read_text(encoding='utf-8')
-for marker in ['confirmReset', 'Confirmación final', 'descarga una copia SQLite', 'obradorr-data-100-rc8']:
+for marker in ['confirmReset', 'Confirmación final', 'descarga una copia SQLite', 'obradorr-data-100-rc9']:
     if marker in reset_html:
         ok(f'marcador reset seguro: {marker}')
     else:
@@ -231,163 +231,210 @@ if 'print-legal-footer' in js_code_p0e:
 else:
     fail('pie legal de impresión ausente')
 
-# RC8 gastronomic/documental checks
+# RC9 gastronomic/documental checks
 for rec_name, expected in [('Pad thai de langostinos','no_apta'), ('Quiche lorraine','no_apta')]:
     st = cur.execute('SELECT release_status FROM culinary_recipes WHERE name=?', (rec_name,)).fetchone()
     if st and st[0] == expected:
-        ok(f'RC8 estado {rec_name}={expected}')
+        ok(f'RC9 estado {rec_name}={expected}')
     else:
-        fail(f'RC8 estado incorrecto {rec_name}: {st}')
+        fail(f'RC9 estado incorrecto {rec_name}: {st}')
 for rec_name in ['Bavaroise de vainilla','Panna cotta de vainilla','Tarta fría de queso']:
     row = cur.execute('SELECT id,release_status FROM culinary_recipes WHERE name=?', (rec_name,)).fetchone()
     if row and row[1] == 'pendiente':
-        ok(f'RC8 {rec_name} pendiente')
+        ok(f'RC9 {rec_name} pendiente')
     else:
-        fail(f'RC8 {rec_name} no está pendiente')
+        fail(f'RC9 {rec_name} no está pendiente')
     fam = cur.execute("SELECT risk_family FROM appcc_doc_blocks WHERE recipe_kind='culinary' AND recipe_id=? AND active=1", (row[0],)).fetchone() if row else None
     if fam and 'Pescado' not in fam[0]:
-        ok(f'RC8 APPCC {rec_name} no clasificado como pescado')
+        ok(f'RC9 APPCC {rec_name} no clasificado como pescado')
     else:
-        fail(f'RC8 APPCC {rec_name} sigue como {fam}')
+        fail(f'RC9 APPCC {rec_name} sigue como {fam}')
 
 pan = cur.execute("SELECT id FROM bakery_recipes WHERE name='Pan integral sin gluten con semillas'").fetchone()
 if pan:
     txt = ' '.join(r[0] for r in cur.execute('SELECT instruction FROM bakery_process_steps WHERE recipe_id=?', (pan[0],)).fetchall())
     if 'cerveza' not in txt.lower():
-        ok('RC8 pan sin gluten sin cerveza textual')
+        ok('RC9 pan sin gluten sin cerveza textual')
     else:
-        fail('RC8 pan sin gluten mantiene cerveza textual')
+        fail('RC9 pan sin gluten mantiene cerveza textual')
     if 'Gluten; Leche; Sésamo' not in txt:
-        ok('RC8 pan sin gluten no declara gluten como incorporado en texto de alérgenos')
+        ok('RC9 pan sin gluten no declara gluten como incorporado en texto de alérgenos')
     else:
-        fail('RC8 pan sin gluten mantiene Gluten como incorporado')
+        fail('RC9 pan sin gluten mantiene Gluten como incorporado')
 
 mezcla = cur.execute("SELECT release_status FROM bakery_recipes WHERE name='Mezcla de harinas sin gluten base'").fetchone()
 if mezcla and mezcla[0] == 'no_apta':
-    ok('RC8 mezcla sin gluten base no_apta')
+    ok('RC9 mezcla sin gluten base no_apta')
 else:
-    fail(f'RC8 mezcla sin gluten base estado incorrecto: {mezcla}')
+    fail(f'RC9 mezcla sin gluten base estado incorrecto: {mezcla}')
 
 for rec_name in ['Cordon bleu de pollo','Pechuga villeroy','Berenjenas fritas con miel','Falafel']:
     row = cur.execute('SELECT id, notes FROM culinary_recipes WHERE name=?', (rec_name,)).fetchone()
     if row and 'aceite como medio' in (row[1] or '').lower():
-        ok(f'RC8 aceite medio documentado en {rec_name}')
+        ok(f'RC9 aceite medio documentado en {rec_name}')
     else:
-        fail(f'RC8 falta nota aceite medio en {rec_name}')
+        fail(f'RC9 falta nota aceite medio en {rec_name}')
 
-for marker in ['sheetStatusWarningHtml','rc8-status-warning','Ficha no apta','Versión docente no IGP','Aceite de fritura']:
+for marker in ['sheetStatusWarningHtml','rc9-status-warning','Ficha no apta','Versión docente no IGP','Aceite de fritura']:
     if marker in js_code_p0e:
-        ok(f'marcador RC8 JS: {marker}')
+        ok(f'marcador RC9 JS: {marker}')
     else:
-        fail(f'marcador RC8 JS ausente: {marker}')
+        fail(f'marcador RC9 JS ausente: {marker}')
 
 
 
-# RC8 Lote 3 checks
+# RC9 Lote 3 checks
 for rec_name in ['Roggenbrot 90%','Pumpernickel bávaro','Rugbrød nórdico','Vollkornbrot con linaza']:
     row = cur.execute('SELECT id, notes FROM bakery_recipes WHERE name=?', (rec_name,)).fetchone()
     if row and 'Centeno alto' in (row[1] or ''):
-        ok(f'RC8 aviso centeno alto en {rec_name}')
+        ok(f'RC9 aviso centeno alto en {rec_name}')
     else:
-        fail(f'RC8 falta aviso centeno alto en {rec_name}')
+        fail(f'RC9 falta aviso centeno alto en {rec_name}')
 
 for rec_name in ['Pan sin gluten básico','Pan integral sin gluten con semillas']:
     row = cur.execute('SELECT id, notes FROM bakery_recipes WHERE name=?', (rec_name,)).fetchone()
     if row and 'Formulado sin ingredientes con gluten' in (row[1] or '') and 'No certificado' in (row[1] or ''):
-        ok(f'RC8 aviso sin gluten no certificado en {rec_name}')
+        ok(f'RC9 aviso sin gluten no certificado en {rec_name}')
     else:
-        fail(f'RC8 falta aviso sin gluten no certificado en {rec_name}')
+        fail(f'RC9 falta aviso sin gluten no certificado en {rec_name}')
 
 for rec_name in ['Dosa fermentada','Idli fermentado']:
     row = cur.execute('SELECT id, notes FROM bakery_recipes WHERE name=?', (rec_name,)).fetchone()
     pref = cur.execute('SELECT validation_status, notes FROM bakery_preferments WHERE recipe_id=?', (row[0],)).fetchone() if row else None
     fam = cur.execute("SELECT risk_family FROM appcc_doc_blocks WHERE recipe_kind='bakery' AND recipe_id=? AND active=1", (row[0],)).fetchone() if row else None
     if row and 'Batido fermentado de arroz/legumbre' in (row[1] or ''):
-        ok(f'RC8 {rec_name} documentado como batido fermentado')
+        ok(f'RC9 {rec_name} documentado como batido fermentado')
     else:
-        fail(f'RC8 {rec_name} sin nota de batido fermentado')
+        fail(f'RC9 {rec_name} sin nota de batido fermentado')
     if pref and pref[0] == 'pending':
-        ok(f'RC8 {rec_name} fermentación espontánea pending')
+        ok(f'RC9 {rec_name} fermentación espontánea pending')
     else:
-        fail(f'RC8 {rec_name} validation_status incorrecto: {pref}')
+        fail(f'RC9 {rec_name} validation_status incorrecto: {pref}')
     if fam and 'Batido fermentado' in fam[0]:
-        ok(f'RC8 APPCC {rec_name} batido fermentado')
+        ok(f'RC9 APPCC {rec_name} batido fermentado')
     else:
-        fail(f'RC8 APPCC {rec_name} no reclasificado: {fam}')
+        fail(f'RC9 APPCC {rec_name} no reclasificado: {fam}')
 
-for marker in ['Sin gluten no certificado','Fermentación espontánea','Centeno alto','Proveedor pendiente','rc8-status-warning']:
+for marker in ['Sin gluten no certificado','Fermentación espontánea','Centeno alto','Proveedor pendiente','rc9-status-warning']:
     if marker in js_code_p0e:
-        ok(f'marcador RC8 JS: {marker}')
+        ok(f'marcador RC9 JS: {marker}')
     else:
-        fail(f'marcador RC8 JS ausente: {marker}')
+        fail(f'marcador RC9 JS ausente: {marker}')
 
 
 
-# RC8 Lote 4 checks
+# RC9 Lote 4 checks
 for rec_name in ['Brioche directo 20% mantequilla','Brioche alta mantequilla 50%','Bollo suizo','Challah clásica','Panettone modernista simplificado','Roscón de reyes directo']:
     row = cur.execute('SELECT id, notes, release_status, yield_status FROM bakery_recipes WHERE name=?', (rec_name,)).fetchone()
     if row and row[2] == 'pendiente' and row[3] == 'pending':
-        ok(f'RC8 {rec_name} pendiente con yield pending')
+        ok(f'RC9 {rec_name} pendiente con yield pending')
     else:
-        fail(f'RC8 estado/yield incorrecto en {rec_name}: {row}')
+        fail(f'RC9 estado/yield incorrecto en {rec_name}: {row}')
     if row and 'Masa enriquecida pendiente' in (row[1] or ''):
-        ok(f'RC8 aviso masa enriquecida en {rec_name}')
+        ok(f'RC9 aviso masa enriquecida en {rec_name}')
     else:
-        fail(f'RC8 falta aviso masa enriquecida en {rec_name}')
+        fail(f'RC9 falta aviso masa enriquecida en {rec_name}')
 
 for rec_name in ['Croissant directo','Croissant con poolish','Croissant con biga firme','Pain au chocolat','Hojaldre fermentado']:
     row = cur.execute('SELECT id, notes, release_status, yield_status FROM bakery_recipes WHERE name=?', (rec_name,)).fetchone()
     if row and row[2] == 'pendiente' and row[3] == 'pending':
-        ok(f'RC8 {rec_name} pendiente con yield pending')
+        ok(f'RC9 {rec_name} pendiente con yield pending')
     else:
-        fail(f'RC8 estado/yield incorrecto en {rec_name}: {row}')
+        fail(f'RC9 estado/yield incorrecto en {rec_name}: {row}')
     if row and 'Laminado pendiente de validación' in (row[1] or ''):
-        ok(f'RC8 aviso laminado en {rec_name}')
+        ok(f'RC9 aviso laminado en {rec_name}')
     else:
-        fail(f'RC8 falta aviso laminado en {rec_name}')
+        fail(f'RC9 falta aviso laminado en {rec_name}')
 
 for rec_name in ['Croissant con poolish','Croissant con biga firme','Panettone modernista simplificado']:
     row = cur.execute('SELECT id, notes FROM bakery_recipes WHERE name=?', (rec_name,)).fetchone()
     pref = cur.execute('SELECT validation_status, notes FROM bakery_preferments WHERE recipe_id=?', (row[0],)).fetchone() if row else None
     if pref and pref[0] == 'pending':
-        ok(f'RC8 prefermento pendiente en {rec_name}')
+        ok(f'RC9 prefermento pendiente en {rec_name}')
     else:
-        fail(f'RC8 prefermento no pendiente en {rec_name}: {pref}')
+        fail(f'RC9 prefermento no pendiente en {rec_name}: {pref}')
     if row and 'Prefermento pendiente de validación' in (row[1] or ''):
-        ok(f'RC8 aviso prefermento en {rec_name}')
+        ok(f'RC9 aviso prefermento en {rec_name}')
     else:
-        fail(f'RC8 falta aviso prefermento en {rec_name}')
+        fail(f'RC9 falta aviso prefermento en {rec_name}')
 
 for rec_name in ['Roscón de reyes directo','Larpeira gallega','Torta de nata','Croissant con poolish']:
     row = cur.execute('SELECT notes FROM bakery_recipes WHERE name=?', (rec_name,)).fetchone()
     if row and 'Ficha base distinta de variante refrigerada' in (row[0] or ''):
-        ok(f'RC8 aviso variante refrigerada en {rec_name}')
+        ok(f'RC9 aviso variante refrigerada en {rec_name}')
     else:
-        fail(f'RC8 falta aviso variante refrigerada en {rec_name}')
+        fail(f'RC9 falta aviso variante refrigerada en {rec_name}')
 
 row = cur.execute("SELECT notes FROM bakery_recipes WHERE name='Pain au chocolat'").fetchone()
 if row and 'Chocolate/proveedor pendiente' in (row[0] or ''):
-    ok('RC8 Pain au chocolat con aviso proveedor chocolate')
+    ok('RC9 Pain au chocolat con aviso proveedor chocolate')
 else:
-    fail('RC8 Pain au chocolat sin aviso proveedor chocolate')
+    fail('RC9 Pain au chocolat sin aviso proveedor chocolate')
 
 row = cur.execute("SELECT notes FROM bakery_recipes WHERE name='Hojaldre fermentado'").fetchone()
 if row and 'Masa laminada fermentada' in (row[0] or ''):
-    ok('RC8 Hojaldre fermentado documentado como masa laminada fermentada')
+    ok('RC9 Hojaldre fermentado documentado como masa laminada fermentada')
 else:
-    fail('RC8 Hojaldre fermentado sin nota masa laminada fermentada')
+    fail('RC9 Hojaldre fermentado sin nota masa laminada fermentada')
 
 row = cur.execute("SELECT notes FROM bakery_recipes WHERE name='Challah clásica'").fetchone()
 if row and 'grasa verificada como aceite' in (row[0] or ''):
-    ok('RC8 Challah con grasa verificada como aceite')
+    ok('RC9 Challah con grasa verificada como aceite')
 else:
-    fail('RC8 Challah sin nota de grasa verificada')
+    fail('RC9 Challah sin nota de grasa verificada')
 
-for marker in ['Masa enriquecida pendiente','Laminado pendiente','Variante refrigerada','Masa laminada fermentada','rc8-status-warning']:
+for marker in ['Masa enriquecida pendiente','Laminado pendiente','Variante refrigerada','Masa laminada fermentada','rc9-status-warning']:
     if marker in js_code_p0e:
-        ok(f'marcador RC8 Lote 4 JS: {marker}')
+        ok(f'marcador RC9 Lote 4 JS: {marker}')
     else:
-        fail(f'marcador RC8 Lote 4 JS ausente: {marker}')
+        fail(f'marcador RC9 Lote 4 JS ausente: {marker}')
+
+
+
+# RC9 Lote 5 checks
+for rec_name in ['Fondo oscuro de ternera','Fondo blanco de ave','Fumet de pescado clásico']:
+    row = cur.execute('SELECT notes, release_status FROM culinary_recipes WHERE name=?', (rec_name,)).fetchone()
+    if row and row[1] == 'pendiente' and 'Fondo/fumet pendiente de validación' in (row[0] or ''):
+        ok(f'RC9 aviso fondo/fumet en {rec_name}')
+    else:
+        fail(f'RC9 falta aviso fondo/fumet en {rec_name}: {row}')
+
+for rec_name in ['Salsa española','Demi-glace','Salsa madeira','Salsa velouté de ave','Salsa velouté de pescado']:
+    row = cur.execute('SELECT notes, release_status FROM culinary_recipes WHERE name=?', (rec_name,)).fetchone()
+    txt = (row[0] if row else '') or ''
+    if row and row[1] == 'pendiente' and 'Subreceta recursiva' in txt and 'Coste directo ≠ coste recursivo' in txt and 'Alérgenos derivados incluidos' in txt:
+        ok(f'RC9 aviso recursivo/coste/alérgenos en {rec_name}')
+    else:
+        fail(f'RC9 falta aviso recursivo/coste/alérgenos en {rec_name}: {row}')
+
+for rec_name in ['Mirepoix blanca','Mirepoix oscura','Roux blanco','Roux rubio','Roux oscuro']:
+    row = cur.execute('SELECT notes, release_status FROM culinary_recipes WHERE name=?', (rec_name,)).fetchone()
+    if row and row[1] == 'pendiente' and 'Base técnica' in (row[0] or ''):
+        ok(f'RC9 base técnica plegable en {rec_name}')
+    else:
+        fail(f'RC9 falta nota base técnica en {rec_name}: {row}')
+
+checks_rc9 = {
+    'Mayonesa': 'Emulsión fría con huevo',
+    'Salsa holandesa': 'Emulsión caliente/tibia',
+    'Salsa bearnesa': 'Emulsión caliente/tibia',
+    'Crema pastelera': 'Subreceta sensible/refrigerada',
+    'Salsa bechamel': 'Salsa láctea sensible',
+    'Salsa de tomate': 'Salsa base pendiente',
+    'Coulis de fresa': 'Subreceta de fruta pendiente',
+}
+for rec_name, marker in checks_rc9.items():
+    row = cur.execute('SELECT notes, release_status FROM culinary_recipes WHERE name=?', (rec_name,)).fetchone()
+    if row and row[1] == 'pendiente' and marker in (row[0] or ''):
+        ok(f'RC9 aviso {marker} en {rec_name}')
+    else:
+        fail(f'RC9 falta aviso {marker} en {rec_name}: {row}')
+
+for marker in ['Subreceta recursiva', 'Coste directo ≠ coste recursivo', 'Alérgenos derivados', 'Fondo/fumet pendiente', 'Emulsión fría con huevo', 'Emulsión caliente/tibia', 'Crema/relleno refrigerado', 'technical-base-collapsed', 'rc9-status-warning']:
+    if marker in js_code_p0e:
+        ok(f'marcador RC9 JS: {marker}')
+    else:
+        fail(f'marcador RC9 JS ausente: {marker}')
 
 con.close()
 

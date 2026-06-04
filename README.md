@@ -1,4 +1,4 @@
-# ObradORR 1.0.0-rc.8
+# ObradORR 1.0.0-rc.9
 
 Aplicación web local/offline para uso docente en Formación Profesional de Cocina, Pastelería y Panadería.
 
@@ -48,7 +48,7 @@ ObradORR no es un ERP, TPV, sistema de stock real, SaaS ni plataforma con login.
 
 Versión actual:
 
-    1.0.0-rc.8
+    1.0.0-rc.9
 
 Canal:
 
@@ -82,6 +82,6 @@ Las versiones descargables están disponibles en:
 
 https://github.com/remo1611-arch/ObradORR/releases
 
-## Nota RC8
+## Nota RC9
 
-RC8 refuerza el saneamiento documental del Lote 3: centenos altos, panes formulados sin ingredientes con gluten, contacto cruzado, Dosa/Idli como batidos fermentados y fermentación espontánea pendiente de control docente. No valida fórmulas ni rendimientos.
+RC9 refuerza el saneamiento documental del Lote 3: centenos altos, panes formulados sin ingredientes con gluten, contacto cruzado, Dosa/Idli como batidos fermentados y fermentación espontánea pendiente de control docente. No valida fórmulas ni rendimientos.

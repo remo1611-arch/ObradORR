@@ -1,6 +1,5 @@
-ObradORR 1.0.0-rc.8
-Release tag: rc8
+ObradORR 1.0.0-rc.9
+Release tag: rc9
 Release channel: release-candidate
-Cache tag: obradorr-100-rc8
-
+Cache tag: obradorr-100-rc9
 © 2026 Remo José Pereira González · Uso docente personal autorizado · Sin licencia abierta de redistribución o explotación comercial.

@@ -52,10 +52,11 @@ textarea[data-step-instruction], textarea[data-step-notes]{min-width:240px;min-h
 
 /* © 2026 Remo José Pereira González · Uso docente personal autorizado · Sin licencia abierta de redistribución o explotación comercial. */
 
-/* RC8 · estados gastronómicos/documentales */
+/* RC9 · estados gastronómicos/documentales */
 .btn[disabled]{opacity:.55;cursor:not-allowed;filter:grayscale(.15)}
 .btn[disabled]:hover{transform:none;box-shadow:none}
 .recipe-card-blocked,.result-row-blocked{background:#fff7ed;border-color:#fdba74}
 .danger-pill{background:#fee2e2;color:#991b1b}
-.rc8-status-warning ul{margin:.35rem 0 0 1.1rem;padding:0}
-.rc8-status-warning li{margin:.25rem 0}
+.rc8-status-warning ul,.rc9-status-warning ul{margin:.35rem 0 0 1.1rem;padding:0}
+.rc8-status-warning li,.rc9-status-warning li{margin:.25rem 0}
+.technical-base-collapsed{background:#fffaf2;border-style:dashed}

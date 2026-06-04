@@ -4,19 +4,19 @@ const ObradORRDatabase = window.ObradORRDatabase;
 if (!ObradORRDatabase)
     throw new Error("No se cargó la capa SQLite de ObradORR.");
 window.__OBRADORR_MODULE_STARTED = true;
-window.__OBRADORR_MODULE_VERSION = 'obradorr-100-rc8';
+window.__OBRADORR_MODULE_VERSION = 'obradorr-100-rc9';
 const DB_URL = '../db/obradorr.sqlite';
 const WORK_SELECTION_ID = 'WORK_CURRENT';
 const STORAGE_PRINT_OPTIONS = 'obradorr_ui_print_options_v1';
-const IDB_DATA_DB = 'obradorr-data-100-rc8';
+const IDB_DATA_DB = 'obradorr-data-100-rc9';
 const IDB_DATA_STORE = 'snapshots';
 const IDB_CURRENT_KEY = 'current-db';
-const VERSION = '1.0.0-rc.8';
+const VERSION = '1.0.0-rc.9';
 const INGREDIENT_SEARCH_LIMIT = 220;
 const PRINT_SEARCH_LIMIT = 60;
 const LEGAL_NOTICE = '© 2026 Remo José Pereira González · Uso docente personal autorizado · Sin licencia abierta de redistribución o explotación comercial.';
-const EXPECTED_RELEASE_TAG = 'rc8';
-const EXPECTED_CACHE_TAG = 'obradorr-100-rc8';
+const EXPECTED_RELEASE_TAG = 'rc9';
+const EXPECTED_CACHE_TAG = 'obradorr-100-rc9';
 const db = new ObradORRDatabase();
 const state = {
     ready: false,
@@ -1385,8 +1385,26 @@ function sheetStatusWarningHtml(detail, kind) {
         warnings.push('<b>Sin gluten no certificado:</b> formulado sin ingredientes con gluten; requiere control de ingredientes, trazabilidad y contaminación cruzada para declararse certificado.');
     if (notes.includes('batido fermentado') || notes.includes('fermentación espontánea') || notes.includes('fermentacion espontanea'))
         warnings.push('<b>Fermentación espontánea:</b> batido fermentado pendiente de control docente; no aplicar porcentaje panadero clásico como único criterio técnico.');
-    if (notes.includes('proveedor pendiente') || notes.includes('ficha técnica de proveedor') || notes.includes('ficha tecnica de proveedor') || notes.includes('chocolate/proveedor'))
+    if (notes.includes('proveedor pendiente') || notes.includes('ficha técnica de proveedor') || notes.includes('ficha tecnica de proveedor') || notes.includes('chocolate/proveedor') || notes.includes('sulfitos/alérgenos de proveedor') || notes.includes('sulfitos/alergenos de proveedor'))
         warnings.push('<b>Proveedor pendiente:</b> composición o alérgeno pendiente de ficha técnica; no cerrar la declaración sin documentación.');
+    if (notes.includes('fondo/fumet pendiente'))
+        warnings.push('<b>Fondo/fumet pendiente:</b> rendimiento final, reducción/evaporación, enfriado, conservación y regeneración requieren prueba de obrador.');
+    if (notes.includes('subreceta recursiva') || notes.includes('coste directo ≠ coste recursivo') || notes.includes('coste directo') && notes.includes('coste recursivo'))
+        warnings.push('<b>Subreceta recursiva:</b> coste, pedido y alérgenos deben calcularse con ingredientes directos y subrecetas derivadas; no confundir coste directo ≠ coste recursivo.');
+    if (notes.includes('alérgenos derivados incluidos') || notes.includes('alergenos derivados incluidos'))
+        warnings.push('<b>Alérgenos derivados:</b> deben permanecer visibles en fichas con subrecetas; no basta con alérgenos directos.');
+    if (notes.includes('rendimiento/reducción pendiente') || notes.includes('rendimiento/reduccion pendiente') || notes.includes('reducción/evaporación') || notes.includes('reduccion/evaporacion'))
+        warnings.push('<b>Rendimiento/reducción pendiente:</b> no se han validado reducción, evaporación, concentración final, conservación o regeneración.');
+    if (notes.includes('emulsión fría con huevo') || notes.includes('emulsion fria con huevo'))
+        warnings.push('<b>Emulsión fría con huevo:</b> usar preferentemente ovoproducto pasteurizado; servicio inmediato o refrigeración estricta según procedimiento del centro.');
+    if (notes.includes('emulsión caliente') || notes.includes('emulsion caliente') || notes.includes('emulsión caliente/tibia') || notes.includes('emulsion caliente/tibia'))
+        warnings.push('<b>Emulsión caliente/tibia:</b> elaboración con yema de uso inmediato; no mantener prolongadamente en zona templada.');
+    if (notes.includes('subreceta sensible/refrigerada') || notes.includes('crema/relleno refrigerado') || notes.includes('salsa láctea sensible') || notes.includes('salsa lactea sensible'))
+        warnings.push('<b>Crema/relleno refrigerado:</b> requiere cocción completa cuando proceda, enfriado rápido, protección y conservación refrigerada.');
+    if (notes.includes('salsa base pendiente'))
+        warnings.push('<b>Salsa base pendiente:</b> reducción, rendimiento final, conservación y regeneración no están validados.');
+    if (notes.includes('subreceta de fruta pendiente'))
+        warnings.push('<b>Subreceta de fruta pendiente:</b> falta definir proceso crudo/cocido/pasteurizado y conservación docente.');
     if (notes.includes('masa enriquecida pendiente'))
         warnings.push('<b>Masa enriquecida pendiente:</b> TFM, fermentación, cocción, peso cocido, merma y conservación requieren prueba de obrador.');
     if (notes.includes('laminado pendiente') || notes.includes('mantequilla de vueltas') || notes.includes('pliegues') || notes.includes('grosor'))
@@ -1398,9 +1416,10 @@ function sheetStatusWarningHtml(detail, kind) {
     if (!warnings.length)
         return '';
     const uniqueWarnings = [...new Set(warnings)];
-    return `<div class="warning-block rc8-status-warning"><h3>Estado documental RC8</h3><ul>${uniqueWarnings.map(w => `<li>${w}</li>`).join('')}</ul></div>`;
+    return `<div class="warning-block rc9-status-warning"><h3>Estado documental RC9</h3><ul>${uniqueWarnings.map(w => `<li>${w}</li>`).join('')}</ul></div>`;
 }
 
+// RC9 marker: Coste directo ≠ coste recursivo
 function printHeader(opts) {
     const fields = [];
     if (opts.includeTeachingData) {
@@ -1467,10 +1486,23 @@ async function culinarySubrecipeSectionsHtml(recipeId, parentScale, opts, ctx = 
             chunks.push(`<div class="warning-block"><b>Subelaboración no escalada:</b> ${escapeHtml(row.name)} · ${escapeHtml(row.warning)}</div>`);
             continue;
         }
+        const detail = recipeDetail('culinary', row.id);
+        if (shouldFoldTechnicalSubrecipe(row, detail)) {
+            chunks.push(foldedTechnicalSubrecipeHtml(row, detail));
+            continue;
+        }
         const childCtx = { depth: depth + 1, visited: new Set([...(ctx.visited || []), key]) };
         chunks.push(await culinarySubrecipeSheetHtml(row, opts, childCtx));
     }
     return chunks.join('\n');
+}
+function shouldFoldTechnicalSubrecipe(row, detail) {
+    const text = `${(row && row.name) || ''} ${(detail && detail.notes) || ''} ${(detail && detail.service_notes) || ''}`.toLowerCase();
+    return (text.includes('base técnica') || text.includes('base tecnica')) && (text.includes('mirepoix') || text.includes('roux'));
+}
+function foldedTechnicalSubrecipeHtml(row, detail) {
+    const allergenData = culinaryAllergenData(row.id);
+    return `<section class="sub-sheet technical-base-collapsed"><h3>Base técnica plegada: ${escapeHtml(row.name)}</h3><p>Cantidad necesaria: ${escapeHtml(displayQuantity(row.requiredQty, row.requiredUnit).text)} · Rendimiento base: ${escapeHtml(displayQuantity(row.yieldQty, row.yieldUnit).text)} · factor ${formatQty(row.factor)}</p><p class="muted">No se desarrolla como producto final para no saturar la impresión. Sus ingredientes, pedido y alérgenos derivados permanecen consolidados en la ficha recursiva.</p>${sheetStatusWarningHtml(detail, 'culinary')}${allergenBlockHtml(allergenData, 'Alérgenos de base técnica')}</section>`;
 }
 async function culinarySubrecipeSheetHtml(row, opts, ctx) {
     const photo = await recipePhotoDataUrl('culinary', row.id);
