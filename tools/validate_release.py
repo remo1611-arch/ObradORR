@@ -48,10 +48,10 @@ if 'iframe' in (ROOT / 'app' / 'js' / 'obradorr-app-classic.js').read_text(encod
     ok('iframe de impresión presente')
 else:
     fail('no se encontró iframe de impresión')
-if 'obradorr-100-rc6' in app_html:
-    ok('cache tag RC6 en HTML')
+if 'obradorr-100-rc7' in app_html:
+    ok('cache tag RC7 en HTML')
 else:
-    fail('cache tag RC6 ausente en HTML')
+    fail('cache tag RC7 ausente en HTML')
 
 # SQLite
 con = sqlite3.connect(ROOT / 'db' / 'obradorr.sqlite')
@@ -83,7 +83,7 @@ for label, sql in checks.items():
         fail(f'{label} vacío')
 
 meta = dict(cur.execute("SELECT key,value FROM app_meta WHERE key IN ('app_version','release_tag','cache_tag','schema_version')"))
-for key, expected in {'app_version':'1.0.0-rc.6','release_tag':'rc6','cache_tag':'obradorr-100-rc6','schema_version':'1.0.0-rc.6'}.items():
+for key, expected in {'app_version':'1.0.0-rc.7','release_tag':'rc7','cache_tag':'obradorr-100-rc7','schema_version':'1.0.0-rc.7'}.items():
     if meta.get(key) == expected:
         ok(f'app_meta {key}={expected}')
     else:
@@ -198,7 +198,7 @@ else:
     fail('metadato P0-F ausente')
 
 reset_html = (ROOT / 'app' / 'reset_local_data.html').read_text(encoding='utf-8')
-for marker in ['confirmReset', 'Confirmación final', 'descarga una copia SQLite', 'obradorr-data-100-rc6']:
+for marker in ['confirmReset', 'Confirmación final', 'descarga una copia SQLite', 'obradorr-data-100-rc7']:
     if marker in reset_html:
         ok(f'marcador reset seguro: {marker}')
     else:
@@ -231,55 +231,95 @@ if 'print-legal-footer' in js_code_p0e:
 else:
     fail('pie legal de impresión ausente')
 
-# RC6 gastronomic/documental checks
+# RC7 gastronomic/documental checks
 for rec_name, expected in [('Pad thai de langostinos','no_apta'), ('Quiche lorraine','no_apta')]:
     st = cur.execute('SELECT release_status FROM culinary_recipes WHERE name=?', (rec_name,)).fetchone()
     if st and st[0] == expected:
-        ok(f'RC6 estado {rec_name}={expected}')
+        ok(f'RC7 estado {rec_name}={expected}')
     else:
-        fail(f'RC6 estado incorrecto {rec_name}: {st}')
+        fail(f'RC7 estado incorrecto {rec_name}: {st}')
 for rec_name in ['Bavaroise de vainilla','Panna cotta de vainilla','Tarta fría de queso']:
     row = cur.execute('SELECT id,release_status FROM culinary_recipes WHERE name=?', (rec_name,)).fetchone()
     if row and row[1] == 'pendiente':
-        ok(f'RC6 {rec_name} pendiente')
+        ok(f'RC7 {rec_name} pendiente')
     else:
-        fail(f'RC6 {rec_name} no está pendiente')
+        fail(f'RC7 {rec_name} no está pendiente')
     fam = cur.execute("SELECT risk_family FROM appcc_doc_blocks WHERE recipe_kind='culinary' AND recipe_id=? AND active=1", (row[0],)).fetchone() if row else None
     if fam and 'Pescado' not in fam[0]:
-        ok(f'RC6 APPCC {rec_name} no clasificado como pescado')
+        ok(f'RC7 APPCC {rec_name} no clasificado como pescado')
     else:
-        fail(f'RC6 APPCC {rec_name} sigue como {fam}')
+        fail(f'RC7 APPCC {rec_name} sigue como {fam}')
 
 pan = cur.execute("SELECT id FROM bakery_recipes WHERE name='Pan integral sin gluten con semillas'").fetchone()
 if pan:
     txt = ' '.join(r[0] for r in cur.execute('SELECT instruction FROM bakery_process_steps WHERE recipe_id=?', (pan[0],)).fetchall())
     if 'cerveza' not in txt.lower():
-        ok('RC6 pan sin gluten sin cerveza textual')
+        ok('RC7 pan sin gluten sin cerveza textual')
     else:
-        fail('RC6 pan sin gluten mantiene cerveza textual')
+        fail('RC7 pan sin gluten mantiene cerveza textual')
     if 'Gluten; Leche; Sésamo' not in txt:
-        ok('RC6 pan sin gluten no declara gluten como incorporado en texto de alérgenos')
+        ok('RC7 pan sin gluten no declara gluten como incorporado en texto de alérgenos')
     else:
-        fail('RC6 pan sin gluten mantiene Gluten como incorporado')
+        fail('RC7 pan sin gluten mantiene Gluten como incorporado')
 
 mezcla = cur.execute("SELECT release_status FROM bakery_recipes WHERE name='Mezcla de harinas sin gluten base'").fetchone()
 if mezcla and mezcla[0] == 'no_apta':
-    ok('RC6 mezcla sin gluten base no_apta')
+    ok('RC7 mezcla sin gluten base no_apta')
 else:
-    fail(f'RC6 mezcla sin gluten base estado incorrecto: {mezcla}')
+    fail(f'RC7 mezcla sin gluten base estado incorrecto: {mezcla}')
 
 for rec_name in ['Cordon bleu de pollo','Pechuga villeroy','Berenjenas fritas con miel','Falafel']:
     row = cur.execute('SELECT id, notes FROM culinary_recipes WHERE name=?', (rec_name,)).fetchone()
     if row and 'aceite como medio' in (row[1] or '').lower():
-        ok(f'RC6 aceite medio documentado en {rec_name}')
+        ok(f'RC7 aceite medio documentado en {rec_name}')
     else:
-        fail(f'RC6 falta nota aceite medio en {rec_name}')
+        fail(f'RC7 falta nota aceite medio en {rec_name}')
 
-for marker in ['sheetStatusWarningHtml','rc6-status-warning','Ficha no apta','Versión docente no IGP','Aceite de fritura']:
+for marker in ['sheetStatusWarningHtml','rc7-status-warning','Ficha no apta','Versión docente no IGP','Aceite de fritura']:
     if marker in js_code_p0e:
-        ok(f'marcador RC6 JS: {marker}')
+        ok(f'marcador RC7 JS: {marker}')
     else:
-        fail(f'marcador RC6 JS ausente: {marker}')
+        fail(f'marcador RC7 JS ausente: {marker}')
+
+
+
+# RC7 Lote 3 checks
+for rec_name in ['Roggenbrot 90%','Pumpernickel bávaro','Rugbrød nórdico','Vollkornbrot con linaza']:
+    row = cur.execute('SELECT id, notes FROM bakery_recipes WHERE name=?', (rec_name,)).fetchone()
+    if row and 'Centeno alto' in (row[1] or ''):
+        ok(f'RC7 aviso centeno alto en {rec_name}')
+    else:
+        fail(f'RC7 falta aviso centeno alto en {rec_name}')
+
+for rec_name in ['Pan sin gluten básico','Pan integral sin gluten con semillas']:
+    row = cur.execute('SELECT id, notes FROM bakery_recipes WHERE name=?', (rec_name,)).fetchone()
+    if row and 'Formulado sin ingredientes con gluten' in (row[1] or '') and 'No certificado' in (row[1] or ''):
+        ok(f'RC7 aviso sin gluten no certificado en {rec_name}')
+    else:
+        fail(f'RC7 falta aviso sin gluten no certificado en {rec_name}')
+
+for rec_name in ['Dosa fermentada','Idli fermentado']:
+    row = cur.execute('SELECT id, notes FROM bakery_recipes WHERE name=?', (rec_name,)).fetchone()
+    pref = cur.execute('SELECT validation_status, notes FROM bakery_preferments WHERE recipe_id=?', (row[0],)).fetchone() if row else None
+    fam = cur.execute("SELECT risk_family FROM appcc_doc_blocks WHERE recipe_kind='bakery' AND recipe_id=? AND active=1", (row[0],)).fetchone() if row else None
+    if row and 'Batido fermentado de arroz/legumbre' in (row[1] or ''):
+        ok(f'RC7 {rec_name} documentado como batido fermentado')
+    else:
+        fail(f'RC7 {rec_name} sin nota de batido fermentado')
+    if pref and pref[0] == 'pending':
+        ok(f'RC7 {rec_name} fermentación espontánea pending')
+    else:
+        fail(f'RC7 {rec_name} validation_status incorrecto: {pref}')
+    if fam and 'Batido fermentado' in fam[0]:
+        ok(f'RC7 APPCC {rec_name} batido fermentado')
+    else:
+        fail(f'RC7 APPCC {rec_name} no reclasificado: {fam}')
+
+for marker in ['Sin gluten no certificado','Fermentación espontánea','Centeno alto','Proveedor pendiente','rc7-status-warning']:
+    if marker in js_code_p0e:
+        ok(f'marcador RC7 JS: {marker}')
+    else:
+        fail(f'marcador RC7 JS ausente: {marker}')
 
 con.close()
 

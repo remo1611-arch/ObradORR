@@ -4,19 +4,19 @@ const ObradORRDatabase = window.ObradORRDatabase;
 if (!ObradORRDatabase)
     throw new Error("No se cargó la capa SQLite de ObradORR.");
 window.__OBRADORR_MODULE_STARTED = true;
-window.__OBRADORR_MODULE_VERSION = 'obradorr-100-rc6';
+window.__OBRADORR_MODULE_VERSION = 'obradorr-100-rc7';
 const DB_URL = '../db/obradorr.sqlite';
 const WORK_SELECTION_ID = 'WORK_CURRENT';
 const STORAGE_PRINT_OPTIONS = 'obradorr_ui_print_options_v1';
-const IDB_DATA_DB = 'obradorr-data-100-rc6';
+const IDB_DATA_DB = 'obradorr-data-100-rc7';
 const IDB_DATA_STORE = 'snapshots';
 const IDB_CURRENT_KEY = 'current-db';
-const VERSION = '1.0.0-rc.6';
+const VERSION = '1.0.0-rc.7';
 const INGREDIENT_SEARCH_LIMIT = 220;
 const PRINT_SEARCH_LIMIT = 60;
 const LEGAL_NOTICE = '© 2026 Remo José Pereira González · Uso docente personal autorizado · Sin licencia abierta de redistribución o explotación comercial.';
-const EXPECTED_RELEASE_TAG = 'rc6';
-const EXPECTED_CACHE_TAG = 'obradorr-100-rc6';
+const EXPECTED_RELEASE_TAG = 'rc7';
+const EXPECTED_CACHE_TAG = 'obradorr-100-rc7';
 const db = new ObradORRDatabase();
 const state = {
     ready: false,
@@ -1363,7 +1363,8 @@ function sheetStatusWarningHtml(detail, kind) {
     if (kind === 'bakery' && detail.yield_status === 'pending')
         warnings.push('<b>Rendimiento pendiente:</b> peso cocido, merma o piezas deben validarse en obrador; los valores actuales son orientativos.');
     if (kind === 'bakery' && detail.preferment_validation_status === 'pending') {
-        const prefLabel = notes.includes('masa madre') || String(detail.bp_type || detail.preferment_type || '').toLowerCase().includes('masa madre') ? 'Masa madre/prefermento pendiente' : 'Prefermento pendiente';
+        const prefText = String(detail.bp_type || detail.preferment_type || '').toLowerCase();
+        const prefLabel = notes.includes('batido fermentado') || notes.includes('fermentación espontánea') || prefText.includes('fermentación espontánea') ? 'Fermentación espontánea pendiente' : (notes.includes('masa madre') || prefText.includes('masa madre') ? 'Masa madre/prefermento pendiente' : 'Prefermento pendiente');
         warnings.push(`<b>${prefLabel}:</b> tiempo, temperatura, levadura/madurez o método requieren prueba de obrador.`);
     }
     if (notes.includes('aceite como medio de fritura') || notes.includes('medio de fritura/pedido'))
@@ -1378,9 +1379,18 @@ function sheetStatusWarningHtml(detail, kind) {
         warnings.push('<b>Alérgeno pendiente:</b> gelatina/proveedor pendiente de verificación; no convertir en dato confirmado sin ficha técnica.');
     if (notes.includes('anisakis') || notes.includes('consumo crudo'))
         warnings.push('<b>Materia prima cruda:</b> requiere proveedor apto y control anisakis/congelación preventiva según manual APPCC del centro.');
+    if (notes.includes('centeno alto') || notes.includes('acidificación') || notes.includes('acidificacion') || notes.includes('reposo postcocción') || notes.includes('reposo postcoccion'))
+        warnings.push('<b>Centeno alto:</b> masa madre/acidificación, cocción prolongada, remojos o reposo postcocción pendientes de prueba de obrador.');
+    if (notes.includes('formulado sin ingredientes con gluten') || notes.includes('no certificado'))
+        warnings.push('<b>Sin gluten no certificado:</b> formulado sin ingredientes con gluten; requiere control de ingredientes, trazabilidad y contaminación cruzada para declararse certificado.');
+    if (notes.includes('batido fermentado') || notes.includes('fermentación espontánea') || notes.includes('fermentacion espontanea'))
+        warnings.push('<b>Fermentación espontánea:</b> batido fermentado pendiente de control docente; no aplicar porcentaje panadero clásico como único criterio técnico.');
+    if (notes.includes('proveedor pendiente') || notes.includes('ficha técnica de proveedor') || notes.includes('ficha tecnica de proveedor'))
+        warnings.push('<b>Proveedor pendiente:</b> composición o alérgeno pendiente de ficha técnica; no cerrar la declaración sin documentación.');
     if (!warnings.length)
         return '';
-    return `<div class="warning-block rc6-status-warning"><h3>Estado documental RC6</h3><ul>${warnings.map(w => `<li>${w}</li>`).join('')}</ul></div>`;
+    const uniqueWarnings = [...new Set(warnings)];
+    return `<div class="warning-block rc7-status-warning"><h3>Estado documental RC7</h3><ul>${uniqueWarnings.map(w => `<li>${w}</li>`).join('')}</ul></div>`;
 }
 
 function printHeader(opts) {
@@ -1972,7 +1982,7 @@ function recipeSteps(sourceType, sourceId) {
 function recipeDetail(sourceType, sourceId) {
     if (sourceType === 'culinary')
         return db.query('SELECT id, name, release_status, process, service_notes, appcc_notes, notes FROM culinary_recipes WHERE id=$id', { $id: sourceId })[0] || {};
-    return db.query('SELECT id, name, release_status, yield_status, fermentation_notes AS process, notes, NULL AS service_notes, NULL AS appcc_notes FROM bakery_recipes WHERE id=$id', { $id: sourceId })[0] || {};
+    return db.query(`SELECT br.id, br.name, br.release_status, br.yield_status, br.fermentation_notes AS process, br.notes, NULL AS service_notes, NULL AS appcc_notes, bp.preferment_type AS bp_type, bp.notes AS preferment_notes, bp.validation_status AS preferment_validation_status FROM bakery_recipes br LEFT JOIN bakery_preferments bp ON bp.recipe_id=br.id WHERE br.id=$id`, { $id: sourceId })[0] || {};
 }
 function recipePhotoDataUrl(kind, id) {
     const row = db.query(`SELECT ma.mime_type, ma.data, ma.file_name

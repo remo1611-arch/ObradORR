@@ -1,3 +1,11 @@
+
+## 1.0.0-rc.7
+
+- Saneamiento documental del Lote 3: centenos, integrales y sin gluten.
+- Avisos de centeno alto, sin gluten no certificado, contacto cruzado y fermentación espontánea.
+- Dosa e Idli se documentan como batidos fermentados.
+- No se validan fórmulas ni rendimientos sin prueba de obrador.
+
 # CHANGELOG · ObradORR
 
 ## 1.0.0-rc.6 PUBLIC

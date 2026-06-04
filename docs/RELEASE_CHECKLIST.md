@@ -1,7 +1,7 @@
-# RELEASE_CHECKLIST · ObradORR 1.0.0-rc.6
+# RELEASE_CHECKLIST · ObradORR 1.0.0-rc.7
 
 - [✓] Entrada `app/obradorr.html`.
-- [✓] Cache tag `obradorr-100-rc6`.
+- [✓] Cache tag `obradorr-100-rc7`.
 - [✓] SQLite `integrity_check=ok`.
 - [✓] SQLite `foreign_key_check=[]`.
 - [✓] JS supera `node --check`.
