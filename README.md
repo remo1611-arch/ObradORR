@@ -1,28 +1,38 @@
-# ObradORR 2.0.0 STABLE-CANDIDATE
+# ObradORR 2.0
 
-Aplicación web local/offline para documentación docente de cocina, pastelería y panadería: fichas técnicas, pedido consolidado, APPCC docente, alérgenos, perfiles de impresión, editor, exportaciones y copias de seguridad.
+Aula taller digital offline para cocina, pastelería y panadería.
 
-## Apertura rápida
+ObradORR permite trabajar con fichas técnicas, ingredientes, subelaboraciones, pedidos consolidados, alérgenos, APPCC docente, perfiles de impresión y copias SQLite sin depender de servidor externo.
 
-- `Abrir_ObradORR.html`
-- o `app/obradorr.html?v=obradorr-200-stable-candidate` desde servidor local.
+## Estado de la versión
 
-## Validación
+- Versión: **2.0.0**
+- Canal: **estable / publicación limpia GitHub**
+- Ejecución: navegador moderno con servidor local desde la raíz del proyecto.
+- Base incluida: SQLite local.
 
-```bash
-python tools/validate_release.py
-```
+## Uso básico
 
-## Estado documental
+1. Descomprime el ZIP.
+2. Arranca un servidor local desde la raíz del proyecto.
+3. Abre `app/obradorr.html` en el navegador.
+4. Trabaja con las pestañas: Inicio, Elaboraciones, Ingredientes, Imprimir/exportar, Sesiones y Sistema.
+5. Al terminar una sesión importante, descarga una copia `.sqlite` desde Sistema.
 
-Ninguna ficha debe considerarse validada por la aplicación. Las fichas permanecen como propuestas documentales pendientes de prueba y validación por profesorado en obrador.
+## Límites importantes
 
-## Documentos principales
+Las fichas son propuestas documentales contrastadas. La validación real de rendimiento, textura, merma, tiempos y aceptación organoléptica corresponde al profesorado tras prueba en obrador.
 
-- `RELEASE_NOTES_2_0_STABLE_CANDIDATE.md`
-- `CHANGELOG_2_0_STABLE_CANDIDATE.md`
-- `LIMITACIONES_2_0_STABLE_CANDIDATE.md`
-- `GUÍA_TERMUX_STABLE_CANDIDATE.md`
-- `GUÍA_WINDOWS_STABLE_CANDIDATE.md`
-- `docs/MATRIZ_VALIDACION_2_0_STABLE_CANDIDATE.md`
-- `DATA8_PENDIENTE_OBRADOR.md`
+## Documentación
+
+- `docs/GUIA_TERMUX.md`
+- `docs/GUIA_WINDOWS.md`
+- `docs/SEGURIDAD_DATOS.md`
+- `docs/EXPORTACIONES.md`
+- `docs/IMPORTACION_SEGURA.md`
+- `docs/PERFILES_DOCUMENTALES.md`
+- `docs/DATA8_VALIDACION_OBRADOR.md`
+
+## Autoría
+
+© 2026 Remo José Pereira González. Uso docente personal autorizado. Sin licencia abierta de redistribución o explotación comercial salvo permiso expreso.

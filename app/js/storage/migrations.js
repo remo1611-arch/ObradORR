@@ -1,6 +1,6 @@
 (function () {
   "use strict";
-  const VERSION = "2.0.0-stable-candidate";
+  const VERSION = "2.0.0";
   const MIGRATION_ID = "20260604_200_final_allinone_non_destructive";
   function hasColumn(db, table, column) { return db.query(`PRAGMA table_info(${table})`).some(r => r.name === column); }
   function addColumn(db, table, spec) { const name = spec.split(/\s+/)[0]; if (!hasColumn(db, table, name)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${spec}`); }

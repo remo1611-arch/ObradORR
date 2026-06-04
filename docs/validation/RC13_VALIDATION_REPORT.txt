@@ -1,9 +1,0 @@
-VALIDACIÓN RC13
-integrity_check: ok
-foreign_key_check: []
-culinary_status: [('no_apta', 3), ('pendiente', 203)]
-bakery_status: [('no_apta', 3), ('pendiente', 96)]
-documentary_sources: 11
-recipe_documentary_reviews: 17
-b1_reviews: 13
-VALIDACIÓN OK · ObradORR 1.0.0-rc.13

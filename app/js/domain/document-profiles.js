@@ -4,7 +4,7 @@
     aula_taller: {
       id: "aula_taller",
       label: "Aula-taller alumnado",
-      help: "Documento operativo compacto para aula-taller. Costes ocultos, proceso visible y preflight resumido.",
+      help: "Documento operativo compacto para aula-taller. Costes ocultos, proceso visible y comprobación documental resumida.",
       compact: true,
       audit: false,
       options: { includeCosts: false, includeProcess: true, includeAppcc: true, subrecipeMode: "none", preflightMode: "summary" },
@@ -22,7 +22,7 @@
     cm: {
       id: "cm",
       label: "CM · ficha técnica",
-      help: "Proceso técnico, pedido y APPCC medio. Costes ocultos por defecto y preflight solo crítico.",
+      help: "Proceso técnico, pedido y APPCC medio. Costes ocultos por defecto y comprobación documental solo crítica.",
       compact: false,
       audit: false,
       options: { includeCosts: false, includeProcess: true, includeAppcc: true, subrecipeMode: "ingredients", preflightMode: "critical" },
@@ -58,7 +58,7 @@
     auditoria_completa: {
       id: "auditoria_completa",
       label: "Auditoría documental",
-      help: "Documento interno completo con trazabilidad, costes, subrecetas, APPCC, preflight completo y avisos de estado.",
+      help: "Documento interno completo con trazabilidad, costes, subrecetas, APPCC, comprobación documental completa y avisos de estado.",
       compact: false,
       audit: true,
       options: { includeCosts: true, includeProcess: true, includeAppcc: true, subrecipeMode: "sheets", preflightMode: "complete" },

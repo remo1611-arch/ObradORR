@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>ObradORR · Reinicio local</title>
-  <link rel="stylesheet" href="./css/obradorr.css?v=obradorr-200-stable-candidate" />
+  <link rel="stylesheet" href="./css/obradorr.css?v=obradorr-200-stable" />
 </head>
 <body>
   <main class="main">
@@ -19,7 +19,7 @@
       </label>
       <div class="actions" style="margin-top:14px">
         <button class="btn danger" id="resetBtn">Borrar recuperación local</button>
-        <a class="btn primary" href="./obradorr.html?v=obradorr-200-stable-candidate-reset">Abrir ObradORR</a>
+        <a class="btn primary" href="./obradorr.html?v=obradorr-200-stable-reset">Abrir ObradORR</a>
       </div>
       <div id="status" class="notice" style="margin-top:16px">No se ha borrado nada todavía.</div>
     </section>
@@ -40,6 +40,8 @@
       if (!confirm('Confirmación final: se borrará la recuperación local de ObradORR en este navegador. ¿Continuar?')) return;
       localStorage.removeItem('obradorr_ui_print_options_v1');
       const stale = [
+        'obradorr-data-200-stable',
+        'obradorr-data-200-stable-candidate',
         'obradorr-data-100-rc21',
         'obradorr-data-100-rc8',
         'obradorr-data-100-rc7',

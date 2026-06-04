@@ -1,7 +1,8 @@
-# Limitaciones conocidas · RC1
+# Limitaciones
 
-- No se ha hecho migración física entre culinary_recipes y bakery_recipes.
-- Las masas auxiliares pueden permanecer en culinary_recipes como bases técnicas o subrecetas puente.
-- Los rendimientos siguen pendientes salvo prueba real.
-- Las fichas no se marcan como validadas por IA.
-- La práctica ZIP contiene HTML imprimible y CSV/JSON; el PDF se genera con la impresión del navegador.
+- La app no valida fichas en obrador.
+- Los rendimientos, mermas, pesos cocidos y tiempos reales deben comprobarse en aula-taller.
+- La recuperación local depende del navegador, dispositivo y puerto/origen usado.
+- Para mover datos entre PC y móvil, usa copia SQLite descargada/importada.
+- La importación combinada está pensada para bases ObradORR compatibles, no para bases antiguas sin adaptador.
+- La impresión PDF depende del motor de impresión del navegador.

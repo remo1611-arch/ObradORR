@@ -44,7 +44,7 @@ textarea[data-step-instruction], textarea[data-step-notes]{min-width:240px;min-h
 /* P0-G1 UX ajuste: tarjetas de radio robustas y notas docentes */
 .radio-row{align-items:stretch}.radio-card{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-areas:"radio title" ". help";gap:4px 9px;min-width:0;overflow-wrap:anywhere;align-content:start}.radio-card input{grid-area:radio;margin:4px 0 0}.radio-card b{grid-area:title;min-width:0}.radio-card small{grid-area:help;min-width:0}.field-with-note{display:grid;gap:5px;min-width:0}.teaching-warning{margin:0;color:#92400e}
 
-/* RC2 · autoría, impresión y fotos responsive */
+
 .app-footer,.static-app-footer{max-width:1320px;margin:0 auto;padding:12px 20px 22px;color:#6b7280;font-size:12.5px;text-align:center}
 .sheet-photo,.sub-sheet-photo{max-width:100%;height:auto;object-fit:contain}
 .print-legal-footer{border-top:1px solid var(--line);margin-top:18px;padding-top:8px;color:#6b7280;font-size:11px;text-align:center}
@@ -52,7 +52,7 @@ textarea[data-step-instruction], textarea[data-step-notes]{min-width:240px;min-h
 
 /* © 2026 Remo José Pereira González · Uso docente personal autorizado · Sin licencia abierta de redistribución o explotación comercial. */
 
-/* RC9 · estados gastronómicos/documentales */
+
 .btn[disabled]{opacity:.55;cursor:not-allowed;filter:grayscale(.15)}
 .btn[disabled]:hover{transform:none;box-shadow:none}
 .recipe-card-blocked,.result-row-blocked{background:#fff7ed;border-color:#fdba74}
@@ -74,7 +74,7 @@ textarea[data-step-instruction], textarea[data-step-notes]{min-width:240px;min-h
 .rc18-status-warning li{margin:.25rem 0}
 .profile-row .radio-card{border-color:#c7d2fe}
 
-/* RC21 · resumen y estado documental de impresión */
+
 .print-summary{border:1px solid #bfdbfe;background:#eff6ff;border-radius:14px;padding:12px;margin-top:2px}
 .print-summary h4{margin:0 0 8px;color:#1e3a8a}
 .print-summary dl{display:grid;grid-template-columns:150px 1fr;gap:4px 10px;margin:0}
@@ -84,7 +84,7 @@ textarea[data-step-instruction], textarea[data-step-notes]{min-width:240px;min-h
 .rc20-status-warning ul{margin:.35rem 0 0 1.1rem;padding:0}
 .rc20-status-warning li{margin:.25rem 0}
 
-/* RC21 · clase neutra para avisos documentales de ficha */
+
 .document-status-warning ul{margin:.35rem 0 0 1.1rem;padding:0}
 .document-status-warning li{margin:.25rem 0}
 
@@ -100,11 +100,11 @@ textarea[data-step-instruction], textarea[data-step-notes]{min-width:240px;min-h
 @media print{.preflight-panel,.safe-editor{break-inside:avoid}.preflight-print{break-inside:auto}.preflight-print table{page-break-inside:auto}.preflight-print tr{break-inside:avoid}}
 
 
-/* RC1 usabilidad/exportaciones */
+
 .editor-modal-full{width:min(1280px,98vw);max-height:96vh}.editor-modal-full .modal-body{padding:18px}.editor-toolbar-rc1{position:sticky;top:0;z-index:5;background:rgba(255,253,248,.98);border:1px solid var(--line);border-radius:18px;padding:10px;margin-bottom:14px;box-shadow:0 8px 24px rgba(54,39,24,.08)}.editor-layout-rc1{grid-template-columns:minmax(360px,.85fr) minmax(520px,1.15fr)}.editor-sections{display:grid;gap:12px}.editor-sections details{border:1px solid var(--line);border-radius:16px;background:#fff;padding:12px}.editor-sections summary{cursor:pointer;color:#4b2d1a}.textarea-large{min-height:220px}.editor-main-section textarea{font-size:16px;line-height:1.5}.export-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px}.safe-action .actions .btn{margin-top:2px}@media(max-width:900px){.editor-modal-full{width:100%;height:100%;max-height:100%;border-radius:0}.editor-layout-rc1{grid-template-columns:1fr}.editor-toolbar-rc1 .btn{flex:1 1 100%}.textarea-large{min-height:260px}}
 
 
-/* RC2/RC3 · imagen de cabecera adaptativa */
+
 .modal-body .print-sheet > .sheet-head,
 .modal-body .sub-sheet > .sub-sheet-head {
   display:grid;
@@ -133,12 +133,12 @@ textarea[data-step-instruction], textarea[data-step-notes]{min-width:240px;min-h
 }
 
 
-/* RC3 · cierre PDF/maquetación: cabecera compacta y cortes prudentes */
+
 .sheet-head{break-inside:avoid;page-break-inside:avoid}.sheet-head-figure{margin:0}.sheet-head-photo{object-fit:contain}.print-sheet h2,.print-sheet h3,.print-sheet h4,.sub-sheet h3{break-after:avoid;page-break-after:avoid}.print-sheet table thead{display:table-header-group}.print-sheet tr{break-inside:avoid;page-break-inside:avoid}
 @media print{.sheet-head{break-inside:avoid;page-break-inside:avoid}.sub-sheet{break-inside:auto;page-break-inside:auto}.structured-appcc{break-inside:auto;page-break-inside:auto}.allergen-block,.warning-block{break-inside:avoid;page-break-inside:avoid}.sheet-head-photo{width:46mm;max-width:46mm;max-height:34mm;object-fit:contain}}
 
 
-/* RC3.1 hotfix maquetación: cabecera real, APPCC breve no divisible y subtítulos no huérfanos */
+
 .sheet-head.has-photo{display:grid;grid-template-columns:minmax(0,1fr) 46mm;gap:10px;align-items:start}
 .sheet-head-figure{grid-column:2;margin:0;max-width:46mm;justify-content:flex-end;align-self:start}
 .sheet-head-text{grid-column:1;min-width:0}
@@ -146,3 +146,7 @@ textarea[data-step-instruction], textarea[data-step-notes]{min-width:240px;min-h
 .appcc-brief-card h4{margin:0 0 4px}.appcc-brief-grid{display:grid;grid-template-columns:22% 1fr;border:1px solid #d9e6cf;border-bottom:0}.appcc-brief-label,.appcc-brief-value{padding:4px 6px;border-bottom:1px solid #d9e6cf;overflow-wrap:break-word}.appcc-brief-label{font-weight:800;text-transform:uppercase;font-size:10.5px;background:#edf7e7}.appcc-brief-value .appcc-cell p{margin:0}.sub-sheet-intro{break-inside:avoid;page-break-inside:avoid;break-after:avoid;page-break-after:avoid}
 @media print{.sheet-head.has-photo{display:grid!important;grid-template-columns:minmax(0,1fr) 44mm!important;gap:8px!important}.sheet-head-figure{grid-column:2!important;max-width:44mm!important;margin:0!important}.sheet-head-text{grid-column:1!important}.sheet-head-photo,.sheet-photo{width:44mm!important;max-width:44mm!important;max-height:32mm!important;object-fit:contain!important}.appcc-brief-card{break-inside:avoid!important;page-break-inside:avoid!important}.appcc-brief-grid{grid-template-columns:23% 1fr}.sub-sheet-intro{break-inside:avoid!important;page-break-inside:avoid!important}}
 @media screen and (max-width:760px){.sheet-head.has-photo{display:block}.sheet-head-figure{margin-top:8px;max-width:100%;justify-content:flex-start}.sheet-head-photo,.sheet-photo{width:auto!important;max-width:100%!important;max-height:38mm!important}}
+
+
+/* Sistema · claridad de uso */
+.system-page .card{align-self:start}.system-state-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:12px 0}.system-state-card{border:1px solid var(--line);background:#fff;border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:4px}.system-state-card b{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:#6b4e16}.system-state-card span{font-weight:900}.system-state-card small{color:var(--muted)}.system-state-card.ok{border-color:#bbf7d0;background:#f0fdf4}.system-state-card.warning{border-color:#fde68a;background:#fffbeb}.system-state-card.saving{border-color:#bfdbfe;background:#eff6ff}.system-state-card.error{border-color:#fecaca;background:#fff1f2}.system-help-card{border:1px solid #e2d8c7;background:#fffaf2;border-radius:16px;padding:12px;margin:12px 0}.system-help-card>b{display:block;margin-bottom:8px}.system-help-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px}.system-help-grid span{border:1px solid var(--line);background:#fff;border-radius:12px;padding:9px;display:flex;flex-direction:column;gap:2px}.system-help-grid small{color:var(--muted)}.summary-list.compact{gap:8px}.summary-list.compact .summary-row{padding:10px}.system-actions-group{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}.system-actions-group h3{margin:0 0 4px}.system-actions-group p{margin:0 0 10px}.system-mobile-note{margin-top:14px}.system-origin-note{border:1px dashed #d8ccb9;border-radius:14px;padding:12px;background:#fff;margin-top:14px}.system-origin-note code{display:block;margin:6px 0;padding:8px;background:#f8fafc;border-radius:10px;overflow:auto}.system-origin-note small{display:block;color:var(--muted)}@media(max-width:900px){.system-state-grid{grid-template-columns:1fr}.system-help-grid{grid-template-columns:1fr}}

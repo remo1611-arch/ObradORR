@@ -4,19 +4,22 @@ const ObradORRDatabase = window.ObradORRDatabase;
 if (!ObradORRDatabase)
     throw new Error("No se cargó la capa SQLite de ObradORR.");
 window.__OBRADORR_MODULE_STARTED = true;
-window.__OBRADORR_MODULE_VERSION = 'obradorr-200-stable-candidate';
+window.__OBRADORR_MODULE_VERSION = 'obradorr-200-public-github-ready';
+// previous boot token: stable
+// public_github_ready
 const DB_URL = '../db/obradorr.sqlite';
 const WORK_SELECTION_ID = 'WORK_CURRENT';
 const STORAGE_PRINT_OPTIONS = 'obradorr_ui_print_options_v1';
-const IDB_DATA_DB = 'obradorr-data-200-stable-candidate';
+const IDB_DATA_DB = 'obradorr-data-200-stable';
 const IDB_DATA_STORE = 'snapshots';
 const IDB_CURRENT_KEY = 'current-db';
-const VERSION = '2.0.0-stable-candidate';
+const IDB_PREVIOUS_KEYS = ['previous-db-1', 'previous-db-2', 'previous-db-3'];
+const VERSION = '2.0.0';
 const INGREDIENT_SEARCH_LIMIT = 220;
 const PRINT_SEARCH_LIMIT = 60;
 const LEGAL_NOTICE = '© 2026 Remo José Pereira González · Uso docente personal autorizado · Sin licencia abierta de redistribución o explotación comercial.';
-const EXPECTED_RELEASE_TAG = '2.0.0-stable-candidate';
-const EXPECTED_CACHE_TAG = 'obradorr-200-stable-candidate';
+const EXPECTED_RELEASE_TAG = '2.0.0-stable';
+const EXPECTED_CACHE_TAG = 'obradorr-200-stable';
 const db = new ObradORRDatabase();
 const state = {
     ready: false,
@@ -31,8 +34,8 @@ const state = {
     storageZones: [],
     units: [],
     allergens: [],
-    dataStatus: 'Cargando base pública...',
-    dataSource: 'base pública',
+    dataStatus: 'Cargando base incluida...',
+    dataSource: 'base incluida',
     dataSavedAt: '',
     dataDirty: false,
     dataRevision: 0,
@@ -70,13 +73,23 @@ window.addEventListener('beforeunload', event => {
     event.preventDefault();
     event.returnValue = 'Hay cambios pendientes de guardar o descargar en ObradORR.';
 });
+window.addEventListener('pagehide', () => flushWorkingCopyOnLifecycle('Guardado al salir de la página'));
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden)
+        flushWorkingCopyOnLifecycle('Guardado al ocultar pestaña');
+});
 boot().catch(showFatalError);
 function showFatalError(error) {
     console.error(error);
-    const message = (error === null || error === void 0 ? void 0 : error.message) || String(error || 'Error desconocido');
+    const message = friendlyDbErrorMessage(error);
+    const isDuplicate = isUniqueConstraintError(error);
+    const title = isDuplicate ? 'No se pudo guardar el dato' : 'No se pudo arrancar ObradORR';
+    const detail = isDuplicate
+        ? '<div class="notice"><b>La base no se ha modificado.</b> Vuelve a la pantalla anterior, usa el registro existente o elige un nombre diferenciado. Si estabas editando desde móvil, descarga una copia SQLite cuando termines.</div>'
+        : '<div class="notice"><b>Comprobaciones:</b> abre la app con servidor local, no con file://; arranca desde la raíz del proyecto; si venías de una versión anterior, usa <code>app/reset_local_data.html</code> y vuelve a cargar la base incluida en la aplicación.</div>';
     if (!app)
         return;
-    app.innerHTML = `<main class="main"><section class="card"><h2>No se pudo arrancar ObradORR</h2><p>${escapeHtml(message)}</p><div class="notice"><b>Comprobaciones:</b> abre la app con servidor local, no con file://; arranca desde la raíz del proyecto; si venías de una versión anterior, usa <code>app/reset_local_data.html</code> y vuelve a cargar la base pública.</div></section></main>`;
+    app.innerHTML = `<main class="main"><section class="card"><h2>${title}</h2><p>${escapeHtml(message)}</p>${detail}</section></main>`;
 }
 async function boot() {
     renderShell('Cargando base de datos...');
@@ -456,7 +469,7 @@ function preflightSelectionSummaryHtml() {
     let result = null;
     const e = effectivePrintOptions(state.printOptions);
     try { result = window.ObradORRPreflight.run({ db, state, items: state.selection, options: e }); }
-    catch (error) { return `<div class="preflight-panel warning"><b>Preflight no disponible:</b> ${escapeHtml(error.message || String(error))}</div>`; }
+    catch (error) { return `<div class="preflight-panel warning"><b>Comprobación documental no disponible:</b> ${escapeHtml(error.message || String(error))}</div>`; }
     const s = (result && result.summary) || {};
     const total = (result.warnings || []).length;
     const cls = s.CRITICO ? 'danger' : (s.ALTO ? 'warning' : 'ok');
@@ -464,7 +477,7 @@ function preflightSelectionSummaryHtml() {
     const showDetails = mode === 'complete' || mode === 'critical_high' || mode === 'critical';
     const allowed = mode === 'complete' ? ['CRITICO','ALTO','MEDIO','BAJO'] : mode === 'critical_high' ? ['CRITICO','ALTO'] : mode === 'critical' ? ['CRITICO'] : [];
     const top = showDetails ? (result.warnings || []).filter(w => allowed.includes(w.severity) && w.code !== 'PENDIENTE_GLOBAL').slice(0, 5) : [];
-    return `<div class="preflight-panel ${cls}"><h4>Preflight documental experimental</h4><p>${total} aviso(s): ${s.CRITICO || 0} crítico(s), ${s.ALTO || 0} alto(s), ${s.MEDIO || 0} medio(s), ${s.BAJO || 0} bajo(s).</p>${top.length ? `<ul>${top.map(w => `<li><b>${escapeHtml(w.severity)} · ${escapeHtml(w.title)}</b><br><small>${escapeHtml(w.detail || '')}</small></li>`).join('')}</ul>` : '<small>Vista resumida. La tabla completa queda reservada al perfil Auditoría documental.</small>'}</div>`;
+    return `<div class="preflight-panel ${cls}"><h4>Comprobación documental previa</h4><p>${total} aviso(s): ${s.CRITICO || 0} crítico(s), ${s.ALTO || 0} alto(s), ${s.MEDIO || 0} medio(s), ${s.BAJO || 0} bajo(s).</p>${top.length ? `<ul>${top.map(w => `<li><b>${escapeHtml(w.severity)} · ${escapeHtml(w.title)}</b><br><small>${escapeHtml(w.detail || '')}</small></li>`).join('')}</ul>` : '<small>Vista resumida. La tabla completa queda reservada al perfil Auditoría documental.</small>'}</div>`;
 }
 function preflightPrintHtml(result, opts) {
     if (!result || !result.warnings || !result.warnings.length)
@@ -475,14 +488,14 @@ function preflightPrintHtml(result, opts) {
     const summary = `${s.CRITICO || 0} crítico(s) · ${s.ALTO || 0} alto(s) · ${s.MEDIO || 0} medio(s) · ${s.BAJO || 0} bajo(s)`;
     if (mode === 'summary' || mode === 'summary_if_alerts') {
         if (mode === 'summary_if_alerts' && !(s.CRITICO || s.ALTO)) return '';
-        return `<section class="preflight-print preflight-summary"><h2>Preflight documental</h2><p>${escapeHtml(summary)}. Las fichas son propuestas documentales contrastadas, pendientes de prueba y validación por profesorado en obrador.</p></section>`;
+        return `<section class="preflight-print preflight-summary"><h2>Comprobación documental previa</h2><p>${escapeHtml(summary)}. Las fichas son propuestas documentales contrastadas, pendientes de prueba y validación por profesorado en obrador.</p></section>`;
     }
     const allowed = mode === 'complete' ? ['CRITICO','ALTO','MEDIO','BAJO'] : mode === 'critical_high' ? ['CRITICO','ALTO'] : ['CRITICO'];
     const rows = (result.warnings || []).filter(w => allowed.includes(w.severity) && (mode === 'complete' || w.code !== 'PENDIENTE_GLOBAL')).slice(0, mode === 'complete' ? 120 : 20);
     if (!rows.length && mode !== 'complete') {
-        return `<section class="preflight-print preflight-summary"><h2>Preflight documental</h2><p>${escapeHtml(summary)}. Sin avisos del nivel mostrado para este perfil.</p></section>`;
+        return `<section class="preflight-print preflight-summary"><h2>Comprobación documental previa</h2><p>${escapeHtml(summary)}. Sin avisos del nivel mostrado para este perfil.</p></section>`;
     }
-    return `<section class="preflight-print ${profile === 'auditoria_completa' ? 'page-break' : 'preflight-summary'}"><h2>Preflight documental experimental</h2><p>No sustituye validación de obrador. ${escapeHtml(summary)}. ${mode === 'complete' ? 'Detalle completo reservado a auditoría.' : 'Detalle limitado al perfil seleccionado.'}</p><table><thead><tr><th>Severidad</th><th>Aviso</th><th>Detalle</th></tr></thead><tbody>${rows.map(w => `<tr><td>${escapeHtml(w.severity)}</td><td>${escapeHtml(w.title)}</td><td>${escapeHtml(w.detail || '')}</td></tr>`).join('')}</tbody></table></section>`;
+    return `<section class="preflight-print ${profile === 'auditoria_completa' ? 'page-break' : 'preflight-summary'}"><h2>Comprobación documental previa</h2><p>No sustituye la validación de obrador. ${escapeHtml(summary)}. ${mode === 'complete' ? 'Detalle completo reservado al perfil Auditoría documental.' : 'Detalle limitado al perfil seleccionado.'}</p><table><thead><tr><th>Severidad</th><th>Aviso</th><th>Detalle</th></tr></thead><tbody>${rows.map(w => `<tr><td>${escapeHtml(w.severity)}</td><td>${escapeHtml(w.title)}</td><td>${escapeHtml(w.detail || '')}</td></tr>`).join('')}</tbody></table></section>`;
 }
 function subrecipeModeLabel(mode) {
     return mode === 'none' ? 'no desarrolladas' : mode === 'ingredients' ? 'ingredientes recursivos desglosados' : 'subfichas sensibles desarrolladas y bases técnicas plegadas';
@@ -522,29 +535,53 @@ function migrationStatusText() {
 
 function systemView() {
     const storage = storageSupportSummary();
-    return `<section class="grid two">
-    <div class="card"><h2>Datos y seguridad</h2><p>ObradORR trabaja en local. Protege tu trabajo con recuperación en este navegador y copia SQLite descargada.</p>
+    const lastSaved = systemLastSavedText();
+    const origin = systemOriginText();
+    const snapshotText = 'current-db + previous-db-1/2/3';
+    return `<section class="grid two system-page">
+    <div class="card"><h2>Sistema y copias</h2><p>Panel de seguridad para guardar, respaldar, importar y comprobar la base activa sin entrar en detalles técnicos.</p>
       ${dataSafetyPanelHtml()}
-      <div class="summary-list">
+      <div class="system-state-grid">
+        <div class="system-state-card ${dataSafetyLevel()}"><b>Estado de protección</b><span>${escapeHtml(dataSafetyHeadline())}</span><small>${escapeHtml(lastSaved)}</small></div>
+        <div class="system-state-card"><b>Copia local</b><span>Este navegador</span><small>${escapeHtml(snapshotText)}</small></div>
+        <div class="system-state-card"><b>Origen actual</b><span>${escapeHtml(origin)}</span><small>Si cambias puerto o navegador, la recuperación local puede no aparecer.</small></div>
+      </div>
+      <div class="system-help-card">
+        <b>Qué copia debes usar</b>
+        <div class="system-help-grid">
+          <span><b>Trabajar aquí</b><small>Guardado local automático.</small></span>
+          <span><b>Copia seria</b><small>Descargar SQLite.</small></span>
+          <span><b>Móvil ↔ PC</b><small>Descargar SQLite e importar.</small></span>
+          <span><b>Compartir</b><small>SQLite o práctica ZIP.</small></span>
+          <span><b>Combinar sin machacar</b><small>Importar y combinar SQLite.</small></span>
+        </div>
+      </div>
+      <div class="summary-list compact">
         <div class="summary-row"><div><b>Estado de datos</b><br><small>${escapeHtml(dataStatusText())}</small></div><span class="pill green">${escapeHtml(state.dataSource)}</span></div>
         <div class="summary-row"><div><b>Recuperación local</b><br><small>${escapeHtml(storage)}</small></div></div>
-        <div class="summary-row"><div><b>Elaboraciones</b><br><small>${state.recipes.length} activas</small></div></div>
-        <div class="summary-row"><div><b>Ingredientes</b><br><small>${state.ingredients.length} activos</small></div></div>
-        <div class="summary-row"><div><b>Selección actual</b><br><small>${state.selection.length} elaboraciones</small></div></div>
+        <div class="summary-row"><div><b>Catálogo activo</b><br><small>${state.recipes.length} elaboraciones · ${state.ingredients.length} ingredientes</small></div></div>
+        <div class="summary-row"><div><b>Selección actual</b><br><small>${state.selection.length} elaboraciones · ${state.sessions.length} sesiones</small></div></div>
         <div class="summary-row"><div><b>Migraciones</b><br><small>${migrationStatusText()}</small></div></div>
       </div>
-      <div class="data-actions-safe" style="margin-top:16px">
-        <div class="safe-action"><b>1 · Descargar copia SQLite</b><small>Archivo portable para guardar fuera del navegador. RC2 añade fecha ISO con segundos.</small><button class="btn primary" data-download-db>Descargar copia de trabajo</button></div>
-        <div class="safe-action"><b>2 · Carpeta de copias</b><small>Elige carpeta si el navegador lo permite; si no, se usa descarga normal.</small><div class="actions"><button class="btn" data-choose-backup-folder>Elegir carpeta de copias</button><button class="btn" data-backup-sqlite>Crear copia SQLite</button><button class="btn" data-backup-json>Crear copia JSON</button><button class="btn" data-backup-zip>Crear copia ZIP</button></div></div>
-        <div class="safe-action"><b>3 · Guardar recuperación local</b><small>Actualiza la copia en IndexedDB de este navegador.</small><button class="btn accent" data-save-local-db>Guardar en este dispositivo</button></div>
-        <div class="safe-action"><b>4 · Importar y combinar</b><small>Importa otra base ObradORR en modo staging. No sobreescribe: los conflictos se convierten en variantes.</small><button class="btn primary" data-merge-db>Importar y combinar SQLite</button></div>
-        <div class="safe-action danger-zone"><b>Restaurar / sustituir manualmente</b><small>Estas acciones sustituyen la base activa. Descarga copia antes.</small><div class="actions"><button class="btn" data-load-db>Cargar copia SQLite sustituyendo</button><button class="btn danger" data-restore-public-db>Volver a base pública</button></div></div>
+      <div class="system-actions-group"><h3>Copias seguras</h3><p>Son las opciones ordinarias: no sustituyen la base activa sin confirmación.</p>
+        <div class="data-actions-safe">
+          <div class="safe-action"><b>Descargar copia SQLite</b><small>Archivo portable recomendado para conservar, mover entre móvil/PC o compartir con otro docente compatible.</small><button class="btn primary" data-download-db>Descargar copia SQLite</button></div>
+          <div class="safe-action"><b>Carpeta de copias</b><small>Si el navegador permite elegir carpeta, se usará esa ubicación; si no, se descargará el archivo normalmente.</small><div class="actions"><button class="btn" data-choose-backup-folder>Elegir carpeta de copias</button><button class="btn" data-backup-sqlite>Crear copia SQLite</button><button class="btn" data-backup-json>Crear copia JSON</button><button class="btn" data-backup-zip>Crear copia ZIP</button></div></div>
+          <div class="safe-action"><b>Guardar recuperación local</b><small>Actualiza la copia IndexedDB de este navegador. No sustituye a una copia SQLite descargada.</small><button class="btn accent" data-save-local-db>Guardar en este dispositivo</button></div>
+        </div>
       </div>
-      <p class="footer-note">Guardar sesión conserva la práctica dentro de la SQLite activa. Descargar copia guarda un archivo. Guardar en este dispositivo crea recuperación local en el navegador.</p>
+      <div class="system-actions-group"><h3>Importación</h3><p>Para conservar tu trabajo, usa primero la combinación segura. La sustitución completa queda separada como acción delicada.</p>
+        <div class="data-actions-safe">
+          <div class="safe-action"><b>Importar y combinar SQLite</b><small>Modo staging: no sobreescribe. Los duplicados se omiten y los conflictos se crean como variantes.</small><button class="btn primary" data-merge-db>Importar y combinar SQLite</button></div>
+          <div class="safe-action danger-zone"><b>Restaurar / sustituir manualmente</b><small>Acción delicada: sustituye la base activa o vuelve a la base incluida. Descarga una copia antes.</small><div class="actions"><button class="btn" data-load-db>Cargar copia SQLite sustituyendo</button><button class="btn danger" data-restore-public-db>Volver a base incluida</button></div></div>
+        </div>
+      </div>
+      <div class="notice warning system-mobile-note"><b>Uso móvil/Termux</b><br><small>Android puede cerrar pestañas en segundo plano. Al terminar una sesión importante, descarga una copia SQLite. La recuperación local depende del navegador, dispositivo y puerto actual.</small></div>
     </div>
-    <div class="card"><h2>Sesiones y diagnóstico</h2><p>Las sesiones y la selección rápida se guardan dentro de la copia SQLite activa. El diagnóstico ayuda a comprobar almacenamiento, versión e integridad.</p>
-      <div class="actions"><button class="btn" data-download-selection>Exportar selección JSON</button><button class="btn" data-clear-local-ui>Limpiar selección y sesiones locales</button><button class="btn" data-diagnostics>Ver diagnóstico</button></div>
-      <div class="safe-action"><b>Exportaciones externas RC2</b><small>Archivos abiertos para Excel, aula virtual, respaldo y práctica.</small><div class="actions"><button class="btn primary" data-export-practice-zip>Práctica ZIP</button><button class="btn" data-export-order-csv>Pedido CSV</button><button class="btn" data-export-order-tsv>Pedido TSV</button><button class="btn" data-export-practice-json>Práctica JSON</button><button class="btn" data-export-technical-json>JSON técnico</button><button class="btn" data-export-catalog-csv>Catálogo CSV</button><button class="btn" data-export-ingredients-csv>Ingredientes CSV</button><button class="btn" data-export-allergens-csv>Alérgenos CSV</button></div></div>
+    <div class="card"><h2>Sesiones, exportaciones y diagnóstico</h2><p>Accesos de mantenimiento diario. El diagnóstico avanzado queda plegado para no saturar la vista.</p>
+      <div class="system-actions-group"><h3>Sesiones y selección</h3><div class="actions"><button class="btn" data-download-selection>Exportar selección JSON</button><button class="btn" data-clear-local-ui>Limpiar selección y sesiones locales</button><button class="btn" data-diagnostics>Ver diagnóstico</button></div></div>
+      <div class="safe-action"><b>Exportaciones externas</b><small>Formatos abiertos para aula virtual, Excel/LibreOffice, respaldo y práctica.</small><div class="actions"><button class="btn primary" data-export-practice-zip>Práctica ZIP</button><button class="btn" data-export-order-csv>Pedido CSV</button><button class="btn" data-export-order-tsv>Pedido TSV</button><button class="btn" data-export-practice-json>Práctica JSON</button><button class="btn" data-export-technical-json>JSON técnico</button><button class="btn" data-export-catalog-csv>Catálogo CSV</button><button class="btn" data-export-ingredients-csv>Ingredientes CSV</button><button class="btn" data-export-allergens-csv>Alérgenos CSV</button></div></div>
+      <div class="system-origin-note"><b>Origen de esta instalación</b><br><code>${escapeHtml(location.href.split('?')[0])}</code><small>Para pasar datos entre puertos, dispositivos o navegadores, usa copia SQLite descargada/importada.</small></div>
       <div id="diagnosticsBox" class="notice hidden" style="margin-top:14px"></div>
     </div>
   </section>`;
@@ -796,26 +833,35 @@ function showRecipeCreator() {
     (_b = document.getElementById('newBakeryRecipe')) === null || _b === void 0 ? void 0 : _b.addEventListener('click', () => createEmptyRecipe('bakery'));
 }
 async function createEmptyRecipe(kind) {
-    const name = prompt(kind === 'bakery' ? 'Nombre de la nueva formulación' : 'Nombre de la nueva elaboración');
-    if (!String(name || '').trim())
-        return;
-    const id = uniqueId(kind === 'bakery' ? 'BAK' : 'REC', name);
-    withTransaction(() => {
-        if (kind === 'bakery') {
-            db.exec(`INSERT INTO bakery_recipes (id,name,family_id,base_flour_g,base_pieces,baking_loss_pct,status,release_status,yield_status,fermentation_notes,notes,active)
-        VALUES ($id,$name,$family,1000,10,0,'draft','pendiente','pending','','',1)`, { $id: id, $name: name.trim(), $family: defaultFamilyId('bakery') });
-            db.exec(`INSERT OR IGNORE INTO bakery_preferments (recipe_id,preferment_type,calculation_mode,hydration_pct,yeast_pct,notes,active)
-        VALUES ($id,'Ninguno','none',100,0,'',0)`, { $id: id });
-        }
-        else {
-            db.exec(`INSERT INTO culinary_recipes (id,name,family_id,base_servings,production_kind,default_production_mode,status,release_status,process,service_notes,appcc_notes,notes,active)
-        VALUES ($id,$name,$family,10,'final_servings','servings','draft','pendiente','','','','',1)`, { $id: id, $name: name.trim(), $family: defaultFamilyId('culinary') });
-        }
-    });
-    await loadCatalogs();
-    scheduleDbAutosave('Nueva elaboración');
-    closeModal();
-    showRecipeEditor(`${kind}:${id}`);
+    try {
+        const name = prompt(kind === 'bakery' ? 'Nombre de la nueva formulación' : 'Nombre de la nueva elaboración');
+        const recipeName = String(name || '').trim();
+        if (!recipeName)
+            return;
+        const duplicate = findRecipeNameDuplicate(recipeName);
+        if (duplicate)
+            return showFormError(duplicateRecipeMessage(duplicate, recipeName));
+        const id = uniqueId(kind === 'bakery' ? 'BAK' : 'REC', recipeName);
+        withTransaction(() => {
+            if (kind === 'bakery') {
+                db.exec(`INSERT INTO bakery_recipes (id,name,family_id,base_flour_g,base_pieces,baking_loss_pct,status,release_status,yield_status,fermentation_notes,notes,active)
+            VALUES ($id,$name,$family,1000,10,0,'draft','pendiente','pending','','',1)`, { $id: id, $name: recipeName, $family: defaultFamilyId('bakery') });
+                db.exec(`INSERT OR IGNORE INTO bakery_preferments (recipe_id,preferment_type,calculation_mode,hydration_pct,yeast_pct,notes,active)
+            VALUES ($id,'Ninguno','none',100,0,'',0)`, { $id: id });
+            }
+            else {
+                db.exec(`INSERT INTO culinary_recipes (id,name,family_id,base_servings,production_kind,default_production_mode,status,release_status,process,service_notes,appcc_notes,notes,active)
+            VALUES ($id,$name,$family,10,'final_servings','servings','draft','pendiente','','','','',1)`, { $id: id, $name: recipeName, $family: defaultFamilyId('culinary') });
+            }
+        });
+        await loadCatalogs();
+        scheduleDbAutosave('Nueva elaboración');
+        closeModal();
+        showRecipeEditor(`${kind}:${id}`);
+    }
+    catch (error) {
+        return showFormError(error);
+    }
 }
 function showRecipeEditor(uid) {
     var _a, _b, _c, _d, _e, _f;
@@ -941,16 +987,25 @@ function setupEditorComfort(recipe) {
 }
 function debounce(fn, ms) { let t = null; return function(){ clearTimeout(t); t = setTimeout(fn, ms); }; }
 function duplicateRecipe(recipe, asVariant) {
-    const base = state.recipes.find(r => r.uid === recipe.uid) || recipe;
-    const defaultName = asVariant ? `${base.name} · variante docente` : `${base.name} · copia`;
-    const name = prompt(asVariant ? 'Nombre de la variante' : 'Nombre de la copia', defaultName);
-    if (!String(name || '').trim()) return;
-    const newId = uniqueId(recipe.source_type === 'bakery' ? 'BAK' : 'REC', name);
-    withTransaction(() => {
-        if (recipe.source_type === 'culinary') duplicateCulinaryRecipe(recipe.source_id, newId, name.trim(), asVariant);
-        else duplicateBakeryRecipe(recipe.source_id, newId, name.trim(), asVariant);
-    });
-    loadCatalogs().then(() => { scheduleDbAutosave(asVariant ? 'Variante creada' : 'Ficha duplicada'); closeModal(); showRecipeEditor(`${recipe.source_type}:${newId}`); });
+    try {
+        const base = state.recipes.find(r => r.uid === recipe.uid) || recipe;
+        const defaultName = asVariant ? `${base.name} · variante docente` : `${base.name} · copia`;
+        const name = prompt(asVariant ? 'Nombre de la variante' : 'Nombre de la copia', defaultName);
+        const recipeName = String(name || '').trim();
+        if (!recipeName) return;
+        const duplicate = findRecipeNameDuplicate(recipeName);
+        if (duplicate)
+            return showFormError(duplicateRecipeMessage(duplicate, recipeName));
+        const newId = uniqueId(recipe.source_type === 'bakery' ? 'BAK' : 'REC', recipeName);
+        withTransaction(() => {
+            if (recipe.source_type === 'culinary') duplicateCulinaryRecipe(recipe.source_id, newId, recipeName, asVariant);
+            else duplicateBakeryRecipe(recipe.source_id, newId, recipeName, asVariant);
+        });
+        loadCatalogs().then(() => { scheduleDbAutosave(asVariant ? 'Variante creada' : 'Ficha duplicada'); closeModal(); showRecipeEditor(`${recipe.source_type}:${newId}`); }).catch(showFormError);
+    }
+    catch (error) {
+        return showFormError(error);
+    }
 }
 function duplicateCulinaryRecipe(oldId, newId, name, asVariant) {
     const src = db.query('SELECT * FROM culinary_recipes WHERE id=$id', { $id: oldId })[0];
@@ -977,11 +1032,11 @@ function duplicateBakeryRecipe(oldId, newId, name, asVariant) {
       VALUES ($id,$recipe,$culinary,$bakery,$role,$status,$calc,$qty,$unit,$note,$sort,$order,$cost)`, { $id:uniqueId('BC', `${newId}-${idx}`), $recipe:newId,$culinary:c.component_culinary_recipe_id,$bakery:c.component_bakery_recipe_id,$role:c.usage_role,$status:c.component_status,$calc:c.calculation_base,$qty:c.quantity_value,$unit:c.unit_id,$note:c.technical_note || '',$sort:c.sort_order || (idx+1)*10,$order:c.include_in_order,$cost:c.include_in_cost }));
 }
 function showRecipePreflight(recipe) {
-    if (!window.ObradORRPreflight) return alert('Preflight no disponible.');
+    if (!window.ObradORRPreflight) return alert('Comprobación documental no disponible.');
     const item = state.recipes.find(r => r.uid === recipe.uid);
     const result = window.ObradORRPreflight.run({ db, state, items: item ? [item] : [], options: effectivePrintOptions(state.printOptions) });
     const rows = (result.warnings || []).map(w => `<tr><td>${escapeHtml(w.severity)}</td><td>${escapeHtml(w.title)}</td><td>${escapeHtml(w.detail || '')}</td></tr>`).join('');
-    showModal('Preflight de ficha', `<div class="notice"><b>${escapeHtml(item ? item.name : recipe.uid)}</b><br>Resumen: ${escapeHtml(JSON.stringify(result.summary || {}))}</div>${rows ? `<div class="table-wrap"><table><thead><tr><th>Severidad</th><th>Aviso</th><th>Detalle</th></tr></thead><tbody>${rows}</tbody></table></div>` : '<div class="notice success">Sin avisos detectados para esta ficha.</div>'}`);
+    showModal('Comprobación documental de ficha', `<div class="notice"><b>${escapeHtml(item ? item.name : recipe.uid)}</b><br>Resumen: ${escapeHtml(JSON.stringify(result.summary || {}))}</div>${rows ? `<div class="table-wrap"><table><thead><tr><th>Severidad</th><th>Aviso</th><th>Detalle</th></tr></thead><tbody>${rows}</tbody></table></div>` : '<div class="notice success">Sin avisos detectados para esta ficha.</div>'}`);
 }
 
 function safeEditorImpactHtml(recipe) {
@@ -1029,6 +1084,9 @@ function saveRecipeMain(recipe) {
     const recipeName = document.getElementById('recipeName').value.trim();
     if (!recipeName)
         return showFormError('La elaboración necesita nombre.');
+    const duplicate = findRecipeNameDuplicate(recipeName, recipe.source_type, recipe.source_id);
+    if (duplicate)
+        return showFormError(duplicateRecipeMessage(duplicate, recipeName));
     const common = {
         $id: recipe.source_id,
         $name: recipeName,
@@ -1428,16 +1486,25 @@ function deleteRecipeLine(recipe, lineId) {
 }
 function showIngredientCreator() {
     var _a, _b, _c;
-    const name = prompt('Nombre del nuevo ingrediente');
-    if (!String(name || '').trim())
-        return;
-    const id = uniqueId('ING', name);
-    const family = defaultFamilyId('ingredient');
-    const orderGroup = ((_a = state.orderGroups[0]) === null || _a === void 0 ? void 0 : _a.id) || null;
-    const storage = ((_b = state.storageZones.find(z => z.name === 'Seco')) === null || _b === void 0 ? void 0 : _b.id) || ((_c = state.storageZones[0]) === null || _c === void 0 ? void 0 : _c.id) || null;
-    withTransaction(() => db.exec(`INSERT INTO ingredients (id,name,family_id,subfamily_id,order_group_id,storage_zone_id,base_unit_id,purchase_unit_id,purchase_price,purchase_net_quantity,waste_pct,use_culinary,use_bakery,notes,active)
-    VALUES ($id,$name,$family,NULL,$order,$storage,'UNIT_KG','UNIT_KG',0,1,0,1,0,'',1)`, { $id: id, $name: name.trim(), $family: family, $order: orderGroup, $storage: storage }));
-    loadCatalogs().then(() => { scheduleDbAutosave('Ingrediente creado'); showIngredientEditor(id); });
+    try {
+        const name = prompt('Nombre del nuevo ingrediente');
+        const ingredientName = String(name || '').trim();
+        if (!ingredientName)
+            return;
+        const duplicate = findIngredientNameDuplicate(ingredientName);
+        if (duplicate)
+            return showFormError(duplicateIngredientMessage(duplicate, ingredientName));
+        const id = uniqueId('ING', ingredientName);
+        const family = defaultFamilyId('ingredient');
+        const orderGroup = ((_a = state.orderGroups[0]) === null || _a === void 0 ? void 0 : _a.id) || null;
+        const storage = ((_b = state.storageZones.find(z => z.name === 'Seco')) === null || _b === void 0 ? void 0 : _b.id) || ((_c = state.storageZones[0]) === null || _c === void 0 ? void 0 : _c.id) || null;
+        withTransaction(() => db.exec(`INSERT INTO ingredients (id,name,family_id,subfamily_id,order_group_id,storage_zone_id,base_unit_id,purchase_unit_id,purchase_price,purchase_net_quantity,waste_pct,use_culinary,use_bakery,notes,active)
+        VALUES ($id,$name,$family,NULL,$order,$storage,'UNIT_KG','UNIT_KG',0,1,0,1,0,'',1)`, { $id: id, $name: ingredientName, $family: family, $order: orderGroup, $storage: storage }));
+        loadCatalogs().then(() => { scheduleDbAutosave('Ingrediente creado'); showIngredientEditor(id); }).catch(showFormError);
+    }
+    catch (error) {
+        return showFormError(error);
+    }
 }
 function showIngredientEditor(id) {
     var _a, _b;
@@ -1469,16 +1536,21 @@ function showIngredientEditor(id) {
             target.innerHTML = subfamilyOptionsHtml(e.target.value, '');
     });
     (_b = document.getElementById('saveIngEdit')) === null || _b === void 0 ? void 0 : _b.addEventListener('click', async () => {
-        const price = Number(document.getElementById('ingPrice').value || 0);
-        const net = Number(document.getElementById('ingNet').value || 1);
-        const waste = Number(document.getElementById('ingWaste').value || 0);
-        if (!document.getElementById('ingName').value.trim())
-            return showFormError('El ingrediente necesita nombre.');
-        if (price < 0 || net <= 0 || waste < 0 || waste >= 100)
-            return showFormError('Revisa precio, cantidad neta y merma.');
-        withTransaction(() => {
+        try {
+            const price = Number(document.getElementById('ingPrice').value || 0);
+            const net = Number(document.getElementById('ingNet').value || 1);
+            const waste = Number(document.getElementById('ingWaste').value || 0);
+            const ingredientName = document.getElementById('ingName').value.trim();
+            if (!ingredientName)
+                return showFormError('El ingrediente necesita nombre.');
+            const duplicate = findIngredientNameDuplicate(ingredientName, id);
+            if (duplicate)
+                return showFormError(duplicateIngredientMessage(duplicate, ingredientName));
+            if (price < 0 || net <= 0 || waste < 0 || waste >= 100)
+                return showFormError('Revisa precio, cantidad neta y merma.');
+            withTransaction(() => {
             db.exec(`UPDATE ingredients SET name=$name,family_id=$family,subfamily_id=$subfamily,order_group_id=$order,storage_zone_id=$storage,base_unit_id=$base,purchase_unit_id=$purchase,purchase_price=$price,purchase_net_quantity=$net,waste_pct=$waste,density_g_ml=$density,use_culinary=$culinary,use_bakery=$bakery,notes=$notes,active=$active,updated_at=CURRENT_TIMESTAMP WHERE id=$id`, {
-                $name: document.getElementById('ingName').value.trim(), $family: document.getElementById('ingFamily').value || null, $subfamily: document.getElementById('ingSubfamily').value || null,
+                $name: ingredientName, $family: document.getElementById('ingFamily').value || null, $subfamily: document.getElementById('ingSubfamily').value || null,
                 $order: document.getElementById('ingOrderGroup').value || null, $storage: document.getElementById('ingStorage').value || null,
                 $base: document.getElementById('ingBaseUnit').value || 'UNIT_KG', $purchase: document.getElementById('ingPurchaseUnit').value || 'UNIT_KG',
                 $price: price, $net: net, $waste: waste,
@@ -1488,10 +1560,14 @@ function showIngredientEditor(id) {
             db.exec('DELETE FROM ingredient_allergens WHERE ingredient_id=$id', { $id: id });
             document.querySelectorAll('[data-allergen]:checked').forEach(el => db.exec(`INSERT INTO ingredient_allergens (ingredient_id,allergen_id,declaration_status) VALUES ($id,$allergen,'confirmed')`, { $id: id, $allergen: el.dataset.allergen }));
         });
-        await loadCatalogs();
-        scheduleDbAutosave('Ingrediente guardado');
-        closeModal();
-        render();
+            await loadCatalogs();
+            scheduleDbAutosave('Ingrediente guardado');
+            closeModal();
+            render();
+        }
+        catch (error) {
+            return showFormError(error);
+        }
     });
 }
 // ────────────────────────────────────────────────────────────────────────────
@@ -1619,11 +1695,11 @@ function sheetStatusWarningHtml(detail, kind, opts = {}) {
     else if (releaseStatus === 'pendiente') {
         warnings.push('<b>Ficha pendiente:</b> propuesta docente contrastable, no validada en obrador; requiere prueba docente real antes de considerarse cerrada.');
         if (isAuditProfile(opts)) {
-            warnings.push('<b>Vía B · Fuentes:</b> ficha elaborada como propuesta documental; debe contrastarse contra bibliografía/normativa registrada y documentar fuente, criterio técnico y nivel de confianza antes de cualquier validación de aula.');
-            warnings.push('<b>B1 · Revisión documental:</b> las fichas recursivas y sensibles pueden tener revisión por fuente registrada en SQLite, pero siguen pendientes de prueba real de obrador.');
-            warnings.push('<b>B2 · Cocina caliente:</b> platos con arroces, pastas, carnes, pescados, frituras o subrecetas deben mantenerse como propuestas documentales hasta prueba de obrador.');
-            warnings.push('<b>B3 · Pastelería sensible:</b> cremas, semifríos, choux, tartas, rellenos, nata, gelatina, huevo y lácteos permanecen como propuestas documentales hasta prueba de obrador y control APPCC.');
-            warnings.push('<b>B4 · Panadería/pastelería:</b> panes, prefermentos, masa madre, centenos, sin gluten, laminados y bollería permanecen como propuestas documentales hasta prueba de obrador; no hay pesos cocidos ni mermas validadas.');
+            warnings.push('<b>Criterio de revisión documental:</b> ficha elaborada como propuesta técnica contrastada; debe mantenerse pendiente hasta prueba real de obrador por profesorado.');
+            warnings.push('<b>Subrecetas y elaboraciones sensibles:</b> la revisión documental no sustituye la prueba real ni el control de rendimiento en aula-taller.');
+            warnings.push('<b>Cocina caliente:</b> arroces, pastas, carnes, pescados, frituras y platos con subrecetas permanecen pendientes de prueba de obrador.');
+            warnings.push('<b>Pastelería sensible:</b> cremas, semifríos, choux, tartas, rellenos, nata, gelatina, huevo y lácteos requieren control APPCC y prueba docente real.');
+            warnings.push('<b>Panadería y bollería:</b> panes, prefermentos, masa madre, centenos, sin gluten, laminados y bollería mantienen pesos cocidos y mermas pendientes de validación de obrador.');
         }
     }
     else if (releaseStatus === 'bloqueante')
@@ -2793,8 +2869,8 @@ async function loadInitialDatabase() {
         saved = await idbGet(IDB_CURRENT_KEY);
     }
     catch (error) {
-        console.warn('[ObradORR] IndexedDB no está disponible. Se cargará la base pública.', error);
-        state.dataStatus = 'IndexedDB no disponible; base pública cargada';
+        console.warn('[ObradORR] IndexedDB no está disponible. Se cargará la base incluida.', error);
+        state.dataStatus = 'IndexedDB no disponible; base incluida cargada';
     }
     if ((_a = saved === null || saved === void 0 ? void 0 : saved.bytes) === null || _a === void 0 ? void 0 : _a.byteLength) {
         try {
@@ -2807,7 +2883,7 @@ async function loadInitialDatabase() {
             return;
         }
         catch (error) {
-            console.warn('[ObradORR] No se pudo cargar la recuperación local, se usará la base pública.', error);
+            console.warn('[ObradORR] No se pudo cargar la recuperación local, se usará la base incluida.', error);
             try {
                 await idbDelete(IDB_CURRENT_KEY);
             }
@@ -2818,8 +2894,8 @@ async function loadInitialDatabase() {
     }
     await db.loadFromUrl(DB_URL);
     validateCurrentDatabase();
-    state.dataSource = 'base pública';
-    state.dataStatus = state.dataStatus.includes('IndexedDB') ? state.dataStatus : 'Base pública cargada';
+    state.dataSource = 'base incluida';
+    state.dataStatus = state.dataStatus.includes('IndexedDB') ? state.dataStatus : 'Base incluida en la aplicación cargada';
 }
 function validateCurrentDatabase() {
     const integrity = db.value('PRAGMA integrity_check;');
@@ -2878,14 +2954,14 @@ function dataSafetyBannerHtml() {
     const level = dataSafetyLevel();
     if (!state.ready && level !== 'error')
         return '';
-    const title = level === 'error' ? 'Error al guardar recuperación local' : level === 'saving' ? 'Guardando recuperación local...' : level === 'warning' ? 'Cambios pendientes de guardar o descargar' : 'Guardado protegido';
+    const title = level === 'error' ? 'Error al guardar recuperación local' : level === 'saving' ? 'Guardando recuperación local...' : level === 'warning' ? 'Cambios pendientes de guardar o descargar' : 'Sistema de guardado disponible';
     const detail = level === 'error'
         ? (state.dataSaveError || 'No se pudo guardar en este navegador. Descarga una copia SQLite antes de cerrar.')
         : level === 'saving'
             ? 'No cierres la pestaña hasta que finalice el guardado.'
             : level === 'warning'
                 ? 'Descarga una copia SQLite o espera al autoguardado local antes de cerrar.'
-                : 'La recuperación local o la copia descargada cubre la revisión actual.';
+                : 'La app puede guardar recuperación local y descargar copias SQLite. Si has hecho cambios importantes, descarga una copia.';
     return `<div class="data-safety ${level} no-print"><div><b>${escapeHtml(title)}</b><br><small>${escapeHtml(detail)}</small></div><div class="data-safety-meta">${escapeHtml(dataStatusText())}</div></div>`;
 }
 function dataSafetyPanelHtml() {
@@ -2906,6 +2982,26 @@ function dataStatusText() {
     const saving = state.autosaveInFlight ? ' · guardando...' : '';
     const error = state.dataSaveError ? ` · error: ${state.dataSaveError}` : '';
     return `${state.dataStatus || 'Sin estado'}${when}${saving}${dirty}${error}`;
+}
+function systemLastSavedText() {
+    if (state.dataSavedAt)
+        return `Último guardado local: ${new Date(state.dataSavedAt).toLocaleString('es-ES')}`;
+    if (state.lastDownloadedRevision >= state.dataRevision && state.lastDownloadedRevision > 0)
+        return 'Última protección: copia descargada en esta sesión';
+    return 'Sin copia local nueva confirmada en esta sesión';
+}
+function systemOriginText() {
+    try { return window.location.origin || 'origen local no disponible'; }
+    catch (_a) { return 'origen local no disponible'; }
+}
+function dataSafetyHeadline() {
+    if (state.dataSaveError)
+        return 'Revisa el guardado local';
+    if (state.autosaveInFlight)
+        return 'Guardando ahora';
+    if (hasUnsavedWork())
+        return 'Cambios pendientes';
+    return state.ready ? 'Sistema disponible' : 'Cargando';
 }
 function updateStatusIndicator() {
     const status = document.querySelector('.topbar .status');
@@ -2945,6 +3041,7 @@ async function saveWorkingCopy(label = 'Guardado en este navegador', options = {
         validateCurrentDatabase();
         const bytes = db.exportBytes();
         const savedAt = new Date().toISOString();
+        await rotateLocalSnapshots(saveRevision, savedAt);
         await idbPut(IDB_CURRENT_KEY, { bytes, savedAt, label, version: VERSION, revision: saveRevision, cacheTag: EXPECTED_CACHE_TAG, releaseTag: EXPECTED_RELEASE_TAG });
         state.dataSource = 'guardado local';
         state.dataSavedAt = savedAt;
@@ -2977,6 +3074,47 @@ Descarga una copia SQLite antes de cerrar la aplicación.`);
             state.autosaveTimer = setTimeout(() => saveWorkingCopy('Guardado en este navegador', { silent: true, rerender: false }), 900);
         }
         updateStatusIndicator();
+    }
+}
+
+function flushWorkingCopyOnLifecycle(label) {
+    if (!state.ready || !hasUnsavedWork())
+        return;
+    clearTimeout(state.autosaveTimer);
+    saveWorkingCopy(label, { silent: true, rerender: false }).catch(error => console.warn('[ObradORR] Guardado defensivo de ciclo de vida fallido.', error));
+}
+async function rotateLocalSnapshots(nextRevision, rotatedAt) {
+    let current = null;
+    try {
+        current = await idbGet(IDB_CURRENT_KEY);
+    }
+    catch (error) {
+        console.warn('[ObradORR] No se pudo leer la copia actual para rotación local.', error);
+        return;
+    }
+    if (!((current === null || current === void 0 ? void 0 : current.bytes) && current.bytes.byteLength))
+        return;
+    if (Number(current.revision || -1) === Number(nextRevision))
+        return;
+    for (let i = IDB_PREVIOUS_KEYS.length - 1; i >= 0; i--) {
+        const targetKey = IDB_PREVIOUS_KEYS[i];
+        const sourceKey = i === 0 ? IDB_CURRENT_KEY : IDB_PREVIOUS_KEYS[i - 1];
+        let source = null;
+        try {
+            source = await idbGet(sourceKey);
+        }
+        catch (error) {
+            console.warn(`[ObradORR] No se pudo leer ${sourceKey} para rotación local.`, error);
+        }
+        if ((source === null || source === void 0 ? void 0 : source.bytes) && source.bytes.byteLength) {
+            await idbPut(targetKey, Object.assign({}, source, { rotatedAt, label: `${source.label || 'Copia local'} · rotatoria` }));
+        }
+        else {
+            try {
+                await idbDelete(targetKey);
+            }
+            catch (_a) { }
+        }
     }
 }
 function triggerLoadDb() { var _a; (_a = document.getElementById('dbFileInput')) === null || _a === void 0 ? void 0 : _a.click(); }
@@ -3019,7 +3157,7 @@ Se conserva la base anterior.`);
     }
 }
 async function restorePublicDatabase() {
-    if (!(await confirmBackupBeforeDestructiveAction('restaurar la base pública original')))
+    if (!(await confirmBackupBeforeDestructiveAction('restaurar la base incluida original')))
         return;
     try {
         await db.loadFromUrl(DB_URL);
@@ -3031,13 +3169,13 @@ async function restorePublicDatabase() {
         catch (error) {
             console.warn('[ObradORR] No se pudo limpiar IndexedDB.', error);
         }
-        state.dataSource = 'base pública';
+        state.dataSource = 'base incluida';
         state.dataSavedAt = '';
         state.dataSaveError = '';
         state.lastSavedRevision = state.dataRevision;
         state.lastDownloadedRevision = state.dataRevision;
         state.dataDirty = false;
-        state.dataStatus = 'Base pública restaurada';
+        state.dataStatus = 'Base incluida restaurada';
         state.selection = [];
         saveSelection();
         state.page = 'inicio';
@@ -3045,7 +3183,7 @@ async function restorePublicDatabase() {
     }
     catch (error) {
         console.error(error);
-        alert(`No se pudo restaurar la base pública: ${error.message}`);
+        alert(`No se pudo restaurar la base incluida: ${error.message}`);
     }
 }
 function clearLocalUiData() {
@@ -3087,6 +3225,7 @@ function showDiagnostics() {
         idb_database: IDB_DATA_DB,
         idb_store: IDB_DATA_STORE,
         idb_current_key: IDB_CURRENT_KEY,
+        idb_previous_keys: IDB_PREVIOUS_KEYS,
         recipes: state.recipes.length,
         ingredients: state.ingredients.length,
         selection: state.selection.length,
@@ -3108,7 +3247,7 @@ function showDiagnostics() {
     box.innerHTML = `<b>Resumen</b><p>IndexedDB: ${data.indexedDB ? 'disponible' : 'no disponible'} · Cambios pendientes: ${data.dataDirty ? 'sí' : 'no'} · Integridad: ${escapeHtml(String(data.integrity_check))}</p><details><summary>Diagnóstico técnico avanzado</summary><pre class="mono">${escapeHtml(JSON.stringify(data, null, 2))}</pre></details>`;
 }
 function showFormError(error) {
-    const message = (error === null || error === void 0 ? void 0 : error.message) || String(error || 'Revisa los datos del formulario.');
+    const message = friendlyDbErrorMessage(error);
     const body = modalRoot.querySelector('.modal-body');
     const html = `<div class="notice error" data-form-error><b>No se ha guardado:</b> ${escapeHtml(message)}</div>`;
     const previous = body === null || body === void 0 ? void 0 : body.querySelector('[data-form-error]');
@@ -3120,6 +3259,61 @@ function showFormError(error) {
         alert(message);
     return false;
 }
+
+function normalizeNameKey(value) {
+    return normalize(value).replace(/\s+/g, ' ').trim();
+}
+function allIngredientNameRows() {
+    return db.query('SELECT id, name, active FROM ingredients ORDER BY name COLLATE NOCASE');
+}
+function allRecipeNameRows() {
+    return db.query(`SELECT 'culinary' AS source_type, id, name, active FROM culinary_recipes
+        UNION ALL
+        SELECT 'bakery' AS source_type, id, name, active FROM bakery_recipes
+        ORDER BY name COLLATE NOCASE`);
+}
+function findIngredientNameDuplicate(name, excludeId = '') {
+    const key = normalizeNameKey(name);
+    if (!key)
+        return null;
+    return allIngredientNameRows().find(row => String(row.id) !== String(excludeId || '') && normalizeNameKey(row.name) === key) || null;
+}
+function findRecipeNameDuplicate(name, excludeType = '', excludeId = '') {
+    const key = normalizeNameKey(name);
+    if (!key)
+        return null;
+    return allRecipeNameRows().find(row => !(String(row.source_type) === String(excludeType || '') && String(row.id) === String(excludeId || '')) && normalizeNameKey(row.name) === key) || null;
+}
+function duplicateIngredientMessage(duplicate, requestedName) {
+    const sameCase = String(duplicate.name || '').trim() === String(requestedName || '').trim();
+    return sameCase
+        ? `Ya existe un ingrediente con ese nombre: “${duplicate.name}”. Usa el ingrediente existente o cambia el nombre si realmente es otro producto.`
+        : `Ya existe un ingrediente equivalente con otra combinación de mayúsculas/minúsculas: “${duplicate.name}”. Evita duplicados para no dividir pedidos, costes y alérgenos.`;
+}
+function duplicateRecipeMessage(duplicate, requestedName) {
+    const typeLabel = duplicate.source_type === 'bakery' ? 'panadería/pastelería' : 'cocina';
+    const sameCase = String(duplicate.name || '').trim() === String(requestedName || '').trim();
+    return sameCase
+        ? `Ya existe una elaboración de ${typeLabel} con ese nombre: “${duplicate.name}”. Usa la ficha existente, edítala o crea una variante con un nombre diferenciado.`
+        : `Ya existe una elaboración equivalente de ${typeLabel} con otra combinación de mayúsculas/minúsculas: “${duplicate.name}”. Usa la ficha existente o elige un nombre diferenciado para la variante.`;
+}
+function isUniqueConstraintError(error) {
+    const message = (error === null || error === void 0 ? void 0 : error.message) || String(error || '');
+    return /SQLITE_CONSTRAINT_UNIQUE|UNIQUE constraint failed/i.test(message);
+}
+function friendlyDbErrorMessage(error) {
+    const message = (error === null || error === void 0 ? void 0 : error.message) || String(error || 'Revisa los datos del formulario.');
+    if (/UNIQUE constraint failed:\s*ingredients\.name/i.test(message))
+        return 'No se pudo guardar el ingrediente porque ya existe otro con el mismo nombre. Usa el ingrediente existente o cambia el nombre si realmente es otro producto.';
+    if (/UNIQUE constraint failed:\s*culinary_recipes\.name/i.test(message))
+        return 'No se pudo guardar la elaboración de cocina porque ya existe otra con el mismo nombre. Usa la ficha existente o crea una variante con un nombre diferenciado.';
+    if (/UNIQUE constraint failed:\s*bakery_recipes\.name/i.test(message))
+        return 'No se pudo guardar la formulación de panadería/pastelería porque ya existe otra con el mismo nombre. Usa la ficha existente o crea una variante con un nombre diferenciado.';
+    if (isUniqueConstraintError(error))
+        return 'No se pudo guardar porque ya existe un registro con esos datos. Revisa el nombre y usa el registro existente o crea una variante diferenciada.';
+    return message;
+}
+
 function positiveNumber(value, fallback = 1) {
     const n = Number(value || fallback);
     if (!Number.isFinite(n) || n <= 0)

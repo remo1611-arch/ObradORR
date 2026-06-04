@@ -1,4 +1,4 @@
-# Guía Termux · ObradORR 2.0.0 STABLE-CANDIDATE
+# Guía Termux · ObradORR 2.0.0 STABLE-CANDIDATE · Persistence hotfix
 
 ```bash
 pkill -f "python -m http.server" 2>/dev/null || true
@@ -26,11 +26,11 @@ python -m http.server 8827 --bind 127.0.0.1
 Abrir:
 
 ```bash
-termux-open-url "http://127.0.0.1:8827/app/obradorr.html?v=obradorr-200-stable-candidate"
+termux-open-url "http://127.0.0.1:8827/app/obradorr.html?v=obradorr-200-stable-candidate-persistence-hotfix"
 ```
 
 Reset local:
 
 ```bash
-termux-open-url "http://127.0.0.1:8827/app/reset_local_data.html?v=obradorr-200-stable-candidate-reset"
+termux-open-url "http://127.0.0.1:8827/app/reset_local_data.html?v=obradorr-200-stable-candidate-persistence-hotfix-reset"
 ```

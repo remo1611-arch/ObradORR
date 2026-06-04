@@ -1,9 +1,0 @@
-{
-  "phase": "P0-C",
-  "applied_at": "2026-06-03T18:36:57Z",
-  "scope": "allergen derivation and print/document preview integration",
-  "versioning_changed": false,
-  "sqlite_structural_migration": false,
-  "uses_declaration_status": true,
-  "normative_filter": "allergens.regulation_order BETWEEN 1 AND 14"
-}
