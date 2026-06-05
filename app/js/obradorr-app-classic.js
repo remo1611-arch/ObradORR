@@ -4,21 +4,22 @@ const ObradORRDatabase = window.ObradORRDatabase;
 if (!ObradORRDatabase)
     throw new Error("No se cargó la capa SQLite de ObradORR.");
 window.__OBRADORR_MODULE_STARTED = true;
-window.__OBRADORR_MODULE_VERSION = 'obradorr-200-public-release';
-// previous boot token: stable
+window.__OBRADORR_MODULE_VERSION = 'obradorr-200-public-release-final-ui-hints';
+// public release final cache token
 const DB_URL = '../db/obradorr.sqlite';
 const WORK_SELECTION_ID = 'WORK_CURRENT';
 const STORAGE_PRINT_OPTIONS = 'obradorr_ui_print_options_v1';
-const IDB_DATA_DB = 'obradorr-data-200-stable';
+const IDB_DATA_DB = 'obradorr-data-200-public-release-final';
 const IDB_DATA_STORE = 'snapshots';
 const IDB_CURRENT_KEY = 'current-db';
 const IDB_PREVIOUS_KEYS = ['previous-db-1', 'previous-db-2', 'previous-db-3'];
 const VERSION = '2.0.0';
-const INGREDIENT_SEARCH_LIMIT = 220;
+const LIST_PAGE_SIZE = 60;
+const INGREDIENT_SEARCH_LIMIT = 60;
 const PRINT_SEARCH_LIMIT = 60;
 const LEGAL_NOTICE = '© 2026 Remo José Pereira González · Uso docente personal autorizado · Sin licencia abierta de redistribución o explotación comercial.';
 const EXPECTED_RELEASE_TAG = '2.0.0-stable';
-const EXPECTED_CACHE_TAG = 'obradorr-200-stable';
+const EXPECTED_CACHE_TAG = 'obradorr-200-public-release-final-ui-hints';
 const db = new ObradORRDatabase();
 const state = {
     ready: false,
@@ -50,6 +51,9 @@ const state = {
     recipeSearch: '',
     ingredientSearch: '',
     printSearch: '',
+    recipeVisibleLimit: LIST_PAGE_SIZE,
+    ingredientVisibleLimit: LIST_PAGE_SIZE,
+    printVisibleLimit: LIST_PAGE_SIZE,
     printOptions: loadJson(STORAGE_PRINT_OPTIONS, {
         documentType: 'fichas_pedido',
         documentProfile: 'aula_taller',
@@ -209,11 +213,13 @@ function selectionSummaryHtml() {
 }
 function recipesView() {
     const rows = filterRecipes(state.recipeSearch);
+    const visible = limitedRows(rows, state.recipeVisibleLimit);
     return `
     <section class="card">
       <div class="panel-title"><div><h2>Elaboraciones</h2><p>Catálogo técnico. Puedes ver, crear, editar o añadir a la práctica actual.</p></div><div class="actions"><button class="btn primary" data-new-recipe>Nueva elaboración</button><button class="btn accent" data-nav="imprimir">Ir a imprimir / exportar</button></div></div>
-      <div class="toolbar"><div class="search"><input class="input" id="recipeSearch" value="${escapeAttr(state.recipeSearch)}" placeholder="Buscar elaboración..." /></div><span class="pill" id="recipeSearchCount">${resultCountText(rows.length, rows.length, 'resultados')}</span></div>
-      <div class="catalog-grid" id="recipeResults">${rows.map(recipeCard).join('')}</div>
+      <div class="toolbar"><div class="search"><input class="input" id="recipeSearch" value="${escapeAttr(state.recipeSearch)}" placeholder="Buscar elaboración..." /></div><span class="pill" id="recipeSearchCount">${resultCountText(rows.length, visible.length, 'resultados')}</span></div>
+      <div id="recipeLimitControls">${listLimitControlsHtml('recipe', rows.length, visible.length, !!state.recipeSearch, 'elaboraciones')}</div>
+      <div class="catalog-grid" id="recipeResults">${visible.map(recipeCard).join('')}</div>
     </section>
   `;
 }
@@ -237,24 +243,37 @@ function recipeCard(recipe) {
 }
 function ingredientsView() {
     const rows = filterIngredients(state.ingredientSearch);
+    const visible = limitedRows(rows, state.ingredientVisibleLimit);
     return `
     <section class="card">
-      <div class="panel-title"><div><h2>Ingredientes</h2><p>Consulta, creación y edición básica. Los cambios en ingredientes afectan a las elaboraciones que los utilizan.</p></div><div class="actions"><button class="btn primary" data-new-ingredient>Nuevo ingrediente</button><span class="pill" id="ingredientSearchCount">${resultCountText(rows.length, Math.min(rows.length, INGREDIENT_SEARCH_LIMIT), 'activos')}</span></div></div>
+      <div class="panel-title"><div><h2>Ingredientes</h2><p>Consulta, creación y edición básica. Los cambios en ingredientes afectan a las elaboraciones que los utilizan.</p></div><div class="actions"><button class="btn primary" data-new-ingredient>Nuevo ingrediente</button><span class="pill" id="ingredientSearchCount">${resultCountText(rows.length, visible.length, 'activos')}</span></div></div>
       <div class="toolbar"><input class="input" id="ingredientSearch" value="${escapeAttr(state.ingredientSearch)}" placeholder="Buscar ingrediente..." /></div>
+      <div id="ingredientLimitControls">${listLimitControlsHtml('ingredient', rows.length, visible.length, !!state.ingredientSearch, 'ingredientes')}</div>
       <div id="ingredientResults">${ingredientResultsHtml(rows)}</div>
     </section>
   `;
 }
 function ingredientResultsHtml(rows) {
+    const visible = limitedRows(rows, state.ingredientVisibleLimit);
     return `<div class="table-wrap"><table><thead><tr><th>Ingrediente</th><th>Familia</th><th>Grupo pedido</th><th>Zona</th><th>Coste</th><th></th></tr></thead><tbody>
-    ${rows.slice(0, INGREDIENT_SEARCH_LIMIT).map(ingredientRowHtml).join('')}
-  </tbody></table></div>
-  ${rows.length > INGREDIENT_SEARCH_LIMIT ? `<p class="footer-note">Se muestran los primeros ${INGREDIENT_SEARCH_LIMIT} de ${rows.length} resultados. Refina la búsqueda para ver menos resultados.</p>` : ''}`;
+    ${visible.map(ingredientRowHtml).join('')}
+  </tbody></table></div>`;
 }
 function resultCountText(total, shown, label) {
     const t = Number(total || 0);
     const s = Math.min(Number(shown || 0), t);
     return `Mostrando ${s} de ${t} ${label}`;
+}
+function limitedRows(rows, limit) {
+    return (rows || []).slice(0, Math.min(Number(limit || LIST_PAGE_SIZE), (rows || []).length));
+}
+function listLimitControlsHtml(kind, total, shown, filtered, noun) {
+    const t = Number(total || 0);
+    const s = Number(shown || 0);
+    if (t <= s)
+        return '';
+    const allLabel = filtered ? `Mostrar todas las filtradas` : `Mostrar todas`;
+    return `<div class="list-limit-actions actions"><button class="btn" data-list-more="${kind}">Mostrar más</button><button class="btn" data-list-all="${kind}">${allLabel}</button><small class="muted">${escapeHtml(resultCountText(t, s, noun || 'resultados'))}</small></div>`;
 }
 function ingredientRowHtml(i) {
     return `<tr><td><b>${escapeHtml(i.name)}</b><br><small class="muted">${escapeHtml(i.id)}</small></td><td>${escapeHtml(i.family || '')}</td><td>${escapeHtml(i.order_group || '')}</td><td>${escapeHtml(i.storage_zone || '')}</td><td>${money(i.cost_per_base_unit_after_waste)} / ${escapeHtml(i.base_unit || '')}</td><td><button class="btn" data-edit-ingredient="${i.id}">Editar</button></td></tr>`;
@@ -270,7 +289,7 @@ function bindDynamicActionButtons(scope = document) {
         if (b.dataset.bound === '1')
             return;
         b.dataset.bound = '1';
-        b.addEventListener('click', () => addRecipeToSelection(b.dataset.addRecipe));
+        b.addEventListener('click', () => showAddRecipeToPrintDialog(b.dataset.addRecipe));
     });
     scope.querySelectorAll('[data-preview-recipe]').forEach(b => {
         if (b.dataset.bound === '1')
@@ -293,29 +312,33 @@ function bindDynamicActionButtons(scope = document) {
 }
 function updateRecipeSearchResults() {
     const rows = filterRecipes(state.recipeSearch);
+    const visible = limitedRows(rows, state.recipeVisibleLimit);
     const results = document.getElementById('recipeResults');
     const count = document.getElementById('recipeSearchCount');
     if (count)
-        count.textContent = resultCountText(rows.length, rows.length, 'resultados');
+        count.textContent = resultCountText(rows.length, visible.length, 'resultados');
     if (results) {
-        results.innerHTML = rows.map(recipeCard).join('');
+        results.innerHTML = visible.map(recipeCard).join('');
         bindDynamicActionButtons(results);
     }
+    refreshListLimitControls('recipe', rows.length, visible.length, !!state.recipeSearch, 'elaboraciones');
 }
 function updateIngredientSearchResults() {
     const rows = filterIngredients(state.ingredientSearch);
+    const visible = limitedRows(rows, state.ingredientVisibleLimit);
     const results = document.getElementById('ingredientResults');
     const count = document.getElementById('ingredientSearchCount');
     if (count)
-        count.textContent = resultCountText(rows.length, Math.min(rows.length, INGREDIENT_SEARCH_LIMIT), 'activos');
+        count.textContent = resultCountText(rows.length, visible.length, 'activos');
     if (results) {
         results.innerHTML = ingredientResultsHtml(rows);
         bindDynamicActionButtons(results);
     }
+    refreshListLimitControls('ingredient', rows.length, visible.length, !!state.ingredientSearch, 'ingredientes');
 }
 function updatePrintSearchResults() {
     const allRows = filterRecipes(state.printSearch);
-    const rows = allRows.slice(0, PRINT_SEARCH_LIMIT);
+    const rows = limitedRows(allRows, state.printVisibleLimit);
     const results = document.getElementById('printResults');
     const count = document.getElementById('printSearchCount');
     const note = document.getElementById('printSearchLimitNote');
@@ -326,19 +349,30 @@ function updatePrintSearchResults() {
         bindDynamicActionButtons(results);
     }
     if (note)
-        note.textContent = allRows.length > PRINT_SEARCH_LIMIT ? `Se muestran los primeros ${PRINT_SEARCH_LIMIT} resultados. Refina la búsqueda para ver menos resultados.` : '';
+        note.innerHTML = listLimitControlsHtml('print', allRows.length, rows.length, !!state.printSearch, 'resultados');
+    bindListLimitButtons(document);
+}
+function refreshListLimitControls(kind, total, shown, filtered, noun) {
+    const container = document.getElementById(`${kind}LimitControls`);
+    if (container) container.innerHTML = listLimitControlsHtml(kind, total, shown, filtered, noun);
+    else {
+        const existing = document.querySelector(`.list-limit-actions [data-list-more="${kind}"]`)?.closest('.list-limit-actions');
+        if (existing) existing.outerHTML = listLimitControlsHtml(kind, total, shown, filtered, noun);
+    }
+    bindListLimitButtons(document);
 }
 function printWorkspaceView() {
     const allResults = filterRecipes(state.printSearch);
-    const results = allResults.slice(0, PRINT_SEARCH_LIMIT);
+    const results = limitedRows(allResults, state.printVisibleLimit);
     const opts = state.printOptions;
     return `
     <section class="workspace">
       <div class="card">
         <div class="panel-title"><div><h2>Imprimir / exportar</h2><p>Busca elaboraciones, añade cantidades y genera el documento desde esta pantalla.</p></div></div>
         <div class="toolbar"><input class="input" id="printSearch" value="${escapeAttr(state.printSearch)}" placeholder="Buscar elaboración para añadir..." /><span class="pill" id="printSearchCount">${resultCountText(allResults.length, results.length, 'resultados')}</span></div>
+        <div id="printLimitControls">${listLimitControlsHtml('print', allResults.length, results.length, !!state.printSearch, 'resultados')}</div>
+        <div class="actions print-bulk-actions"><button class="btn" data-add-all-catalog>Añadir todo el catálogo</button></div>
         <div class="results" id="printResults" style="margin-top:12px">${printSearchResultsHtml(results)}</div>
-        <p class="footer-note" id="printSearchLimitNote">${allResults.length > PRINT_SEARCH_LIMIT ? `Se muestran los primeros ${PRINT_SEARCH_LIMIT} resultados. Refina la búsqueda para ver menos resultados.` : ''}</p>
       </div>
       <div class="card">
         <div class="panel-title"><div><h2>Selección actual</h2><p>${state.selection.length} elaboraciones para el documento.</p></div><button class="btn danger" data-clear-selection>Vaciar</button></div>
@@ -375,7 +409,7 @@ function selectionEditorHtml() {
     return state.selection.map(item => `<div class="selection-item production-scaling-item">
     <div><b>${escapeHtml(item.name)}</b><br><small class="muted">${escapeHtml(item.categoryLabel || '')}</small><br><small class="muted">${escapeHtml(selectionQuantityLabel(item))}</small></div>
     ${selectionScalingControlsHtml(item)}
-    <button class="btn danger" data-remove-selection="${item.uid}">Quitar</button>
+    <div class="actions"><button class="btn" data-edit-selection-qty="${item.uid}">Editar cantidad</button><button class="btn danger" data-remove-selection="${item.uid}">Quitar</button></div>
   </div>`).join('');
 } 
 function selectionScalingControlsHtml(item) {
@@ -389,14 +423,14 @@ function selectionScalingControlsHtml(item) {
     const flour = Number(item.flourG || (mode === 'flour_g' ? item.qty : 0) || 0);
     const modeSelect = `<label class="scaling-field scaling-mode"><span>Modo de cálculo</span><select data-update-scaling-mode="${item.uid}">
       <option value="pieces_weight" ${mode === 'pieces_weight' ? 'selected' : ''}>Piezas + peso unitario</option>
-      <option value="raw_dough" ${mode === 'raw_dough' ? 'selected' : ''}>Masa/pasta total</option>
+      <option value="raw_dough" ${mode === 'raw_dough' ? 'selected' : ''}>Masa total</option>
       <option value="flour_g" ${mode === 'flour_g' ? 'selected' : ''}>Harina total</option>
     </select></label>`;
     if (mode === 'pieces_weight') {
-        return `<div class="scaling-controls">${modeSelect}<label class="scaling-field"><span>Piezas</span><input class="input" type="number" min="0" step="1" value="${escapeAttr(pieces)}" data-update-selection-field="${item.uid}" data-field="qty" /></label><label class="scaling-field"><span>Peso unitario crudo/escudillado (g)</span><input class="input" type="number" min="0" step="0.1" value="${escapeAttr(pieceWeight)}" data-update-selection-field="${item.uid}" data-field="pieceWeightG" /></label><small class="muted scaling-note">Masa/pasta objetivo: ${formatQty(pieces * pieceWeight)} g. No se declara peso cocido ni merma.</small></div>`;
+        return `<div class="scaling-controls">${modeSelect}<label class="scaling-field"><span>Piezas</span><input class="input" type="number" min="0" step="1" value="${escapeAttr(pieces)}" data-update-selection-field="${item.uid}" data-field="qty" /></label><label class="scaling-field"><span>Peso unitario crudo/escudillado (g)</span><input class="input" type="number" min="0" step="0.1" value="${escapeAttr(pieceWeight)}" data-update-selection-field="${item.uid}" data-field="pieceWeightG" /></label><small class="muted scaling-note">Masa objetivo: ${formatQty(pieces * pieceWeight)} g. No se declara peso cocido ni merma.</small></div>`;
     }
     if (mode === 'raw_dough') {
-        return `<div class="scaling-controls">${modeSelect}<label class="scaling-field"><span>Masa/pasta total cruda (g)</span><input class="input" type="number" min="0" step="1" value="${escapeAttr(rawDough)}" data-update-selection-field="${item.uid}" data-field="rawDoughG" /></label><small class="muted scaling-note">Escalado por masa o pasta total objetivo.</small></div>`;
+        return `<div class="scaling-controls">${modeSelect}<label class="scaling-field"><span>Masa total cruda (g)</span><input class="input" type="number" min="0" step="1" value="${escapeAttr(rawDough)}" data-update-selection-field="${item.uid}" data-field="rawDoughG" /></label><small class="muted scaling-note">Escalado por masa total objetivo.</small></div>`;
     }
     return `<div class="scaling-controls">${modeSelect}<label class="scaling-field"><span>Harina total (g)</span><input class="input" type="number" min="0" step="1" value="${escapeAttr(flour)}" data-update-selection-field="${item.uid}" data-field="flourG" /></label><small class="muted scaling-note">Escalado panadero por harina base 100&nbsp;%.</small></div>`;
 }
@@ -431,7 +465,7 @@ function updateScalingMode(uid, mode) {
         item.baseMode = 'raw_dough';
         item.rawDoughG = Number(item.rawDoughG || baseRaw || 1000);
         item.qty = item.rawDoughG;
-        item.unitLabel = 'g masa/pasta';
+        item.unitLabel = 'g masa';
     }
     else {
         item.baseMode = 'flour_g';
@@ -470,7 +504,7 @@ function updateSelectionField(uid, field, value) {
         }
         else if (mode === 'raw_dough') {
             item.qty = Number(item.rawDoughG || item.qty || 0);
-            item.unitLabel = 'g masa/pasta';
+            item.unitLabel = 'g masa';
         }
         else {
             item.qty = Number(item.flourG || item.qty || 0);
@@ -504,13 +538,13 @@ function teachingFieldsHtml() {
     const moduleHelp = cycle ? `Módulos filtrados por ${escapeHtml(cycle.name)}.` : 'Selecciona un ciclo para filtrar módulos; mientras tanto se muestran todos.';
     const moduleWarning = t.module && !moduleInCycle ? `<p class="footer-note teaching-warning">El módulo seleccionado no corresponde al ciclo actual. Selecciona otro módulo.</p>` : '';
     return `<div class="teaching-fields">
-    <input class="input" data-teaching="title" value="${escapeAttr(t.title || '')}" placeholder="Título de la práctica" />
+    <div class="field-with-note"><input class="input" data-teaching="title" value="${escapeAttr(t.title || '')}" placeholder="Título de la práctica" /><small class="muted">Ejemplo: Práctica de masas fermentadas dulces</small></div>
     <input class="input" data-teaching="date" type="date" value="${escapeAttr(t.date || '')}" />
     <select data-teaching="cycle"><option value="">Ciclo</option>${state.cycles.map(c => `<option value="${escapeAttr(c.name)}" ${t.cycle === c.name ? 'selected' : ''}>${escapeHtml(c.name)}</option>`).join('')}</select>
     <div class="field-with-note"><select data-teaching="module"><option value="">Módulo</option>${modules.map(m => `<option value="${escapeAttr(moduleLabel(m))}" ${t.module === moduleLabel(m) ? 'selected' : ''}>${escapeHtml(moduleLabel(m))}</option>`).join('')}</select><small class="muted">${moduleHelp}</small>${moduleWarning}</div>
     <input class="input" data-teaching="group" value="${escapeAttr(t.group || '')}" placeholder="Grupo" />
-    <input class="input" data-teaching="responsible" value="${escapeAttr(t.responsible || '')}" placeholder="Responsable" />
-    <textarea data-teaching="notes" placeholder="Observaciones" style="grid-column:1/-1">${escapeHtml(t.notes || '')}</textarea>
+    <div class="field-with-note"><input class="input" data-teaching="responsible" value="${escapeAttr(t.responsible || '')}" placeholder="Responsable" /><small class="muted">Ejemplo: Remo J. Pereira González</small></div>
+    <div class="field-with-note" style="grid-column:1/-1"><textarea data-teaching="notes" placeholder="Observaciones">${escapeHtml(t.notes || '')}</textarea><small class="muted">Ejemplo: organización del grupo, mise en place previa, elaboraciones que requieren frío o alérgenos a vigilar.</small></div>
   </div>`;
 }
 function teachingCycle() {
@@ -693,14 +727,17 @@ function bindCurrentView() {
     document.querySelectorAll('[data-nav]').forEach(b => b.addEventListener('click', () => { state.page = b.dataset.nav; render(); }));
     const recipeSearch = document.getElementById('recipeSearch');
     if (recipeSearch)
-        recipeSearch.addEventListener('input', e => { state.recipeSearch = e.target.value; updateRecipeSearchResults(); });
+        recipeSearch.addEventListener('input', e => { state.recipeSearch = e.target.value; state.recipeVisibleLimit = LIST_PAGE_SIZE; updateRecipeSearchResults(); });
     const ingredientSearch = document.getElementById('ingredientSearch');
     if (ingredientSearch)
-        ingredientSearch.addEventListener('input', e => { state.ingredientSearch = e.target.value; updateIngredientSearchResults(); });
+        ingredientSearch.addEventListener('input', e => { state.ingredientSearch = e.target.value; state.ingredientVisibleLimit = LIST_PAGE_SIZE; updateIngredientSearchResults(); });
     const printSearch = document.getElementById('printSearch');
     if (printSearch)
-        printSearch.addEventListener('input', e => { state.printSearch = e.target.value; updatePrintSearchResults(); });
+        printSearch.addEventListener('input', e => { state.printSearch = e.target.value; state.printVisibleLimit = LIST_PAGE_SIZE; updatePrintSearchResults(); });
     bindDynamicActionButtons(document);
+    bindListLimitButtons(document);
+    document.querySelectorAll('[data-edit-selection-qty]').forEach(b => b.addEventListener('click', () => showEditSelectionQuantityDialog(b.dataset.editSelectionQty)));
+    document.querySelector('[data-add-all-catalog]')?.addEventListener('click', () => addRecipesBulk('all'));
     (_a = document.querySelector('[data-new-recipe]')) === null || _a === void 0 ? void 0 : _a.addEventListener('click', () => showRecipeCreator());
     (_b = document.querySelector('[data-new-ingredient]')) === null || _b === void 0 ? void 0 : _b.addEventListener('click', () => showIngredientCreator());
     document.querySelectorAll('[data-remove-selection]').forEach(b => b.addEventListener('click', () => removeSelection(b.dataset.removeSelection)));
@@ -759,6 +796,170 @@ function bindCheck(id) {
         return;
     el.addEventListener('change', () => { state.printOptions[id] = el.checked; savePrintOptions(); render(); });
 }
+
+function bindListLimitButtons(scope = document) {
+    scope.querySelectorAll('[data-list-more]').forEach(b => {
+        if (b.dataset.bound === '1') return;
+        b.dataset.bound = '1';
+        b.addEventListener('click', () => updateListLimit(b.dataset.listMore, false));
+    });
+    scope.querySelectorAll('[data-list-all]').forEach(b => {
+        if (b.dataset.bound === '1') return;
+        b.dataset.bound = '1';
+        b.addEventListener('click', () => updateListLimit(b.dataset.listAll, true));
+    });
+}
+function updateListLimit(kind, showAll) {
+    const map = {
+        recipe: { key: 'recipeVisibleLimit', rows: filterRecipes(state.recipeSearch) },
+        ingredient: { key: 'ingredientVisibleLimit', rows: filterIngredients(state.ingredientSearch) },
+        print: { key: 'printVisibleLimit', rows: filterRecipes(state.printSearch) }
+    };
+    const entry = map[kind];
+    if (!entry) return;
+    state[entry.key] = showAll ? entry.rows.length : Math.min(entry.rows.length, Number(state[entry.key] || LIST_PAGE_SIZE) + LIST_PAGE_SIZE);
+    if (kind === 'recipe') updateRecipeSearchResults();
+    else if (kind === 'ingredient') updateIngredientSearchResults();
+    else updatePrintSearchResults();
+}
+function recipeRowsForBulk(kind) {
+    const filtered = filterRecipes(state.printSearch);
+    if (kind === 'visible') return limitedRows(filtered, state.printVisibleLimit);
+    if (kind === 'filtered') return filtered;
+    return state.recipes;
+}
+function addRecipesBulk(kind) {
+    const rows = recipeRowsForBulk(kind).filter(r => !['no_apta','bloqueante'].includes(r.release_status || ''));
+    if (!rows.length) return alert('No hay elaboraciones aptas para añadir con el filtro actual.');
+    const label = kind === 'visible' ? 'visibles' : (kind === 'filtered' ? 'filtradas' : 'del catálogo');
+    if (rows.length > 60 || kind === 'all') {
+        if (!confirm(`Vas a añadir ${rows.length} elaboraciones ${label} a la impresión con su cantidad base. Después podrás ajustar cada cantidad en la selección. ¿Continuar?`)) return;
+    }
+    let added = 0, skipped = 0;
+    rows.forEach(recipe => {
+        if (state.selection.some(i => i.uid === recipe.uid)) { skipped += 1; return; }
+        const item = makeSelectionItem(recipe.uid);
+        if (item) { state.selection.push(item); added += 1; }
+    });
+    if (added) {
+        saveSelection();
+        scheduleDbAutosave('Selección masiva actualizada');
+    }
+    render();
+    alert(`Añadidas: ${added}. Ya estaban en la selección: ${skipped}.`);
+}
+function showAddRecipeToPrintDialog(uid) {
+    const recipe = state.recipes.find(r => r.uid === uid);
+    if (!recipe) return;
+    const releaseStatus = recipe.release_status || '';
+    if (releaseStatus === 'no_apta' || releaseStatus === 'bloqueante') {
+        alert('Ficha no apta para uso docente final. No se añade a la práctica como ficha normal.');
+        return;
+    }
+    const item = makeSelectionItem(uid);
+    if (!item) return;
+    const existing = state.selection.find(i => i.uid === uid);
+    const base = existing ? Object.assign({}, item, existing) : item;
+    showQuantityDialog(base, false);
+}
+function showEditSelectionQuantityDialog(uid) {
+    const item = state.selection.find(i => i.uid === uid);
+    if (!item) return;
+    showQuantityDialog(Object.assign({}, item), true);
+}
+function showQuantityDialog(item, editing) {
+    const title = editing ? 'Editar cantidad de impresión' : 'Añadir elaboración a la impresión';
+    const body = item.sourceType === 'bakery' ? bakeryQuantityDialogHtml(item) : ordinaryQuantityDialogHtml(item);
+    showModal(title, `<div class="quantity-dialog"><div class="notice"><b>${escapeHtml(item.name)}</b><br><small>${escapeHtml(item.categoryLabel || '')}</small></div>${body}<div class="actions" style="margin-top:16px"><button class="btn" id="cancelQuantityDialog">Cancelar</button><button class="btn primary" id="confirmQuantityDialog">${editing ? 'Actualizar' : 'Añadir'}</button></div><div id="quantityDialogError" class="notice warning hidden" style="margin-top:12px"></div></div>`);
+    setupQuantityDialogBehaviour(item, editing);
+}
+function ordinaryQuantityDialogHtml(item) {
+    const label = item.baseMode === 'yield' ? 'Rendimiento' : 'Raciones';
+    const unit = item.unitLabel || (item.baseMode === 'yield' ? 'rendimiento' : 'raciones');
+    return `<label class="scaling-field"><span>${escapeHtml(label)}</span><input class="input" id="quantityDialogQty" type="number" min="0" step="0.01" value="${escapeAttr(item.qty || 1)}" /> <small>${escapeHtml(unit)}</small></label><p class="footer-note">Las fichas ordinarias se añaden por raciones o rendimiento, según su ficha base.</p>`;
+}
+function bakeryQuantityDialogHtml(item) {
+    const mode = bakeryScalingMode(item);
+    const pieces = Number(item.qty || item.targetPieces || item.basePieces || 0);
+    const pieceWeight = Number(item.pieceWeightG || 0);
+    const rawDough = Number(item.rawDoughG || (mode === 'pieces_weight' ? pieces * pieceWeight : item.qty) || item.baseRawDoughG || 0);
+    const flour = Number(item.flourG || (mode === 'flour_g' ? item.qty : 0) || item.baseFlourG || 0);
+    return `<label class="scaling-field"><span>Modo de cálculo</span><select id="quantityDialogMode">
+      <option value="pieces_weight" ${mode === 'pieces_weight' ? 'selected' : ''}>Piezas + peso unitario</option>
+      <option value="raw_dough" ${mode === 'raw_dough' ? 'selected' : ''}>Masa total</option>
+      <option value="flour_g" ${mode === 'flour_g' ? 'selected' : ''}>Harina total</option>
+    </select></label>
+    <div id="quantityModePieces" class="quantity-mode-panel"><label class="scaling-field"><span>Piezas</span><input class="input" id="quantityDialogPieces" type="number" min="0" step="1" value="${escapeAttr(pieces || '')}" /></label><label class="scaling-field"><span>Peso unitario de masa cruda (g)</span><input class="input" id="quantityDialogPieceWeight" type="number" min="0" step="0.1" value="${escapeAttr(pieceWeight || '')}" /></label><small class="muted" id="quantityPiecesPreview"></small></div>
+    <div id="quantityModeRaw" class="quantity-mode-panel"><label class="scaling-field"><span>Masa total (g)</span><input class="input" id="quantityDialogRawDough" type="number" min="0" step="1" value="${escapeAttr(rawDough || '')}" /></label></div>
+    <div id="quantityModeFlour" class="quantity-mode-panel"><label class="scaling-field"><span>Harina total (g)</span><input class="input" id="quantityDialogFlour" type="number" min="0" step="1" value="${escapeAttr(flour || '')}" /></label></div>
+    <p class="footer-note">Las formulaciones se añaden por piezas con peso unitario, masa total o harina total. No se declara peso cocido ni merma sin prueba de obrador.</p>`;
+}
+function setupQuantityDialogBehaviour(item, editing) {
+    const cancel = document.getElementById('cancelQuantityDialog');
+    const confirmBtn = document.getElementById('confirmQuantityDialog');
+    if (cancel) cancel.addEventListener('click', closeModal);
+    const refresh = () => refreshQuantityModePanels();
+    document.getElementById('quantityDialogMode')?.addEventListener('change', refresh);
+    document.getElementById('quantityDialogPieces')?.addEventListener('input', refresh);
+    document.getElementById('quantityDialogPieceWeight')?.addEventListener('input', refresh);
+    refresh();
+    if (confirmBtn) confirmBtn.addEventListener('click', () => confirmQuantityDialog(item, editing));
+}
+function refreshQuantityModePanels() {
+    const mode = document.getElementById('quantityDialogMode')?.value;
+    ['Pieces','Raw','Flour'].forEach(key => {
+        const el = document.getElementById(`quantityMode${key}`);
+        if (el) el.style.display = (mode === 'pieces_weight' && key === 'Pieces') || (mode === 'raw_dough' && key === 'Raw') || (mode === 'flour_g' && key === 'Flour') ? '' : 'none';
+    });
+    const preview = document.getElementById('quantityPiecesPreview');
+    if (preview) {
+        const pieces = Number(document.getElementById('quantityDialogPieces')?.value || 0);
+        const weight = Number(document.getElementById('quantityDialogPieceWeight')?.value || 0);
+        preview.textContent = pieces && weight ? `${formatQty(pieces)} piezas × ${formatQty(weight)} g = ${formatQty(pieces * weight)} g de masa cruda` : 'Indica piezas y peso unitario para calcular la masa cruda.';
+    }
+}
+function quantityDialogError(message) {
+    const box = document.getElementById('quantityDialogError');
+    if (!box) return alert(message);
+    box.classList.remove('hidden');
+    box.textContent = message;
+}
+function confirmQuantityDialog(item, editing) {
+    const next = Object.assign({}, item);
+    if (item.sourceType === 'bakery') {
+        const mode = document.getElementById('quantityDialogMode')?.value || 'flour_g';
+        if (mode === 'pieces_weight') {
+            const pieces = Number(document.getElementById('quantityDialogPieces')?.value || 0);
+            const weight = Number(document.getElementById('quantityDialogPieceWeight')?.value || 0);
+            if (pieces <= 0 || weight <= 0) return quantityDialogError('Indica número de piezas y peso unitario de masa cruda.');
+            next.baseMode = 'pieces_weight'; next.qty = pieces; next.pieceWeightG = weight; next.rawDoughG = round2(pieces * weight); next.unitLabel = 'piezas × g/pieza';
+        }
+        else if (mode === 'raw_dough') {
+            const raw = Number(document.getElementById('quantityDialogRawDough')?.value || 0);
+            if (raw <= 0) return quantityDialogError('Indica la masa total en gramos.');
+            next.baseMode = 'raw_dough'; next.qty = raw; next.rawDoughG = raw; next.unitLabel = 'g masa';
+        }
+        else {
+            const flour = Number(document.getElementById('quantityDialogFlour')?.value || 0);
+            if (flour <= 0) return quantityDialogError('Indica la harina total en gramos.');
+            next.baseMode = 'flour_g'; next.qty = flour; next.flourG = flour; next.unitLabel = 'g harina';
+        }
+    }
+    else {
+        const qty = Number(document.getElementById('quantityDialogQty')?.value || 0);
+        if (qty <= 0) return quantityDialogError('Indica una cantidad mayor que cero.');
+        next.qty = qty;
+    }
+    const idx = state.selection.findIndex(i => i.uid === next.uid);
+    if (idx >= 0) state.selection[idx] = Object.assign({}, state.selection[idx], next);
+    else state.selection.push(next);
+    saveSelection();
+    scheduleDbAutosave(editing ? 'Cantidad actualizada' : 'Elaboración añadida');
+    closeModal();
+    state.page = 'imprimir';
+    render();
+}
+
 function addRecipeToSelection(uid) {
     const recipe = state.recipes.find(r => r.uid === uid);
     if (!recipe)
@@ -911,7 +1112,7 @@ function selectionItemFromDbRow(row) {
         }
         if (row.production_mode === 'raw_dough') {
             const qty = Number((_f = (_e = (_d = row.raw_dough_g) !== null && _d !== void 0 ? _d : row.main_qty) !== null && _e !== void 0 ? _e : baseRaw) !== null && _f !== void 0 ? _f : 1000);
-            return { uid, sourceType: type, sourceId, name: (recipe === null || recipe === void 0 ? void 0 : recipe.name) || row.bakery_name || sourceId, categoryLabel: (recipe === null || recipe === void 0 ? void 0 : recipe.category_label) || 'Panadería/Pastelería', qty, unitLabel: 'g masa/pasta', baseMode: 'raw_dough', baseValue: baseRaw || qty || 1, baseFlourG: baseFlour, baseRawDoughG: baseRaw, basePieces, rawDoughG: qty, pieceWeightG: basePieceWeight, notes: row.notes || '' };
+            return { uid, sourceType: type, sourceId, name: (recipe === null || recipe === void 0 ? void 0 : recipe.name) || row.bakery_name || sourceId, categoryLabel: (recipe === null || recipe === void 0 ? void 0 : recipe.category_label) || 'Panadería/Pastelería', qty, unitLabel: 'g masa', baseMode: 'raw_dough', baseValue: baseRaw || qty || 1, baseFlourG: baseFlour, baseRawDoughG: baseRaw, basePieces, rawDoughG: qty, pieceWeightG: basePieceWeight, notes: row.notes || '' };
         }
         const qty = Number((_j = (_h = (_g = row.flour_g) !== null && _g !== void 0 ? _g : row.main_qty) !== null && _h !== void 0 ? _h : baseFlour) !== null && _j !== void 0 ? _j : 1000);
         return { uid, sourceType: type, sourceId, name: (recipe === null || recipe === void 0 ? void 0 : recipe.name) || row.bakery_name || sourceId, categoryLabel: (recipe === null || recipe === void 0 ? void 0 : recipe.category_label) || 'Panadería/Pastelería', qty, unitLabel: 'g harina', baseMode: 'flour_g', baseValue: baseFlour || qty || 1000, baseFlourG: baseFlour, baseRawDoughG: baseRaw, basePieces, flourG: qty, pieceWeightG: basePieceWeight, notes: row.notes || '' };
@@ -1953,7 +2154,7 @@ function printHeader(opts) {
 }
 function documentHelpText(opts, profile) {
     if (opts.documentType === 'pedido') return 'Pedido consolidado para compra, economato o reparto de mise en place. Agrupa ingredientes expandidos, mantiene alérgenos globales y no sustituye la revisión docente.';
-    if (profile === 'auditoria_completa') return 'Auditoría documental completa con trazabilidad interna, fuentes, avisos RC y revisión técnica. No es el perfil ordinario para alumnado.';
+    if (profile === 'auditoria_completa') return 'Auditoría documental completa con trazabilidad interna, fuentes, avisos documentales y revisión técnica. No es el perfil ordinario para alumnado.';
     if (profile === 'docente_produccion') return 'Documento de producción docente: preparación de práctica, subrecetas sensibles, costes y APPCC según configuración.';
     if (profile === 'fpb') return 'Ficha guiada FPB: ingredientes, proceso paso a paso, alérgenos y seguridad básica. Sin auditoría completa.';
     if (profile === 'cm') return 'Ficha de producción de Ciclo Medio: proceso técnico, pedido y APPCC medio, sin auditoría completa.';
@@ -2226,6 +2427,10 @@ function bakeryDetail(recipeId) {
     return db.query(`SELECT br.*, bp.preferment_type AS bp_type, bp.calculation_mode, bp.hydration_pct, bp.flour_prefermented_pct, bp.preferment_total_pct, bp.time_hours, bp.temperature_c, bp.notes AS preferment_notes, bp.validation_status AS preferment_validation_status
     FROM bakery_recipes br LEFT JOIN bakery_preferments bp ON bp.recipe_id=br.id WHERE br.id=$id`, { $id: recipeId })[0] || {};
 }
+function prefermentBlockTitle(detail = {}) {
+    const raw = String(detail.bp_type || detail.preferment_type || '').trim();
+    return raw || 'Prefermento';
+}
 function bakeryMetaHtml(detail, item, recipe, blocks) {
     const pref = detail.calculation_mode && detail.calculation_mode !== 'none';
     const fields = [];
@@ -2253,7 +2458,7 @@ function bakeryFormulaBlocks(recipeId, item, recipe) {
     const pref = lines.filter(l => l.prefermentQuantity > 0);
     const final = lines.filter(l => l.finalQuantity > 0);
     if (pref.length)
-        groups.push({ title: 'Prefermento / Biga / Poolish / Masa madre', lines: pref.map(l => (Object.assign(Object.assign({}, l), { quantity: l.prefermentQuantity, unit: 'g', technical_note: lineGroupLabel(l.line_group) }))) });
+        groups.push({ title: prefermentBlockTitle(bakeryDetail(recipeId)), lines: pref.map(l => (Object.assign(Object.assign({}, l), { quantity: l.prefermentQuantity, unit: 'g', technical_note: lineGroupLabel(l.line_group) }))) });
     if (final.length)
         groups.push({ title: 'Masa final', lines: final.map(l => (Object.assign(Object.assign({}, l), { quantity: l.finalQuantity, unit: 'g', technical_note: lineGroupLabel(l.line_group) }))) });
     for (const group of ['filling', 'topping', 'decoration', 'other']) {
@@ -2388,9 +2593,10 @@ function bakeryProcessBlocksHtml(recipeId) {
     const rows = db.query('SELECT block, block_label, instruction, notes FROM v_bakery_process_blocks_print WHERE recipe_id=$id ORDER BY block_order, step_number', { $id: recipeId });
     if (!rows.length)
         return processBlock(recipeDetail('bakery', recipeId), [], 'bakery');
+    const detail = bakeryDetail(recipeId);
     const groups = new Map();
     for (const r of rows) {
-        const label = r.block_label || r.block;
+        const label = r.block === 'preferment' ? prefermentBlockTitle(detail) : (r.block_label || r.block);
         if (!groups.has(label))
             groups.set(label, []);
         groups.get(label).push([r.instruction, r.notes].filter(Boolean).join('\n'));
@@ -2955,7 +3161,7 @@ function defaultQuantity(recipe) {
         if (basePieces > 0 && pieceWeightG > 0)
             return { qty: basePieces, unitLabel: 'piezas × g/pieza', baseMode: 'pieces_weight', baseValue: baseRaw || basePieces * pieceWeightG, baseFlourG: baseFlour, baseRawDoughG: baseRaw, basePieces, pieceWeightG, rawDoughG: round2(basePieces * pieceWeightG) };
         if (baseRaw > 0)
-            return { qty: baseRaw, unitLabel: 'g masa/pasta', baseMode: 'raw_dough', baseValue: baseRaw, baseFlourG: baseFlour, baseRawDoughG: baseRaw, rawDoughG: baseRaw };
+            return { qty: baseRaw, unitLabel: 'g masa', baseMode: 'raw_dough', baseValue: baseRaw, baseFlourG: baseFlour, baseRawDoughG: baseRaw, rawDoughG: baseRaw };
         return { qty: baseFlour, unitLabel: 'g harina', baseMode: 'flour_g', baseValue: baseFlour, baseFlourG: baseFlour, flourG: baseFlour };
     }
     if (recipe.default_production_mode === 'yield' || recipe.production_kind === 'technical_yield')
@@ -2969,9 +3175,9 @@ function selectionQuantityLabel(item) {
     if (item.sourceType === 'bakery') {
         const mode = bakeryScalingMode(item);
         if (mode === 'pieces_weight')
-            return `${formatQty(item.qty || 0)} piezas × ${formatQty(item.pieceWeightG || 0)} g = ${formatQty((Number(item.qty || 0) * Number(item.pieceWeightG || 0)) || item.rawDoughG || 0)} g masa/pasta cruda`;
+            return `${formatQty(item.qty || 0)} piezas × ${formatQty(item.pieceWeightG || 0)} g = ${formatQty((Number(item.qty || 0) * Number(item.pieceWeightG || 0)) || item.rawDoughG || 0)} g masa cruda`;
         if (mode === 'raw_dough')
-            return `${formatQty(item.rawDoughG || item.qty || 0)} g masa/pasta total`;
+            return `${formatQty(item.rawDoughG || item.qty || 0)} g masa total`;
         return `${formatQty(item.flourG || item.qty || 0)} g harina total`;
     }
     return `${formatQty(item.qty)} ${item.unitLabel || ''}`.trim();

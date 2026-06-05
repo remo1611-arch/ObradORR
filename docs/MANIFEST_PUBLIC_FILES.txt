@@ -50,7 +50,6 @@ assets/photos/recipes/002_albondigas-en-salsa-espanola.png
 assets/photos/recipes/003_almibar-30-brix.png
 assets/photos/recipes/004_arroz-al-horno.png
 assets/photos/recipes/005_arroz-con-chocos.png
-assets/photos/recipes/008_arroz-marinero-con-fumet.png
 assets/photos/recipes/009_arroz-negro.png
 assets/photos/recipes/010_arroz-pilaf.png
 assets/photos/recipes/011_babka-chocolate.png
@@ -68,13 +67,15 @@ docs/GUIA_TERMUX.md
 docs/GUIA_WINDOWS.md
 docs/IMPORTACION_SEGURA.md
 docs/LIMPIEZA_PUBLICA.md
-docs/MANIFEST_PUBLIC_FILES.txt
-docs/MANIFEST_PUBLIC_SHA256.txt
 docs/PERFILES_DOCUMENTALES.md
 docs/SEGURIDAD_DATOS.md
+docs/UI_SELECCION_IMPRESION.md
 docs/VALIDACION_OBRADOR.md
 docs/VALIDACION_TECNICA.md
-docs/validation/PUBLIC_RELEASE_VALIDATE_RELEASE_OUTPUT.txt
+docs/validation/PUBLIC_RELEASE_FINAL_TERMINOLOGIA_VALIDATE_RELEASE_OUTPUT.txt
+docs/validation/PUBLIC_RELEASE_FINAL_UI_FINAL_VALIDATE_RELEASE_OUTPUT.txt
+docs/validation/PUBLIC_RELEASE_FINAL_UI_SELECCION_IMPRESION_VALIDATE_RELEASE_OUTPUT.txt
+docs/validation/PUBLIC_RELEASE_FINAL_VALIDATE_RELEASE_OUTPUT.txt
 favicon.ico
 index.html
 robots.txt

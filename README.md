@@ -22,7 +22,7 @@ ObradORR permite trabajar con fichas técnicas, ingredientes, subelaboraciones, 
 ## Escalado de producción
 
 - Fichas ordinarias: raciones o rendimiento.
-- Formulación y masas: piezas + peso unitario, masa/pasta total o harina total cuando proceda.
+- Formulación y masas: piezas + peso unitario, masa total o harina total cuando proceda.
 
 ## Límites importantes
 

@@ -8,7 +8,7 @@
 - Conserva persistencia móvil reforzada con `pagehide`, `visibilitychange` y snapshots rotatorios.
 - Conserva escalado de producción corregido:
   - fichas ordinarias por raciones/rendimiento;
-  - formulación por piezas + peso unitario, masa/pasta total o harina total.
+  - formulación por piezas + peso unitario, masa total o harina total.
 - Conserva APPCC de Pasta choux como masa escaldada de pastelería con huevo y lácteos.
 - Mantiene política de fichas pendientes de prueba de obrador.
 
@@ -19,3 +19,9 @@
 - Editor con borrador, duplicación, variantes y comprobación documental.
 - Exportaciones CSV, TSV, JSON, ZIP y copias SQLite.
 - Importación combinada segura sin sobreescritura directa.
+
+## 2026-06-05 · Microcierre editorial final
+
+- Limpieza final de terminología visible para publicación.
+- Validación técnica superada sin cambios funcionales.
+- Microajuste terminológico final: las etiquetas de formulación quedan como “masa total” y “masa cruda” en formulación visible y el bloque de prefermento muestra el tipo real cuando existe.

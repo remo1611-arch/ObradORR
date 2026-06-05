@@ -1,7 +1,7 @@
 ObradORR · Imágenes públicas correctas incluidas
 
 Versión: ObradORR 1.0.0-rc.4
-Total incluidas: 15
+Total incluidas: 14
 
 Incluidas:
 - 001_ajoblanco.png
@@ -9,7 +9,6 @@ Incluidas:
 - 003_almibar-30-brix.png
 - 004_arroz-al-horno.png
 - 005_arroz-con-chocos.png
-- 008_arroz-marinero-con-fumet.png
 - 009_arroz-negro.png
 - 010_arroz-pilaf.png
 - 011_babka-chocolate.png
@@ -23,4 +22,5 @@ Incluidas:
 No incluidas por no estar disponibles o no ser suficientemente correctas:
 - 006_arroz-con-leche-cremoso.png: no se conserva una versión inequívoca como archivo público validado.
 - 007_arroz-del-senoret.png: no se conserva una versión inequívoca y suficientemente específica; conviene regenerarla.
+- 008_arroz-marinero-con-fumet.png: retirada por corresponder visualmente a arroz con leche; mejor sin foto que con imagen incorrecta.
 - Cualquier generación intermedia no listada fue descartada.

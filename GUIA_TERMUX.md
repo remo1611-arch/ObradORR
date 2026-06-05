@@ -23,11 +23,11 @@ python -m http.server 8835 --bind 127.0.0.1
 Abrir:
 
 ```bash
-termux-open-url "http://127.0.0.1:8835/app/obradorr.html?v=obradorr-200-public-release"
+termux-open-url "http://127.0.0.1:8835/app/obradorr.html?v=obradorr-200-public-release-final-ui-hints"
 ```
 
 Reset local:
 
 ```bash
-termux-open-url "http://127.0.0.1:8835/app/reset_local_data.html?v=obradorr-200-public-release-reset"
+termux-open-url "http://127.0.0.1:8835/app/reset_local_data.html?v=obradorr-200-public-release-final-ui-hints-reset"
 ```

@@ -13,7 +13,7 @@
 [OK] node --check app/js/utils/file-tools.js
 [OK] token presente: 2.0.0
 [OK] token presente: 2.0.0-stable
-[OK] token presente: obradorr-200-stable
+[OK] token presente: obradorr-200-public-release-final-ui-hints
 [OK] token presente: ObradORRExportTools
 [OK] token presente: exportPracticeZip
 [OK] token presente: ObradORRRecursiveEngine
@@ -35,20 +35,27 @@
 [OK] token presente: flourG
 [OK] token presente: pieceWeightG
 [OK] token presente: Piezas + peso unitario
-[OK] token presente: Masa/pasta total
+[OK] token presente: Masa total
 [OK] token presente: Harina total
-[OK] texto público ausente: Preflight documental experimental
-[OK] texto público ausente: Vía B ·
-[OK] texto público ausente: B1 ·
-[OK] texto público ausente: B2 ·
-[OK] texto público ausente: B3 ·
-[OK] texto público ausente: B4 ·
+[OK] token presente: Ejemplo: Remo J. Pereira González
+[OK] token presente: Ejemplo: Práctica de masas fermentadas dulces
+[OK] token presente: mise en place previa
+[OK] ausente: texto interno preflight antiguo
+[OK] ausente: texto interno via antigua
+[OK] ausente: criterio interno B1 antiguo
+[OK] ausente: criterio interno B2 antiguo
+[OK] ausente: criterio interno B3 antiguo
+[OK] ausente: criterio interno B4 antiguo
+[OK] ausente: mención RC en portada
+[OK] ausente: nota APPCC sin puntuación
+[OK] ausente: terminología antigua masa/pasta total
+[OK] ausente: terminología antigua masa/pasta cruda
 [OK] SQLite integrity_check ok
 [OK] SQLite foreign_key_check sin errores
 [OK] app_meta app_version=2.0.0
 [OK] app_meta schema_version=2.0.0
 [OK] app_meta release_tag=2.0.0-stable
-[OK] app_meta cache_tag=obradorr-200-stable
+[OK] app_meta cache_tag=obradorr-200-public-release-final-ui-hints
 [OK] app_meta stable=1
 [OK] app_meta public_release=1
 [OK] culinary_recipes activas sin validada

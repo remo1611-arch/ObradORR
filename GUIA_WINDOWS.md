@@ -11,11 +11,11 @@ python -m http.server 8835 --bind 127.0.0.1
 4. Abre en el navegador:
 
 ```text
-http://127.0.0.1:8835/app/obradorr.html?v=obradorr-200-public-release
+http://127.0.0.1:8835/app/obradorr.html?v=obradorr-200-public-release-final-ui-hints
 ```
 
 Reset local:
 
 ```text
-http://127.0.0.1:8835/app/reset_local_data.html?v=obradorr-200-public-release-reset
+http://127.0.0.1:8835/app/reset_local_data.html?v=obradorr-200-public-release-final-ui-hints-reset
 ```
