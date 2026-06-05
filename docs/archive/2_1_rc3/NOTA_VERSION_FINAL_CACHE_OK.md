@@ -4,11 +4,11 @@ Este paquete recompone la versión pública final con nombre diferenciado para e
 
 Debe cargar módulos con:
 
-`?v=obradorr-200-public-release-final-ui-hints`
+`?v=obradorr-210-rc7-release-candidate`
 
 Y validar:
 
-- `cache_tag = obradorr-200-public-release-final-ui-hints`
+- `cache_tag = obradorr-210-rc7-release-candidate`
 - sin `Masa/pasta total`
 - sin `masa/pasta cruda`
 - con `Masa total`

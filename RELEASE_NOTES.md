@@ -1,39 +1,45 @@
-# Notas de versión · ObradORR 2.0.0
+# Release notes · ObradORR 2.1.0-RC8 Release Candidate
 
-Versión pública estable preparada para uso docente local/offline.
+## Criterio de cierre
 
-## Incluye
+RC8 cierra la fase de refinamiento de ObradORR 2.1.0. No añade cambios gastronómicos ni modifica la base SQLite incluida; consolida interfaz, edición, seguridad de borrado, ayuda y validación de entrega.
 
-- Fichas técnicas de cocina, pastelería y panadería.
-- Pedido consolidado con ingredientes recursivos.
-- Declaración de alérgenos directos y derivados limitada a los 14 grupos normativos.
-- Perfiles documentales: aula-taller, FPB, CM, GS, docente, pedido y auditoría.
-- Editor con duplicación, variantes, borrador local y avisos de impacto.
-- Copias SQLite, JSON, CSV, TSV y ZIP de práctica.
-- Importación combinada segura entre bases ObradORR compatibles.
-- Persistencia local con IndexedDB y snapshots rotatorios.
-- Escalado de producción: raciones/rendimiento para fichas ordinarias y piezas+peso, masa total o harina total para formulación.
+## Cambios consolidados desde RC7
 
-## Límites
+- Catálogo Excel corregido y tratado como exportación técnica, no como editor.
+- Importación y plantilla Excel retiradas de la interfaz.
+- Navegación final: Inicio, Sesión actual, Sesiones guardadas, Elaboraciones, Ingredientes, Validación de obrador, Sistema.
+- Cabecera compacta en móvil y reorganizada en PC.
+- Pestaña Sesión actual reorganizada como flujo docente.
+- Subelaboraciones culinarias corregidas para evitar cortes de palabra/solapamientos.
+- Sistema revisado tras regresión visual, manteniendo una solución conservadora.
+- Editores de elaboraciones e ingredientes más amplios y adaptativos.
+- Alta cancelable de elaboraciones e ingredientes.
+- Eliminación segura de elaboraciones e ingredientes con comprobación de uso.
+- Guía de uso plegada en Inicio.
 
-- No valida rendimientos reales de obrador.
-- No declara pesos cocidos ni mermas como datos cerrados sin prueba docente.
-- La recuperación local depende del navegador, dispositivo y puerto/origen.
-- Para mover datos entre PC y móvil se recomienda exportar/importar copia SQLite.
+## Política documental
 
-## 2.0.0 · Microcierre editorial final
+- Las fichas nuevas o generadas se mantienen como propuestas documentales.
+- La validación real corresponde al profesorado tras prueba de obrador.
+- `recipe_documentary_reviews` y registros equivalentes no sustituyen la comprobación práctica.
+- SQLite es la fuente de verdad; Excel/CSV/JSON son salidas de auditoría, consulta o respaldo.
 
-- Se sustituye en la portada de auditoría una referencia interna de desarrollo por “avisos documentales”.
-- Se normaliza la puntuación de notas APPCC visibles del tipo “Modelo docente mínimo. Ficha pendiente…”.
-- No se han modificado fórmulas, cantidades, motor de escalado, impresión, backup/import/export ni estructura SQLite.
-- Microajuste terminológico final: “masa total”, “masa cruda” y tipo real de prefermento en bloques panaderos.
+## Prueba mínima antes de estable
 
-## Mejora final de selección e impresión
+1. Abrir con servidor local, no con `file://`.
+2. Ejecutar `app/reset_local_data.html` si se viene de versiones anteriores.
+3. Crear una elaboración de prueba, cancelar otra alta y eliminar la creada.
+4. Crear un ingrediente de prueba, cancelar otra alta y eliminar el creado.
+5. Confirmar bloqueo de eliminación cuando el registro está en uso.
+6. Añadir elaboración a Sesión actual.
+7. Generar vista previa / PDF.
+8. Guardar y recuperar una sesión.
+9. Descargar copia SQLite.
+10. Exportar catálogo Excel/CSV/JSON técnico.
 
-- Los listados de elaboraciones, ingredientes e impresión mantienen una carga inicial ligera y añaden opciones **Mostrar más** y **Mostrar todas**.
-- Al añadir una elaboración individual a impresión se solicita la cantidad de producción.
-- Las fichas ordinarias se añaden por raciones o rendimiento.
-- Las formulaciones se añaden por piezas con peso unitario, masa total o harina total.
-- En impresión/exportación se pueden añadir elaboraciones visibles, filtradas o todo el catálogo con confirmación.
-- La selección permite revisar y ajustar cantidades antes de generar PDF, pedido o exportaciones.
+## Límites conocidos
 
+- La salida PDF depende del motor de impresión del navegador.
+- Las exportaciones técnicas no son formatos maestros de edición.
+- La base mantiene metadatos internos RC7 por compatibilidad documental y de persistencia.

@@ -1,6 +1,6 @@
 (function(){
   "use strict";
-  const VERSION = "2.0.0";
+  const VERSION = "2.1.0";
   let backupDirectoryHandle = null;
   function pad(n){ return String(n).padStart(2,'0'); }
   function getIsoTimestampForFilename(date){

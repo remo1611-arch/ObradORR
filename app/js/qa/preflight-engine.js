@@ -23,7 +23,7 @@
   }
   function hasAllergen(allergens, words) { const t = norm((allergens || []).map(a => a.allergen + ' ' + a.ingredient).join(' | ')); return words.some(w => t.includes(norm(w))); }
   function run({ db, items, options }) {
-    const out = { version: "2.0.0", generatedAt: new Date().toISOString(), warnings: [], byRecipe: {}, summary: { CRITICO: 0, ALTO: 0, MEDIO: 0, BAJO: 0 }, meta: { pendingRecipes: 0 } };
+    const out = { version: "2.1.0", generatedAt: new Date().toISOString(), warnings: [], byRecipe: {}, summary: { CRITICO: 0, ALTO: 0, MEDIO: 0, BAJO: 0 }, meta: { pendingRecipes: 0 } };
     for (const item of items || []) {
       const uid = item.uid || `${item.sourceType}:${item.sourceId}`;
       const d = detail(db, item);
@@ -32,9 +32,12 @@
       const live = liveLineText(db, item);
       const notes = norm([d.process, d.appcc_notes, d.service_notes, d.notes, d.fermentation_notes].filter(Boolean).join(" | "));
       const allergens = allergensForItem(db, item);
-      if ((d.release_status || "") === "validada" && (d.workshop_validation_status || "") !== "validada") add(out, uid, "CRITICO", "VALIDADA_SIN_OBRADOR", "Ficha marcada como validada", "No consta registro real de validación por profesorado en obrador.");
+      const validationLogCount = Number((db.value ? db.value("SELECT COUNT(*) FROM workshop_validation_log WHERE recipe_type=$type AND recipe_id=$id AND result_status='validada'", { $type: item.sourceType, $id: item.sourceId }) : 0) || 0);
+      if ((d.release_status || "") === "validada" && (d.workshop_validation_status || "") !== "validada") add(out, uid, "CRITICO", "VALIDADA_SIN_OBRADOR", "Ficha marcada como validada", "No consta estado real de validación por profesorado en obrador.");
+      if ((d.release_status || "") === "validada" && validationLogCount < 1) add(out, uid, "CRITICO", "VALIDADA_SIN_LOG", "Ficha validada sin registro de prueba", "Toda ficha validada debe tener una entrada en el histórico de prueba de obrador con fecha y responsable.");
+      if ((d.workshop_validation_status || "") === "validada" && validationLogCount < 1) add(out, uid, "CRITICO", "OBRADOR_VALIDADO_SIN_LOG", "Validación de obrador sin histórico", "El estado validada requiere registro en workshop_validation_log.");
       if ((d.release_status || "") === "pendiente") out.meta.pendingRecipes += 1;
-      if (item.sourceType === "bakery" && d.yield_status && d.yield_status !== "pending") add(out, uid, "ALTO", "YIELD_NO_PENDING", "Rendimiento panadero no pendiente", "No debe cambiarse yield_status sin prueba real de obrador.");
+      if (item.sourceType === "bakery" && d.yield_status && d.yield_status !== "pending" && validationLogCount < 1) add(out, uid, "ALTO", "YIELD_NO_LOG", "Rendimiento panadero medido sin registro", "No debe cambiarse yield_status sin prueba real de obrador registrada.");
       if (name.includes("banoffee") && !text.includes("platano") && !text.includes("banana")) add(out, uid, "CRITICO", "BANOFFEE_SIN_PLATANO", "Banoffee sin plátano", "La denominación no se defiende si no hay plátano/banana.");
       if (name.includes("quiche") && (live.includes("quebrada dulce") || live.includes("past quebrada dulce") || live.includes("rec-past-quebrada-dulce"))) add(out, uid, "CRITICO", "QUICHE_MASA_DULCE", "Quiche con masa dulce", "Una quiche salada no debe apoyarse en masa quebrada dulce.");
       if ((name.includes("sin gluten") || notes.includes("sin gluten")) && /(trigo|centeno|cebada|espelta|kamut)/.test(text)) add(out, uid, "CRITICO", "SIN_GLUTEN_CON_GLUTEN", "Sin gluten con cereal con gluten", "Contradicción documental grave; requiere revisión antes de uso.");
@@ -53,5 +56,5 @@
     for (const w of out.warnings) out.summary[w.severity] = (out.summary[w.severity] || 0) + 1;
     return out;
   }
-  window.ObradORRPreflight = { version: "2.0.0", run };
+  window.ObradORRPreflight = { version: "2.1.0", run };
 })();

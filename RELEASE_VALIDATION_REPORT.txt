@@ -1,0 +1,172 @@
+[OK] node --check app/js/domain/document-model.js
+[OK] node --check app/js/domain/document-profiles.js
+[OK] node --check app/js/domain/recursive-engine.js
+[OK] node --check app/js/export/export-tools.js
+[OK] node --check app/js/obradorr-app-classic.js
+[OK] node --check app/js/obradorr-app.js
+[OK] node --check app/js/obradorr-db-classic.js
+[OK] node --check app/js/obradorr-db.js
+[OK] node --check app/js/qa/preflight-engine.js
+[OK] node --check app/js/storage/import-merge.js
+[OK] node --check app/js/storage/migrations.js
+[OK] node --check app/js/ui/safe-editor.js
+[OK] node --check app/js/utils/file-tools.js
+[OK] token presente: 2.1.0
+[OK] token presente: 2.1.0-rc7
+[OK] token presente: obradorr-210-rc7-release-candidate
+[OK] token presente: obradorr-data-210-rc7-release-candidate
+[OK] token presente: ObradORRExportTools
+[OK] token presente: exportPracticeZip
+[OK] token presente: ObradORRRecursiveEngine
+[OK] token presente: ObradORRPreflight
+[OK] token presente: ObradORRSafeEditor
+[OK] token presente: ObradORRImportMerge
+[OK] token presente: findIngredientNameDuplicate
+[OK] token presente: findRecipeNameDuplicate
+[OK] token presente: friendlyDbErrorMessage
+[OK] token presente: Comprobación documental previa
+[OK] token presente: Criterio de revisión documental
+[OK] token presente: Sistema de guardado disponible
+[OK] token presente: Base incluida en la aplicación cargada
+[OK] token presente: pagehide
+[OK] token presente: visibilitychange
+[OK] token presente: previous-db-1
+[OK] token presente: modeSelect
+[OK] token presente: rawDoughG
+[OK] token presente: flourG
+[OK] token presente: pieceWeightG
+[OK] token presente: Piezas + peso unitario
+[OK] token presente: Masa total
+[OK] token presente: Harina total
+[OK] token presente: Ejemplo: Remo J. Pereira González
+[OK] token presente: Ejemplo: Práctica de masas fermentadas dulces
+[OK] token presente: mise en place previa
+[OK] token presente: Validación de obrador
+[OK] token presente: Registrar prueba de obrador
+[OK] token presente: workshop_validation_flow
+[OK] token presente: probada_con_ajustes
+[OK] token presente: requiere_revision
+[OK] token presente: Crear base nueva limpia
+[OK] token presente: Usar base incluida
+[OK] token presente: Restaurar SQLite sustituyendo
+[OK] token presente: Validar base activa
+[OK] token presente: Copia previa obligatoria
+[OK] token presente: policy: POLICY
+[OK] token presente: validateByImport: false
+[OK] token presente: recipe_documentary_reviews
+[OK] token presente: workshop_validation_log
+[OK] token presente: media_assets
+[OK] token presente: exportCatalogExcel
+[OK] token presente: Catálogo Excel
+[OK] token presente: Exportaciones técnicas
+[OK] token presente: technical-exports
+[OK] token presente: ObradORR_catalogo_completo_
+[OK] token presente: 99_AUX_VALIDACION
+[OK] token presente: 11_AVISOS
+[OK] token presente: Release candidate integral
+[OK] ausente: cache rc4 activo
+[OK] ausente: cache rc3 activo
+[OK] ausente: idb rc4 activa
+[OK] ausente: idb rc3 activa
+[OK] ausente: texto interno preflight antiguo
+[OK] ausente: texto interno via antigua
+[OK] ausente: criterio interno B1 antiguo
+[OK] ausente: criterio interno B2 antiguo
+[OK] ausente: criterio interno B3 antiguo
+[OK] ausente: criterio interno B4 antiguo
+[OK] ausente: mención RC en portada
+[OK] ausente: nota APPCC sin puntuación
+[OK] ausente: terminología antigua masa/pasta total
+[OK] ausente: terminología antigua masa/pasta cruda
+[OK] ausente: función antigua de añadir sin modal
+[OK] ausente: export schema antiguo practica
+[OK] ausente: export schema antiguo tecnico
+[OK] ausente: botón importar plantilla Excel retirado
+[OK] ausente: botón plantilla Excel vacía retirado
+[OK] ausente: input importación Excel retirado
+[OK] ausente: módulo importación Excel no cargado
+[OK] motor XLSX sin dependencias presente
+[OK] SQLite integrity_check ok
+[OK] SQLite foreign_key_check sin errores
+[OK] app_meta app_version=2.1.0
+[OK] app_meta schema_version=2.1.0
+[OK] app_meta version=2.1.0
+[OK] app_meta release_tag=2.1.0-rc7
+[OK] app_meta cache_tag=obradorr-210-rc7-release-candidate
+[OK] app_meta stable=0
+[OK] app_meta public_release=0
+[OK] app_meta legado ausente: release
+[OK] app_meta legado ausente: cache
+[OK] app_meta legado ausente: document_model
+[OK] app_meta legado ausente: public_notes
+[OK] app_meta legado ausente: public_review
+[OK] app_meta legado ausente: public_github_ready
+[OK] app_meta legado ausente: experimental_allinone
+[OK] app_meta legado ausente: v2_experimental_final
+[OK] app_meta legado ausente: stable_closed_at
+[OK] migración RC5 registrada
+[OK] migración RC6 registrada
+[OK] migración RC7 registrada
+[OK] migración 2.1 registrada
+[OK] regresión exportación 00_AUX units ok: 3 filas leídas
+[OK] regresión exportación 00_AUX familias ok: 3 filas leídas
+[OK] regresión exportación 00_AUX subfamilias ok: 3 filas leídas
+[OK] regresión exportación 00_AUX alergenos ok: 3 filas leídas
+[OK] regresión exportación 02_ELABORACIONES ok: 3 filas leídas
+[OK] regresión exportación 03_INGREDIENTES ok: 3 filas leídas
+[OK] regresión exportación 04_LINEAS_RECETA ok: 3 filas leídas
+[OK] regresión exportación 05_PROCESOS culinary ok: 3 filas leídas
+[OK] regresión exportación 05_PROCESOS bakery ok: 3 filas leídas
+[OK] regresión exportación 06_FORMULACION_PANADERA ok: 3 filas leídas
+[OK] regresión exportación 07_COMPONENTES_SUBRECETAS ok: 3 filas leídas
+[OK] regresión exportación 08_ALERGENOS ok: 3 filas leídas
+[OK] regresión exportación 09_APPCC ok: 3 filas leídas
+[OK] regresión exportación 10_VALIDACION_OBRADOR ok: 0 filas leídas
+[OK] regresión exportación CSV catalogo ok: 3 filas leídas
+[OK] regresión exportación CSV ingredientes ok: 3 filas leídas
+[OK] regresión exportación CSV alergenos ok: 3 filas leídas
+[OK] regresión exportación JSON meta ok: 3 filas leídas
+[OK] regresión exportación JSON recipes ok: 3 filas leídas
+[OK] regresión exportación JSON ingredients ok: 3 filas leídas
+[OK] regresión exportación JSON allergens ok: 3 filas leídas
+[OK] culinary_recipes activas sin validada
+[OK] bakery_recipes activas sin validada
+[OK] bakery yield_status solo pending/tested/validated
+[OK] bakery yield_status pending en fichas activas
+[OK] tabla import_log presente
+[OK] tabla migrations_log presente
+[OK] tabla workshop_validation_log presente
+[OK] tabla media_assets presente
+[OK] tabla recipe_media presente
+[OK] tabla recipe_documentary_reviews presente
+[OK] Quiche sin masa quebrada dulce real
+[OK] Pasta choux APPCC corregido
+[OK] workshop_validation_log 2.1 ampliada
+[OK] prueba yield_status panadero validated/tested/pending
+[OK] prueba validación culinaria transaccional
+[OK] yield_status no permitido bloqueado: measured
+[OK] yield_status no permitido bloqueado: adjusted
+[OK] plantilla limpia presente
+[OK] plantilla limpia integrity_check ok
+[OK] plantilla limpia foreign_key_check sin errores
+[OK] plantilla limpia sin catálogo/ingredientes/validaciones
+[OK] plantilla limpia app_meta compatible
+[OK] cierre RC8 token presente: obradorr-210-rc8-release-candidate
+[OK] cierre RC8 token presente: Sesión actual
+[OK] cierre RC8 token presente: Sesiones guardadas
+[OK] cierre RC8 token presente: Guía de uso
+[OK] cierre RC8 token presente: Eliminar elaboración
+[OK] cierre RC8 token presente: Eliminar ingrediente
+[OK] cierre RC8 token presente: Crear y editar
+[OK] cierre RC8 ausente: obradorr-210-rc7-exports-discreet
+[OK] cierre RC8 ausente: Sesiones / prácticas
+[OK] cierre RC8 ausente: data-import-template-excel
+[OK] cierre RC8 ausente: data-export-template-excel
+[OK] cierre RC8 ausente: excelImportFileInput
+[OK] cierre RC8 ausente: js/import/excel-import.js
+[OK] entrada actualizada: index.html
+[OK] entrada actualizada: Abrir_ObradORR.html
+[OK] entrada actualizada: app/reset_local_data.html
+[OK] namespace IndexedDB RC7 conservado por compatibilidad
+
+RESULTADO: OK

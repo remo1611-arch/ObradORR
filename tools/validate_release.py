@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from pathlib import Path
-import sqlite3, subprocess, sys
+import sqlite3, subprocess, sys, re
 ROOT = Path(__file__).resolve().parents[1]
 errors=[]
 def ok(m): print('[OK]',m)
@@ -11,10 +11,29 @@ for js in sorted((ROOT/'app/js').rglob('*.js')):
 html=(ROOT/'app/obradorr.html').read_text(encoding='utf-8')
 alljs='\n'.join(p.read_text(encoding='utf-8') for p in (ROOT/'app/js').rglob('*.js'))
 css=(ROOT/'app/css/obradorr.css').read_text(encoding='utf-8')
-blob=html+'\n'+alljs+'\n'+css
-for token in ['2.0.0','2.0.0-stable','obradorr-200-public-release-final-ui-hints','ObradORRExportTools','exportPracticeZip','ObradORRRecursiveEngine','ObradORRPreflight','ObradORRSafeEditor','ObradORRImportMerge','findIngredientNameDuplicate','findRecipeNameDuplicate','friendlyDbErrorMessage','Comprobación documental previa','Criterio de revisión documental','Sistema de guardado disponible','Base incluida en la aplicación cargada','pagehide','visibilitychange','previous-db-1','modeSelect','rawDoughG','flourG','pieceWeightG','Piezas + peso unitario','Masa total','Harina total','Ejemplo: Remo J. Pereira González','Ejemplo: Práctica de masas fermentadas dulces','mise en place previa']:
+docs='\n'.join(p.read_text(encoding='utf-8', errors='ignore') for p in [ROOT/'README.md',ROOT/'RELEASE_NOTES.md',ROOT/'CHANGELOG.md',ROOT/'GUIA_TERMUX.md',ROOT/'GUIA_WINDOWS.md'] if p.exists())
+blob=html+'\n'+alljs+'\n'+css+'\n'+docs
+required_tokens = [
+    '2.1.0','2.1.0-rc7','obradorr-210-rc7-release-candidate','obradorr-data-210-rc7-release-candidate',
+    'ObradORRExportTools','exportPracticeZip','ObradORRRecursiveEngine','ObradORRPreflight','ObradORRSafeEditor','ObradORRImportMerge',
+    'findIngredientNameDuplicate','findRecipeNameDuplicate','friendlyDbErrorMessage',
+    'Comprobación documental previa','Criterio de revisión documental','Sistema de guardado disponible','Base incluida en la aplicación cargada',
+    'pagehide','visibilitychange','previous-db-1','modeSelect','rawDoughG','flourG','pieceWeightG','Piezas + peso unitario','Masa total','Harina total',
+    'Ejemplo: Remo J. Pereira González','Ejemplo: Práctica de masas fermentadas dulces','mise en place previa',
+    'Validación de obrador','Registrar prueba de obrador','workshop_validation_flow','probada_con_ajustes','requiere_revision',
+    'Crear base nueva limpia','Usar base incluida','Restaurar SQLite sustituyendo','Validar base activa',
+    'Copia previa obligatoria','policy: POLICY','validateByImport: false','recipe_documentary_reviews','workshop_validation_log','media_assets',
+    'exportCatalogExcel','Catálogo Excel','Exportaciones técnicas','technical-exports',
+    'ObradORR_catalogo_completo_',
+    '99_AUX_VALIDACION','11_AVISOS','Release candidate integral'
+]
+for token in required_tokens:
     ok(f'token presente: {token}') if token in blob else fail(f'token ausente: {token}')
 for label, forbidden in [
+    ('cache rc4 activo', 'obradorr-210-rc4-hardening-bases'),
+    ('cache rc3 activo', 'obradorr-210-rc3-gestion-bases'),
+    ('idb rc4 activa', 'obradorr-data-210-rc4-hardening-bases'),
+    ('idb rc3 activa', 'obradorr-data-210-rc3-gestion-bases'),
     ('texto interno preflight antiguo', 'Preflight documental ' + 'experimental'),
     ('texto interno via antigua', 'Vía B' + ' ·'),
     ('criterio interno B1 antiguo', 'B1' + ' ·'),
@@ -25,29 +44,149 @@ for label, forbidden in [
     ('nota APPCC sin puntuación', 'Modelo docente mínimo ' + 'Ficha pendiente'),
     ('terminología antigua masa/pasta total', 'Masa/pasta total'),
     ('terminología antigua masa/pasta cruda', 'masa/pasta cruda'),
+    ('función antigua de añadir sin modal', 'function addRecipeToSelection'),
+    ('export schema antiguo practica', 'ObradORRPracticeExport/2.0-rc1'),
+    ('export schema antiguo tecnico', 'ObradORRTechnicalExport/2.0-rc1'),
+    ('botón importar plantilla Excel retirado', 'data-import-template-excel'),
+    ('botón plantilla Excel vacía retirado', 'data-export-template-excel'),
+    ('input importación Excel retirado', 'excelImportFileInput'),
+    ('módulo importación Excel no cargado', 'js/import/excel-import.js'),
 ]:
-    ok(f'ausente: {label}') if forbidden not in blob else fail(f'texto público no limpiado: {label}')
+    ok(f'ausente: {label}') if forbidden not in blob else fail(f'texto/código no limpiado: {label}')
+
+# Comprobación estática mínima de exportación XLSX en JS
+if 'xlsxWorkbookBytes' in alljs and 'xlsxSheetXml' in alljs and 'dataValidations' in alljs:
+    ok('motor XLSX sin dependencias presente')
+else:
+    fail('motor XLSX incompleto')
+
 con=sqlite3.connect(ROOT/'db/obradorr.sqlite')
 cur=con.cursor()
 if cur.execute('PRAGMA integrity_check').fetchone()[0]=='ok': ok('SQLite integrity_check ok')
 else: fail('SQLite integrity_check falla')
 fk=cur.execute('PRAGMA foreign_key_check').fetchall()
 ok('SQLite foreign_key_check sin errores') if not fk else fail(f'foreign_key_check: {fk[:5]}')
-meta=dict(cur.execute("SELECT key,value FROM app_meta WHERE key IN ('app_version','schema_version','release_tag','cache_tag','stable','public_release')"))
-for k,v in [('app_version','2.0.0'),('schema_version','2.0.0'),('release_tag','2.0.0-stable'),('cache_tag','obradorr-200-public-release-final-ui-hints'),('stable','1'),('public_release','1')]:
+meta=dict(cur.execute("SELECT key,value FROM app_meta"))
+for k,v in [('app_version','2.1.0'),('schema_version','2.1.0'),('version','2.1.0'),('release_tag','2.1.0-rc7'),('cache_tag','obradorr-210-rc7-release-candidate'),('stable','0'),('public_release','0')]:
     ok(f'app_meta {k}={v}') if meta.get(k)==v else fail(f'app_meta {k} incorrecto: {meta.get(k)}')
+legacy_keys = ['release','cache','document_model','public_notes','public_review','public_github_ready','experimental_allinone','v2_experimental_final','stable_closed_at']
+for k in legacy_keys:
+    ok(f'app_meta legado ausente: {k}') if k not in meta else fail(f'app_meta conserva clave antigua: {k}={meta.get(k)}')
+if cur.execute("SELECT 1 FROM migrations_log WHERE id='20260605_210_rc5_excel_export'").fetchone(): ok('migración RC5 registrada')
+else: fail('migración RC5 ausente')
+if cur.execute("SELECT 1 FROM migrations_log WHERE id='20260605_210_rc6_excel_import_altas'").fetchone(): ok('migración RC6 registrada')
+else: fail('migración RC6 ausente')
+if cur.execute("SELECT 1 FROM migrations_log WHERE id='20260605_210_rc7_release_candidate'").fetchone(): ok('migración RC7 registrada')
+else: fail('migración RC7 ausente')
+if cur.execute("SELECT 1 FROM migrations_log WHERE id='20260605_210_workshop_validation'").fetchone(): ok('migración 2.1 registrada')
+else: fail('migración 2.1 ausente')
+
+# Regresión SQL del exportador: ejecutar todas las consultas usadas por las hojas del
+# catálogo completo y por las exportaciones auxiliares. Esto evita falsos OK cuando
+# una hoja posterior falla en navegador por columna inexistente.
+excel_export_queries = {
+    '00_AUX units': "SELECT id, symbol || ' · ' || name AS label FROM units ORDER BY id",
+    '00_AUX familias': "SELECT id, name FROM technical_families ORDER BY name COLLATE NOCASE",
+    '00_AUX subfamilias': "SELECT id, name FROM technical_subfamilies ORDER BY name COLLATE NOCASE",
+    '00_AUX alergenos': "SELECT name FROM allergens WHERE regulation_order BETWEEN 1 AND 14 ORDER BY regulation_order",
+    '02_ELABORACIONES': "SELECT * FROM (SELECT 'culinary' AS recipe_kind, c.id, c.name, COALESCE(f.name,c.family_id,'') AS family, COALESCE(sf.name,c.subfamily_id,'') AS subfamily, c.base_servings, c.yield_quantity, c.yield_unit_id, c.release_status, c.documentary_status, c.workshop_validation_status, '' AS yield_status, c.notes, 'raciones_rendimiento' AS mundo FROM culinary_recipes c LEFT JOIN technical_families f ON f.id=c.family_id LEFT JOIN technical_subfamilies sf ON sf.id=c.subfamily_id WHERE COALESCE(c.active,1)=1 UNION ALL SELECT 'bakery', b.id, b.name, COALESCE(f.name,b.family_id,''), COALESCE(sf.name,b.subfamily_id,''), b.base_pieces, b.base_raw_weight_g, 'g', b.release_status, b.documentary_status, b.workshop_validation_status, b.yield_status, b.notes, 'formulacion' FROM bakery_recipes b LEFT JOIN technical_families f ON f.id=b.family_id LEFT JOIN technical_subfamilies sf ON sf.id=b.subfamily_id WHERE COALESCE(b.active,1)=1) ORDER BY name COLLATE NOCASE",
+    '03_INGREDIENTES': "SELECT v.id,v.name,v.family,v.subfamily,v.base_unit,v.storage_zone,v.cost_per_base_unit_after_waste,i.notes FROM v_ingredients_cost v LEFT JOIN ingredients i ON i.id=v.id ORDER BY v.name COLLATE NOCASE",
+    '04_LINEAS_RECETA': "SELECT l.recipe_id, COALESCE(l.ingredient_id,l.subrecipe_id,'') AS ref, l.line_type, l.quantity, l.unit_id, '' AS block, 1 AS obligatory, l.technical_note FROM culinary_recipe_lines l ORDER BY l.recipe_id,l.sort_order",
+    '05_PROCESOS culinary': "SELECT id AS recipe_id, 'proceso' AS block, process AS instruction FROM culinary_recipes WHERE COALESCE(active,1)=1 AND COALESCE(process,'')<>'' ORDER BY name COLLATE NOCASE",
+    '05_PROCESOS bakery': "SELECT recipe_id, step_number, block, instruction FROM bakery_process_steps ORDER BY recipe_id,block,step_number",
+    '06_FORMULACION_PANADERA': "SELECT id,base_flour_g,base_raw_weight_g,base_pieces,base_raw_piece_weight_g,preferment_type,yield_status FROM bakery_recipes WHERE COALESCE(active,1)=1 ORDER BY name COLLATE NOCASE",
+    '07_COMPONENTES_SUBRECETAS': "SELECT bakery_recipe_id, COALESCE(component_culinary_recipe_id,component_bakery_recipe_id,'') AS component, CASE WHEN component_bakery_recipe_id IS NOT NULL THEN 'bakery' ELSE 'culinary' END AS component_type, usage_role, calculation_base, quantity_value, unit_id, component_status FROM bakery_recipe_components WHERE COALESCE(active,1)=1 ORDER BY bakery_recipe_id,sort_order",
+    '08_ALERGENOS': "SELECT i.id AS ingredient_id,a.name AS allergen,ia.declaration_status,ia.notes FROM ingredient_allergens ia JOIN ingredients i ON i.id=ia.ingredient_id JOIN allergens a ON a.id=ia.allergen_id WHERE a.regulation_order BETWEEN 1 AND 14 ORDER BY i.name,a.regulation_order",
+    '09_APPCC': "SELECT recipe_id,sort_order,risk_family,hazard_type,main_hazard,preventive_measure,monitoring,corrective_action,record_reference,service_conservation FROM appcc_doc_blocks WHERE COALESCE(active,1)=1 ORDER BY recipe_id,sort_order",
+    '10_VALIDACION_OBRADOR': "SELECT recipe_id,recipe_type,validation_date,responsible,group_module,practice_title,result_status,planned_quantity,actual_quantity,actual_yield,measured_yield_unit_id,notes,adjustments_required FROM workshop_validation_log ORDER BY created_at DESC",
+    'CSV catalogo': "SELECT uid,source_type,source_id,name,family,subfamily,status,release_status,COALESCE(yield_quantity,base_servings,base_flour_g,'') AS rendimiento,total_cost FROM v_elaborations_unified WHERE COALESCE(active,1)=1 ORDER BY name COLLATE NOCASE",
+    'CSV ingredientes': "SELECT id,name,family,subfamily,base_unit,purchase_price,purchase_net_quantity,waste_pct,cost_per_base_unit_after_waste,order_group,storage_zone,supplier,active FROM v_ingredients_cost ORDER BY name COLLATE NOCASE",
+    'CSV alergenos': "SELECT i.id AS ingredient_id,i.name AS ingredient,a.id AS allergen_id,a.name AS allergen,a.regulation_order,ia.declaration_status FROM ingredient_allergens ia JOIN ingredients i ON i.id=ia.ingredient_id JOIN allergens a ON a.id=ia.allergen_id WHERE a.regulation_order BETWEEN 1 AND 14 ORDER BY a.regulation_order,i.name COLLATE NOCASE",
+    'JSON meta': "SELECT key,value FROM app_meta ORDER BY key",
+    'JSON recipes': "SELECT * FROM v_elaborations_unified WHERE COALESCE(active,1)=1 ORDER BY name COLLATE NOCASE",
+    'JSON ingredients': "SELECT * FROM v_ingredients_cost ORDER BY name COLLATE NOCASE",
+    'JSON allergens': "SELECT ia.*, i.name AS ingredient, a.name AS allergen FROM ingredient_allergens ia JOIN ingredients i ON i.id=ia.ingredient_id JOIN allergens a ON a.id=ia.allergen_id ORDER BY a.regulation_order,i.name",
+}
+for label, sql in excel_export_queries.items():
+    try:
+        rows = cur.execute(sql).fetchmany(3)
+        ok(f'regresión exportación {label} ok: {len(rows)} filas leídas')
+    except Exception as e:
+        fail(f'regresión exportación {label} falla: {e}')
 for table in ['culinary_recipes','bakery_recipes']:
     v=cur.execute(f"SELECT COUNT(*) FROM {table} WHERE active=1 AND release_status='validada'").fetchone()[0]
     ok(f'{table} activas sin validada') if v==0 else fail(f'{table} contiene {v} validada')
-bad=cur.execute("SELECT COUNT(*) FROM bakery_recipes WHERE active=1 AND COALESCE(yield_status,'pending')<>'pending'").fetchone()[0]
-ok('bakery yield_status pending') if bad==0 else fail(f'bakery yield_status no pending: {bad}')
-for table in ['import_log','migrations_log']:
+bad=cur.execute("SELECT COUNT(*) FROM bakery_recipes WHERE active=1 AND COALESCE(yield_status,'pending') NOT IN ('pending','tested','validated')").fetchone()[0]
+ok('bakery yield_status solo pending/tested/validated') if bad==0 else fail(f'bakery yield_status incompatible: {bad}')
+active_nonpending=cur.execute("SELECT COUNT(*) FROM bakery_recipes WHERE active=1 AND COALESCE(yield_status,'pending')<>'pending'").fetchone()[0]
+ok('bakery yield_status pending en fichas activas') if active_nonpending==0 else fail(f'bakery yield_status no pending en fichas activas: {active_nonpending}')
+for table in ['import_log','migrations_log','workshop_validation_log','media_assets','recipe_media','recipe_documentary_reviews']:
     ok(f'tabla {table} presente') if cur.execute("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=?",(table,)).fetchone()[0] else fail(f'tabla {table} ausente')
 if cur.execute("SELECT 1 FROM culinary_recipe_lines WHERE recipe_id='REC-QUICHE-LORRAINE' AND subrecipe_id='REC-PAST-QUEBRADA-DULCE'").fetchone(): fail('Quiche conserva masa quebrada dulce')
 else: ok('Quiche sin masa quebrada dulce real')
 choux=cur.execute("SELECT risk_family FROM appcc_doc_blocks WHERE recipe_id='REC-PAST-CHOUX' LIMIT 1").fetchone()
 ok('Pasta choux APPCC corregido') if choux and 'Masa escaldada' in choux[0] else fail(f'Pasta choux APPCC no corregido: {choux}')
-ok('migración pública final registrada') if cur.execute("SELECT 1 FROM migrations_log WHERE id IN ('20260605_200_public_release_cleanup','20260605_200_public_release_final_cache_terminology_fix')").fetchone() else fail('migración pública final ausente')
+required_wv_cols = {'recipe_name_snapshot','group_module','practice_title','actual_quantity','target_flour_g','actual_flour_g','planned_raw_dough_g','actual_raw_dough_g','raw_piece_weight_g','baked_piece_weight_g','bake_loss_pct','tfm_c','fermentation_time_min','validation_data_json'}
+wv_cols = {r[1] for r in cur.execute('PRAGMA table_info(workshop_validation_log)')}
+missing_wv = sorted(required_wv_cols - wv_cols)
+ok('workshop_validation_log 2.1 ampliada') if not missing_wv else fail(f'faltan columnas workshop_validation_log: {missing_wv}')
+try:
+    b_id = cur.execute("SELECT id FROM bakery_recipes WHERE active=1 LIMIT 1").fetchone()
+    c_id = cur.execute("SELECT id FROM culinary_recipes WHERE active=1 LIMIT 1").fetchone()
+    cur.execute('BEGIN')
+    if b_id:
+        cur.execute("UPDATE bakery_recipes SET workshop_validation_status='validada', release_status='validada', yield_status='validated' WHERE id=?", (b_id[0],))
+        cur.execute("UPDATE bakery_recipes SET workshop_validation_status='probada_con_ajustes', release_status='pendiente', yield_status='tested' WHERE id=?", (b_id[0],))
+        cur.execute("UPDATE bakery_recipes SET workshop_validation_status='requiere_revision', release_status='pendiente', yield_status='pending' WHERE id=?", (b_id[0],))
+        ok('prueba yield_status panadero validated/tested/pending')
+    if c_id:
+        cur.execute("UPDATE culinary_recipes SET workshop_validation_status='validada', release_status='validada' WHERE id=?", (c_id[0],))
+        ok('prueba validación culinaria transaccional')
+    cur.execute('ROLLBACK')
+except Exception as e:
+    try: cur.execute('ROLLBACK')
+    except Exception: pass
+    fail(f'prueba transaccional validación obrador falla: {e}')
+for bad_state in ['measured','adjusted']:
+    try:
+        cur.execute('BEGIN')
+        if b_id:
+            cur.execute("UPDATE bakery_recipes SET yield_status=? WHERE id=?", (bad_state, b_id[0]))
+            fail(f'yield_status no permitido aceptado: {bad_state}')
+        cur.execute('ROLLBACK')
+    except Exception:
+        try: cur.execute('ROLLBACK')
+        except Exception: pass
+        ok(f'yield_status no permitido bloqueado: {bad_state}')
+blank_path = ROOT/'db/obradorr_blank.sqlite'
+if blank_path.exists():
+    bcon=sqlite3.connect(blank_path); bcur=bcon.cursor()
+    ok('plantilla limpia presente')
+    ok('plantilla limpia integrity_check ok') if bcur.execute('PRAGMA integrity_check').fetchone()[0]=='ok' else fail('plantilla limpia integrity_check falla')
+    bfk=bcur.execute('PRAGMA foreign_key_check').fetchall()
+    ok('plantilla limpia foreign_key_check sin errores') if not bfk else fail(f'plantilla limpia foreign_key_check: {bfk[:5]}')
+    counts={t:bcur.execute(f'SELECT COUNT(*) FROM {t}').fetchone()[0] for t in ['culinary_recipes','bakery_recipes','ingredients','workshop_validation_log']}
+    ok('plantilla limpia sin catálogo/ingredientes/validaciones') if all(v==0 for v in counts.values()) else fail(f'plantilla limpia contiene datos no esperados: {counts}')
+    bmeta=dict(bcur.execute("SELECT key,value FROM app_meta WHERE key IN ('release_tag','cache_tag','blank_template')"))
+    ok('plantilla limpia app_meta compatible') if bmeta.get('release_tag')=='2.1.0-rc7' and bmeta.get('cache_tag')=='obradorr-210-rc7-release-candidate' and bmeta.get('blank_template')=='1' else fail(f'plantilla limpia app_meta incorrecto: {bmeta}')
+    bcon.close()
+else:
+    fail('falta db/obradorr_blank.sqlite')
+
+# Cierre RC8: coherencia de interfaz y ausencia de restos obsoletos de entrada.
+closure_text = html + "\n" + alljs + "\n" + css
+for token in ['obradorr-210-rc8-release-candidate', 'Sesión actual', 'Sesiones guardadas', 'Guía de uso', 'Eliminar elaboración', 'Eliminar ingrediente', 'Crear y editar']:
+    ok(f'cierre RC8 token presente: {token}') if token in closure_text else fail(f'cierre RC8 token ausente: {token}')
+for old in ['obradorr-210-rc7-exports-discreet', 'Sesiones / prácticas', 'data-import-template-excel', 'data-export-template-excel', 'excelImportFileInput', 'js/import/excel-import.js']:
+    ok(f'cierre RC8 ausente: {old}') if old not in closure_text else fail(f'cierre RC8 conserva resto obsoleto: {old}')
+for entry_file in [ROOT/'index.html', ROOT/'Abrir_ObradORR.html', ROOT/'app/reset_local_data.html']:
+    txt = entry_file.read_text(encoding='utf-8')
+    ok(f'entrada actualizada: {entry_file.relative_to(ROOT)}') if 'obradorr-210-rc8-release-candidate' in txt and 'obradorr-210-rc7-exports-discreet' not in txt else fail(f'entrada obsoleta: {entry_file.relative_to(ROOT)}')
+if "IDB_DATA_DB = 'obradorr-data-210-rc7-release-candidate'" in alljs:
+    ok('namespace IndexedDB RC7 conservado por compatibilidad')
+else:
+    fail('namespace IndexedDB inesperado; revisar compatibilidad de persistencia')
+
 con.close()
 print('\nRESULTADO:', 'OK' if not errors else f'ERRORES={len(errors)}')
 sys.exit(1 if errors else 0)

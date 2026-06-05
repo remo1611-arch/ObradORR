@@ -17,7 +17,7 @@
 .notice.error{border-color:#fca5a5;background:#fff1f2;color:#7f1d1d}
 
 
-/* ObradORR 2.0 · edición progresiva */
+/* ObradORR 2.1 · edición progresiva */
 .edit-block{margin-top:18px;border:1px solid var(--line);border-radius:16px;padding:12px;background:rgba(255,255,255,.55)}
 .edit-block summary{cursor:pointer;margin:-4px 0 12px 0;list-style:none}
 .edit-block summary::-webkit-details-marker{display:none}
@@ -159,3 +159,331 @@ textarea[data-step-instruction], textarea[data-step-notes]{min-width:240px;min-h
 .scaling-mode{grid-column:1/-1}
 .scaling-note{grid-column:1/-1;line-height:1.25}
 @media(max-width:760px){.production-scaling-item{grid-template-columns:1fr}.scaling-controls{grid-template-columns:1fr;min-width:0}}
+
+/* ObradORR 2.1 · Validación de obrador */
+.validation-page .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:12px 0}.validation-list{display:grid;gap:10px}.validation-row{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;border:1px solid var(--line,#e5e7eb);border-radius:12px;padding:12px;background:#fff}.validation-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.workshop-dialog details{margin:10px 0;padding:10px;border:1px solid #e2d8c7;border-radius:10px;background:#fffaf2}.danger-pill{background:#fee2e2;color:#991b1b}.pill.warning{background:#fef3c7;color:#92400e}@media(max-width:760px){.validation-row{display:block}.validation-actions{justify-content:flex-start;margin-top:8px}}
+
+.technical-exports{margin-top:12px;background:#fffdf8}.technical-exports summary{cursor:pointer;display:grid;gap:4px;list-style:none}.technical-exports summary::-webkit-details-marker{display:none}.technical-exports summary::before{content:"▸ Exportaciones técnicas";font-weight:900;color:#6b4e16}.technical-exports[open] summary::before{content:"▾ Exportaciones técnicas"}.technical-exports summary>b{display:none}.technical-exports summary small{font-size:12px;color:var(--muted)}.technical-exports .actions{margin-top:10px}
+
+
+/* ObradORR 2.1 RC8 · refinamiento HTML/UX sin cambios de datos */
+.editor-help-note{margin:0 0 14px}.modal textarea{overflow:hidden}.line-note{min-height:72px;min-width:260px;line-height:1.35}.editor-line-table td{vertical-align:top}.editor-line-table .compact{max-width:150px}.editor-table-wrap{max-height:62vh;overflow:auto}.editor-table-wrap thead th{position:sticky;top:0;z-index:1}.editor-main-section label,.ingredient-editor-layout label{display:flex;flex-direction:column;gap:5px;font-weight:750}.check-inline{flex-direction:row!important;align-items:center!important;border:1px solid var(--line);border-radius:14px;padding:10px;background:#fff}.ingredient-editor-layout{grid-template-columns:minmax(440px,1.1fr) minmax(320px,.9fr)}.ingredient-editor-toolbar{margin-bottom:12px}.ingredient-allergen-panel{align-self:start}.allergen-check-grid label{min-height:44px}.responsive-table td[data-label]::before{display:none}.editor-modal-full .modal-body{padding:16px}.editor-modal-full .modal header h2{font-size:1.15rem}.editor-toolbar-rc1{display:flex;align-items:center}.editor-toolbar-rc1 .btn{white-space:nowrap}.editor-toolbar-rc1 .btn.primary,.editor-toolbar-rc1 .btn.accent{min-width:132px}.input,select,textarea{min-height:46px}.modal table textarea,.modal table input,.modal table select{font-size:.95rem}
+@media(min-width:1180px){.editor-modal-full{width:min(1420px,98vw)}.editor-layout-rc1{grid-template-columns:minmax(460px,.85fr) minmax(650px,1.15fr)}}
+@media(max-width:900px){.ingredient-editor-layout{grid-template-columns:1fr}.editor-table-wrap{max-height:none}.editor-toolbar-rc1{position:sticky;top:0;z-index:6;max-height:42vh;overflow:auto}.editor-toolbar-rc1 .btn{flex:1 1 160px}.line-note{min-width:0}.modal .grid.two{grid-template-columns:1fr}}
+@media(max-width:760px){.responsive-table thead{display:none}.responsive-table,.responsive-table tbody,.responsive-table tr,.responsive-table td{display:block;width:100%}.responsive-table tr{border:1px solid var(--line);border-radius:16px;margin:10px 0;padding:10px;background:#fff}.responsive-table td{border:0;padding:7px 4px}.responsive-table td[data-label]::before{display:block;content:attr(data-label);font-size:11px;text-transform:uppercase;letter-spacing:.04em;font-weight:900;color:#6b4e16;margin-bottom:3px}.responsive-table td .btn{width:100%;justify-content:center}.ingredient-table-wrap{border:0;background:transparent}.ingredient-table tr{box-shadow:0 4px 18px rgba(54,39,24,.06)}.editor-line-table select,.editor-line-table input,.editor-line-table textarea{width:100%;max-width:none}.editor-modal-full .modal-body{padding:12px}.editor-sections details{padding:10px}.textarea-large{min-height:210px}.editor-help-note{font-size:.95rem}}
+
+/* ObradORR 2.1 RC8 hotfix móvil · barra de acciones del editor no fija */
+@media(max-width:900px){
+  .editor-toolbar-rc1{
+    position:static!important;
+    top:auto!important;
+    z-index:auto!important;
+    max-height:none!important;
+    overflow:visible!important;
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:8px;
+    padding:8px;
+    margin-bottom:10px;
+    box-shadow:0 2px 10px rgba(54,39,24,.06);
+  }
+  .editor-toolbar-rc1 .btn,
+  .editor-toolbar-rc1 .btn.primary,
+  .editor-toolbar-rc1 .btn.accent{
+    width:100%;
+    min-width:0!important;
+    flex:0 1 auto!important;
+    padding:9px 10px;
+    min-height:42px;
+    font-size:.92rem;
+    line-height:1.15;
+    white-space:normal;
+  }
+}
+@media(max-width:380px){
+  .editor-toolbar-rc1{grid-template-columns:1fr 1fr;gap:6px;padding:7px}
+  .editor-toolbar-rc1 .btn{font-size:.88rem;padding:8px 7px}
+}
+
+
+/* ObradORR 2.1 RC8 hotfix móvil · encabezado compacto y navegación docente */
+@media(max-width:900px){
+  .topbar-inner{
+    padding:8px 12px!important;
+    gap:8px!important;
+  }
+  .brand{gap:8px!important;}
+  .brand-mark{
+    width:34px!important;
+    height:34px!important;
+    border-radius:11px!important;
+    font-size:17px!important;
+    box-shadow:0 4px 16px rgba(54,39,24,.10)!important;
+  }
+  .brand h1{font-size:18px!important;}
+  .brand small{
+    font-size:10.5px!important;
+    line-height:1.15!important;
+    margin-top:1px!important;
+  }
+  .nav{
+    gap:6px!important;
+    padding-bottom:1px;
+    scrollbar-width:none;
+  }
+  .nav::-webkit-scrollbar{display:none;}
+  .nav button{
+    padding:8px 10px!important;
+    min-height:38px;
+    font-size:.88rem;
+    line-height:1.1;
+    white-space:nowrap;
+  }
+  .status{
+    padding:6px 9px!important;
+    min-height:32px;
+    font-size:.78rem;
+    line-height:1.1;
+  }
+}
+@media(max-width:420px){
+  .brand small{font-size:10px!important;}
+  .nav button{padding:7px 9px!important;font-size:.86rem;}
+}
+
+
+/* ObradORR 2.1 RC8 · Header status hotfix
+   Marca arriba, navegación en línea inferior y estado compacto en móvil. */
+.topbar-inner{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:stretch!important;
+  justify-content:flex-start!important;
+  gap:10px!important;
+  padding:12px 20px!important;
+}
+.topbar-brand-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  width:100%;
+  min-width:0;
+}
+.topbar-brand-row .brand{min-width:0;}
+.topbar-brand-row .brand h1,.topbar-brand-row .brand small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.topbar .nav{
+  width:100%;
+  flex-wrap:nowrap!important;
+  overflow-x:auto;
+  scrollbar-width:none;
+}
+.topbar .nav::-webkit-scrollbar{display:none;}
+.status{
+  appearance:none;
+  border:1px solid var(--line);
+  background:#fff;
+  color:var(--ink);
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  white-space:nowrap;
+  user-select:none;
+}
+.status:focus-visible{outline:3px solid rgba(15,118,110,.20);outline-offset:2px;}
+.dot.warning{background:#d97706;}
+.dot.saving{background:#0f766e;animation:obradorrStatusPulse 1s ease-in-out infinite;}
+.dot.error{background:#dc2626;}
+@keyframes obradorrStatusPulse{0%,100%{transform:scale(1);opacity:.65}50%{transform:scale(1.28);opacity:1}}
+
+@media(min-width:901px){
+  .topbar .nav{padding-left:58px;}
+  .topbar .nav button{padding:9px 14px;}
+  .topbar .status .status-text{display:inline;}
+}
+@media(max-width:900px){
+  .topbar-inner{
+    padding:9px 12px!important;
+    gap:8px!important;
+  }
+  .topbar-brand-row{gap:8px;}
+  .brand{gap:8px!important;}
+  .brand-mark{
+    width:34px!important;
+    height:34px!important;
+    border-radius:11px!important;
+    font-size:17px!important;
+  }
+  .brand h1{font-size:18px!important;line-height:1!important;}
+  .brand small{font-size:10px!important;line-height:1.12!important;margin-top:1px!important;}
+  .status{
+    width:34px!important;
+    min-width:34px!important;
+    height:34px!important;
+    padding:0!important;
+    gap:0!important;
+    overflow:hidden;
+    transition:width .18s ease,min-width .18s ease,padding .18s ease,gap .18s ease;
+  }
+  .status .status-text{display:none;}
+  .status.expanded,.status.flash{
+    width:auto!important;
+    min-width:78px!important;
+    max-width:72vw;
+    padding:0 10px!important;
+    gap:7px!important;
+  }
+  .status.expanded .status-text,.status.flash .status-text{display:inline;}
+  .topbar .nav{
+    gap:6px!important;
+    padding-bottom:1px;
+  }
+  .topbar .nav button{
+    min-height:36px!important;
+    padding:7px 10px!important;
+    font-size:.86rem!important;
+    line-height:1.1;
+  }
+}
+@media(max-width:420px){
+  .topbar-inner{padding:8px 10px!important;}
+  .brand small{max-width:240px;}
+  .topbar .nav button{padding:7px 9px!important;font-size:.84rem!important;}
+}
+
+/* ObradORR 2.1 RC8 · Sesión actual
+   Flujo docente guiado sin tocar el motor de impresión. */
+.print-ux-page{display:grid;gap:16px}
+.print-ux-hero{padding:18px 20px}
+.print-ux-title{margin-bottom:14px}
+.print-ux-practice{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:center;border:1px solid var(--line);border-radius:18px;background:linear-gradient(180deg,#fffdf8,#fbf7ee);padding:14px}
+.print-ux-practice-main{display:flex;flex-direction:column;gap:3px;min-width:0}
+.print-ux-practice-main b{font-size:1.08rem}
+.print-ux-step{display:inline-flex;width:max-content;border-radius:999px;background:#eefaf8;color:#0f766e;font-size:.75rem;font-weight:900;text-transform:uppercase;letter-spacing:.035em;padding:3px 8px}
+.print-ux-layout{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(320px,.85fr);gap:var(--gap);align-items:start}
+.print-ux-main-card,.print-ux-add-card{display:grid;gap:16px}
+.print-ux-block{border:1px solid var(--line);border-radius:18px;background:#fff;padding:14px}
+.print-ux-block h3{display:flex;align-items:center;gap:9px;margin:0 0 5px}
+.print-ux-block h3 span{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:999px;background:var(--brand);color:#fff;font-size:.88rem;line-height:1}
+.print-ux-block p{margin-bottom:12px}
+.print-doc-row,.print-profile-row{grid-template-columns:repeat(3,minmax(0,1fr))}
+.print-doc-row .radio-card,.print-profile-row .radio-card{min-height:104px}
+.print-teaching-block .option-row{margin:0}
+.print-ux-advanced{border:1px solid var(--line);border-radius:18px;background:#fff;padding:0;overflow:hidden}
+.print-ux-advanced>summary,.print-ux-bulk>summary{cursor:pointer;list-style:none;padding:14px;display:flex;flex-direction:column;gap:3px}
+.print-ux-advanced>summary::-webkit-details-marker,.print-ux-bulk>summary::-webkit-details-marker{display:none}
+.print-ux-advanced>summary:before,.print-ux-bulk>summary:before{content:'▸';font-weight:900;color:var(--brand);margin-right:6px;display:inline-block}
+.print-ux-advanced[open]>summary:before,.print-ux-bulk[open]>summary:before{content:'▾'}
+.print-ux-advanced>summary b,.print-ux-bulk>summary b{display:inline-flex;align-items:center;gap:6px}
+.print-ux-advanced>summary small,.print-ux-bulk>summary small{color:var(--muted)}
+.print-ux-advanced .options{padding:0 14px 14px}
+.print-ux-submit{justify-content:flex-end;border-top:1px solid var(--line);padding-top:14px;margin-top:0!important}
+.print-ux-submit .btn.primary{font-size:1rem;padding:12px 18px}
+.print-search-toolbar{margin-bottom:6px}
+.print-results{max-height:62vh;margin-top:12px!important}
+.print-ux-bulk{border:1px dashed #d8ccb9;border-radius:16px;background:#fffaf2;margin-top:10px}
+.print-ux-bulk .actions{padding:0 14px 14px;margin:0}
+@media(max-width:1100px){.print-ux-layout{grid-template-columns:1fr}.print-results{max-height:none}.print-doc-row,.print-profile-row{grid-template-columns:repeat(3,minmax(190px,1fr));overflow-x:auto;padding-bottom:2px}.print-doc-row .radio-card,.print-profile-row .radio-card{min-width:190px}}
+@media(max-width:760px){.print-ux-page{gap:12px}.print-ux-hero,.print-ux-main-card,.print-ux-add-card{padding:14px}.print-ux-practice{grid-template-columns:1fr;padding:12px;gap:10px}.print-ux-practice-actions .btn{flex:1 1 auto}.print-ux-block{padding:12px;border-radius:16px}.print-ux-block h3{font-size:1rem}.print-doc-row,.print-profile-row{display:grid;grid-template-columns:1fr;overflow:visible}.print-doc-row .radio-card,.print-profile-row .radio-card{min-width:0;min-height:0}.print-ux-submit{display:grid;grid-template-columns:1fr;gap:8px}.print-ux-submit .btn{width:100%;justify-content:center}.print-results .result-row{grid-template-columns:1fr;align-items:stretch}.print-results .result-row .btn{width:100%;justify-content:center}.print-search-toolbar{display:grid;grid-template-columns:1fr auto}.print-search-toolbar .input{min-width:0}.print-ux-advanced>summary,.print-ux-bulk>summary{padding:12px}}
+.print-ux-advanced>summary:before,.print-ux-bulk>summary:before{display:none!important;content:''!important}
+.print-ux-advanced>summary b:before,.print-ux-bulk>summary b:before{content:'▸';font-weight:900;color:var(--brand);margin-right:2px}
+.print-ux-advanced[open]>summary b:before,.print-ux-bulk[open]>summary b:before{content:'▾'}
+
+
+/* ObradORR 2.1 RC8 · Ajustes responsive finales
+   Sesión actual y Sistema sin tocar datos ni motor. */
+.subrecipe-option-block .subrecipe-radio-row{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(255px,1fr));
+  gap:10px;
+}
+.subrecipe-option-block .subrecipe-radio-card{
+  display:grid!important;
+  grid-template-columns:auto minmax(0,1fr)!important;
+  grid-template-areas:none!important;
+  align-items:flex-start!important;
+  gap:0 12px!important;
+  min-width:0!important;
+  min-height:0!important;
+  overflow-wrap:normal!important;
+  word-break:normal!important;
+  hyphens:none!important;
+}
+.subrecipe-option-block .subrecipe-radio-card input{
+  grid-area:auto!important;
+  margin:4px 0 0!important;
+  flex:0 0 auto;
+}
+.subrecipe-option-block .radio-card-body{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  line-height:1.25;
+}
+.subrecipe-option-block .radio-card-body b,
+.subrecipe-option-block .radio-card-body small{
+  min-width:0;
+  overflow-wrap:normal!important;
+  word-break:normal!important;
+  hyphens:none!important;
+}
+.subrecipe-option-block .radio-card-body small{
+  line-height:1.35;
+}
+.system-page .summary-list.compact{
+  max-width:none!important;
+  width:100%!important;
+}
+.system-page .summary-list.compact .summary-row{
+  width:100%;
+  grid-template-columns:minmax(0,1fr) auto;
+}
+.system-page .system-help-grid{
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+}
+.system-page .system-help-grid span,
+.system-page .summary-row,
+.system-page .system-state-card{
+  min-width:0;
+  overflow-wrap:normal;
+  word-break:normal;
+  hyphens:none;
+}
+.system-page .system-state-card span,
+.system-page .system-state-card small,
+.system-page .summary-row small{
+  overflow-wrap:break-word;
+  word-break:normal;
+}
+@media(max-width:900px){
+  .subrecipe-option-block .subrecipe-radio-row{grid-template-columns:1fr;}
+  .subrecipe-option-block .subrecipe-radio-card{padding:14px 12px;}
+  .system-page .system-state-grid,
+  .system-page .system-help-grid{grid-template-columns:1fr;}
+  .system-page .summary-list.compact .summary-row{grid-template-columns:1fr;}
+}
+
+
+/* ObradORR 2.1 RC8 · Guía de uso
+   Guía plegable en Inicio, discreta y sin afectar a SQLite ni impresión. */
+.usage-guide-card{margin-top:var(--gap);padding:0;overflow:hidden}
+.usage-guide>summary{cursor:pointer;list-style:none;padding:16px 18px;display:grid;gap:3px;border-radius:var(--r);background:linear-gradient(180deg,#fffdf8,#fbf7ee)}
+.usage-guide>summary::-webkit-details-marker,.usage-guide-item>summary::-webkit-details-marker{display:none}
+.usage-guide>summary span{display:flex;align-items:center;gap:8px;font-size:1.05rem;font-weight:900}
+.usage-guide>summary span:before{content:'▸';color:var(--brand);font-weight:900}
+.usage-guide[open]>summary span:before{content:'▾'}
+.usage-guide>summary small{color:var(--muted)}
+.usage-guide-body{display:grid;gap:10px;padding:0 18px 18px}
+.usage-guide-item{border:1px solid var(--line);border-radius:14px;background:#fff;overflow:hidden}
+.usage-guide-item>summary{cursor:pointer;list-style:none;padding:12px 14px;font-weight:900;display:flex;align-items:center;gap:7px}
+.usage-guide-item>summary:before{content:'▸';color:var(--brand);font-weight:900}
+.usage-guide-item[open]>summary:before{content:'▾'}
+.usage-guide-item p,.usage-guide-item ol,.usage-guide-item ul{margin:0 14px 12px;color:var(--muted)}
+.usage-guide-item ol,.usage-guide-item ul{padding-left:20px}
+.usage-guide-item li{margin:4px 0}
+.usage-guide-item code{background:#f4efe5;border:1px solid var(--line);border-radius:6px;padding:1px 4px;font-size:.9em}
+.guide-actions{margin:0 14px 14px}
+@media(max-width:760px){.usage-guide-card{margin-top:12px}.usage-guide>summary{padding:14px}.usage-guide-body{padding:0 14px 14px}.guide-actions .btn{flex:1 1 100%;justify-content:center}}

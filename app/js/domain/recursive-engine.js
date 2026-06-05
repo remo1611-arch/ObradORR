@@ -210,7 +210,7 @@
     return { lines: lines.length, aggregated: aggregate(lines).length, allergens: allergensFromLines(db, lines).length };
   }
   window.ObradORRRecursiveEngine = {
-    version: "2.0.0",
+    version: "2.1.0",
     canonical: true,
     scaleForCulinary, culinaryExpandedLines, culinarySubrecipes,
     bakeryBaseMetrics, bakeryDirectLines, bakeryComponents, bakeryExpandedLines,

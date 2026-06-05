@@ -12,8 +12,8 @@
 [OK] node --check app/js/ui/safe-editor.js
 [OK] node --check app/js/utils/file-tools.js
 [OK] token presente: 2.0.0
-[OK] token presente: 2.0.0-stable
-[OK] token presente: obradorr-200-stable
+[OK] token presente: 2.1.0-stable
+[OK] token presente: obradorr-210-rc7-release-candidate
 [OK] token presente: ObradORRExportTools
 [OK] token presente: exportPracticeZip
 [OK] token presente: ObradORRRecursiveEngine
@@ -49,8 +49,8 @@
 [OK] SQLite foreign_key_check sin errores
 [OK] app_meta app_version=2.0.0
 [OK] app_meta schema_version=2.0.0
-[OK] app_meta release_tag=2.0.0-stable
-[OK] app_meta cache_tag=obradorr-200-stable
+[OK] app_meta release_tag=2.1.0-stable
+[OK] app_meta cache_tag=obradorr-210-rc7-release-candidate
 [OK] app_meta stable=1
 [OK] app_meta public_release=1
 [OK] culinary_recipes activas sin validada

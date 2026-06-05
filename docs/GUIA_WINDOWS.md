@@ -1,21 +1,21 @@
-# Guía Windows · ObradORR 2.0.0
+# Guía Windows · ObradORR 2.1.0-RC7
 
-1. Descomprime `ObradORR_2_0_0_PUBLIC_RELEASE.zip`.
+1. Descomprime `ObradORR_2_1_0_RC5_HARDENING_BASES.zip`.
 2. Abre PowerShell o Terminal en la carpeta descomprimida.
 3. Ejecuta:
 
 ```powershell
-python -m http.server 8835 --bind 127.0.0.1
+python -m http.server 8847 --bind 127.0.0.1
 ```
 
-4. Abre en el navegador:
+4. Abre primero el reset local:
 
 ```text
-http://127.0.0.1:8835/app/obradorr.html?v=obradorr-200-public-release
+http://127.0.0.1:8847/app/reset_local_data.html?v=obradorr-210-rc7-release-candidate-reset
 ```
 
-Reset local:
+5. Después abre la aplicación:
 
 ```text
-http://127.0.0.1:8835/app/reset_local_data.html?v=obradorr-200-public-release-reset
+http://127.0.0.1:8847/app/obradorr.html?v=obradorr-210-rc7-release-candidate
 ```

@@ -1,33 +1,33 @@
-# Guía Termux · ObradORR 2.0.0
+# Guía Termux · ObradORR 2.1.0-RC7
 
 ```bash
 pkill -f "python -m http.server" 2>/dev/null || true
 
 cd ~
-rm -rf ~/obradorr_200_public_release_test
-mkdir -p ~/obradorr_200_public_release_test
+rm -rf ~/obradorr_210_rc4_hardening_test
+mkdir -p ~/obradorr_210_rc4_hardening_test
 
-cp ~/storage/downloads/ObradORR_2_0_0_PUBLIC_RELEASE.zip ~/obradorr_200_public_release_test/
-cp ~/storage/downloads/ObradORR_2_0_0_PUBLIC_RELEASE.zip.sha256 ~/obradorr_200_public_release_test/
+cp ~/storage/downloads/ObradORR_2_1_0_RC5_HARDENING_BASES.zip ~/obradorr_210_rc4_hardening_test/
+cp ~/storage/downloads/ObradORR_2_1_0_RC5_HARDENING_BASES.zip.sha256 ~/obradorr_210_rc4_hardening_test/
 
-cd ~/obradorr_200_public_release_test
+cd ~/obradorr_210_rc4_hardening_test
 
-sha256sum -c ObradORR_2_0_0_PUBLIC_RELEASE.zip.sha256
-unzip -q ObradORR_2_0_0_PUBLIC_RELEASE.zip
-cd ObradORR_2_0_0_PUBLIC_RELEASE
+sha256sum -c ObradORR_2_1_0_RC5_HARDENING_BASES.zip.sha256
+unzip -q ObradORR_2_1_0_RC5_HARDENING_BASES.zip
+cd ObradORR_2_1_0_RC5_HARDENING_BASES
 
 python tools/validate_release.py
-python -m http.server 8835 --bind 127.0.0.1
+python -m http.server 8847 --bind 127.0.0.1
 ```
 
-Abrir:
+Primero reset local:
 
 ```bash
-termux-open-url "http://127.0.0.1:8835/app/obradorr.html?v=obradorr-200-public-release"
+termux-open-url "http://127.0.0.1:8847/app/reset_local_data.html?v=obradorr-210-rc7-release-candidate-reset-$(date +%Y%m%d%H%M%S)"
 ```
 
-Reset local:
+Después abrir la app:
 
 ```bash
-termux-open-url "http://127.0.0.1:8835/app/reset_local_data.html?v=obradorr-200-public-release-reset"
+termux-open-url "http://127.0.0.1:8847/app/obradorr.html?v=obradorr-210-rc7-release-candidate-$(date +%Y%m%d%H%M%S)"
 ```

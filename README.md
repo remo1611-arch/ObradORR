@@ -1,44 +1,40 @@
-# ObradORR 2.0.0
+# ObradORR 2.1.0-RC8 · Release Candidate
 
-Aula taller digital offline para cocina, pastelería y panadería.
+Aplicación web offline para aula-taller de cocina, pastelería y panadería.
 
-ObradORR permite trabajar con fichas técnicas, ingredientes, subelaboraciones, pedidos consolidados, alérgenos, APPCC docente, perfiles de impresión, escalado de producción y copias SQLite sin depender de servidor externo.
+Esta release candidate consolida la línea 2.1.0-RC8 tras los refinamientos de interfaz, edición segura, eliminación controlada y guía de uso. El objetivo es cerrar una versión de prueba docente coherente antes de una posible publicación estable.
 
-## Estado de la versión
+## Navegación final
 
-- Versión: **2.0.0**
-- Canal: **público estable**
-- Ejecución: navegador moderno con servidor local desde la raíz del proyecto.
-- Base incluida: SQLite local.
+`Inicio · Sesión actual · Sesiones guardadas · Elaboraciones · Ingredientes · Validación de obrador · Sistema`
 
-## Uso básico
+## Incluye
 
-1. Descomprime el ZIP.
-2. Arranca un servidor local desde la raíz del proyecto.
-3. Abre `app/obradorr.html` en el navegador.
-4. Trabaja con las pestañas: Inicio, Elaboraciones, Ingredientes, Imprimir/exportar, Sesiones y Sistema.
-5. Al terminar una sesión importante, descarga una copia `.sqlite` desde Sistema.
+- Sesión actual como flujo guiado para preparar fichas, pedido o ficha + pedido.
+- Sesiones guardadas en la copia SQLite activa.
+- Edición cómoda de elaboraciones e ingredientes.
+- Alta cancelable: no se crea una elaboración o ingrediente hasta confirmar `Crear y editar`.
+- Eliminación segura de elaboraciones e ingredientes, bloqueada si el registro está en uso.
+- Guía de uso plegada en Inicio.
+- Validación de obrador preparada sin validar automáticamente fichas.
+- Exportaciones técnicas discretas y plegadas.
+- Importación Excel retirada; Excel/CSV/JSON quedan como salidas de consulta, auditoría o respaldo.
+- Copias SQLite, restauración y combinación segura.
 
-## Escalado de producción
+## Metadatos técnicos
 
-- Fichas ordinarias: raciones o rendimiento.
-- Formulación y masas: piezas + peso unitario, masa total o harina total cuando proceda.
+- Versión visual: `2.1.0-RC8 Release Candidate`.
+- Base SQLite incluida: `2.1.0-RC7`.
+- `release_tag` interno de base: `2.1.0-rc7`.
+- `cache_tag` interno de base: `obradorr-210-rc7-release-candidate`.
+- Token de carga web de esta compilación: `obradorr-210-rc8-release-candidate`.
 
-## Límites importantes
+Se mantiene el espacio de datos local de RC7 para no invalidar copias de trabajo compatibles. El parámetro `?v=` cambia para forzar recarga de HTML/CSS/JS.
 
-Las fichas son propuestas documentales contrastadas. La validación real de rendimiento, textura, merma, tiempos y aceptación organoléptica corresponde al profesorado tras prueba en obrador.
+## Estado
 
-## Documentación
+Release candidate integral para prueba final en PC y Termux/Android. No debe considerarse publicación estable hasta superar prueba manual de uso real.
 
-- `GUIA_TERMUX.md`
-- `GUIA_WINDOWS.md`
-- `docs/SEGURIDAD_DATOS.md`
-- `docs/EXPORTACIONES.md`
-- `docs/IMPORTACION_SEGURA.md`
-- `docs/PERFILES_DOCUMENTALES.md`
-- `docs/ESCALADO_PRODUCCION.md`
-- `docs/VALIDACION_OBRADOR.md`
+## Regla documental
 
-## Autoría
-
-© 2026 Remo José Pereira González. Uso docente personal autorizado. Sin licencia abierta de redistribución o explotación comercial salvo permiso expreso.
+Ninguna ficha se considera validada por IA ni por importación. La validación real corresponde al profesorado tras prueba de obrador.

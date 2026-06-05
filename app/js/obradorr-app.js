@@ -4,22 +4,24 @@ const ObradORRDatabase = window.ObradORRDatabase;
 if (!ObradORRDatabase)
     throw new Error("No se cargó la capa SQLite de ObradORR.");
 window.__OBRADORR_MODULE_STARTED = true;
-window.__OBRADORR_MODULE_VERSION = 'obradorr-200-public-release-final-ui-hints';
+window.__OBRADORR_MODULE_VERSION = 'obradorr-210-rc8-release-candidate';
 // public release final cache token
 const DB_URL = '../db/obradorr.sqlite';
+const BLANK_DB_URL = '../db/obradorr_blank.sqlite';
 const WORK_SELECTION_ID = 'WORK_CURRENT';
 const STORAGE_PRINT_OPTIONS = 'obradorr_ui_print_options_v1';
-const IDB_DATA_DB = 'obradorr-data-200-public-release-final';
+const IDB_DATA_DB = 'obradorr-data-210-rc7-release-candidate';
 const IDB_DATA_STORE = 'snapshots';
 const IDB_CURRENT_KEY = 'current-db';
 const IDB_PREVIOUS_KEYS = ['previous-db-1', 'previous-db-2', 'previous-db-3'];
-const VERSION = '2.0.0';
+const VERSION = '2.1.0';
+const WORKSHOP_VALIDATION_FLOW = 'workshop_validation_flow';
 const LIST_PAGE_SIZE = 60;
 const INGREDIENT_SEARCH_LIMIT = 60;
 const PRINT_SEARCH_LIMIT = 60;
 const LEGAL_NOTICE = '© 2026 Remo José Pereira González · Uso docente personal autorizado · Sin licencia abierta de redistribución o explotación comercial.';
-const EXPECTED_RELEASE_TAG = '2.0.0-stable';
-const EXPECTED_CACHE_TAG = 'obradorr-200-public-release-final-ui-hints';
+const EXPECTED_RELEASE_TAG = '2.1.0-rc7';
+const EXPECTED_CACHE_TAG = 'obradorr-210-rc7-release-candidate';
 const db = new ObradORRDatabase();
 const state = {
     ready: false,
@@ -46,6 +48,8 @@ const state = {
     autosaveTimer: null,
     autosaveInFlight: false,
     autosaveQueued: false,
+    statusFlashTimer: null,
+    statusIndicatorLabel: '',
     selection: [],
     sessions: [],
     recipeSearch: '',
@@ -54,6 +58,8 @@ const state = {
     recipeVisibleLimit: LIST_PAGE_SIZE,
     ingredientVisibleLimit: LIST_PAGE_SIZE,
     printVisibleLimit: LIST_PAGE_SIZE,
+    validationSearch: '',
+    validationStatusFilter: 'all',
     printOptions: loadJson(STORAGE_PRINT_OPTIONS, {
         documentType: 'fichas_pedido',
         documentProfile: 'aula_taller',
@@ -104,7 +110,10 @@ async function boot() {
 async function loadCatalogs() {
     state.recipes = db.query(`
     SELECT uid, source_type, source_id, name, category_label, production_kind, default_production_mode,
-           production_label, family, subfamily, status, release_status, active, base_servings, yield_quantity, yield_unit,
+           production_label, family, subfamily, status, release_status,
+           CASE WHEN source_type='bakery' THEN (SELECT workshop_validation_status FROM bakery_recipes br2 WHERE br2.id=source_id) ELSE (SELECT workshop_validation_status FROM culinary_recipes cr2 WHERE cr2.id=source_id) END AS workshop_validation_status,
+           CASE WHEN source_type='bakery' THEN (SELECT documentary_status FROM bakery_recipes br2 WHERE br2.id=source_id) ELSE (SELECT documentary_status FROM culinary_recipes cr2 WHERE cr2.id=source_id) END AS documentary_status,
+           active, base_servings, yield_quantity, yield_unit,
            base_flour_g, base_pieces, base_label, total_cost, ingredient_cost_total, updated_at, yield_status
     FROM v_elaborations_unified
     WHERE COALESCE(active,1)=1
@@ -131,22 +140,29 @@ async function loadCatalogs() {
     reconcileSelection();
 }
 function renderShell(status = '') {
+    const statusLabel = headerStatusLabel(status);
+    const statusTitle = state.ready ? dataStatusText() : (state.dataStatus || statusLabel);
     app.innerHTML = `
     <header class="topbar no-print">
       <div class="topbar-inner">
-        <div class="brand">
-          <div class="brand-mark">🍽️</div>
-          <div><h1>ObradORR</h1><small>Aula taller digital de cocina, pastelería y panadería</small></div>
+        <div class="topbar-brand-row">
+          <div class="brand">
+            <div class="brand-mark">🍽️</div>
+            <div><h1>ObradORR</h1><small>Aula taller digital de cocina, pastelería y panadería</small></div>
+          </div>
+          <button type="button" class="status status-compact" data-status-toggle aria-label="Estado: ${escapeAttr(statusTitle)}" title="${escapeAttr(statusTitle)}">
+            <span class="dot ${statusDotClass()}"></span><span class="status-text">${escapeHtml(statusLabel)}</span>
+          </button>
         </div>
         <nav class="nav" aria-label="Navegación principal">
           ${navButton('inicio', 'Inicio')}
+          ${navButton('imprimir', 'Sesión actual')}
+          ${navButton('sesiones', 'Sesiones guardadas')}
           ${navButton('elaboraciones', 'Elaboraciones')}
           ${navButton('ingredientes', 'Ingredientes')}
-          ${navButton('imprimir', 'Imprimir / exportar')}
-          ${navButton('sesiones', 'Sesiones')}
+          ${navButton('validacion', 'Validación de obrador')}
           ${navButton('sistema', 'Sistema')}
         </nav>
-        <span class="status"><span class="dot ${state.ready ? 'ok' : ''}"></span>${status || (state.ready ? 'LISTO' : 'Cargando')}</span>
       </div>
     </header>
     ${dataSafetyBannerHtml()}
@@ -169,9 +185,12 @@ function render() {
         main.innerHTML = printWorkspaceView();
     if (state.page === 'sesiones')
         main.innerHTML = sessionsView();
+    if (state.page === 'validacion')
+        main.innerHTML = validationView();
     if (state.page === 'sistema')
         main.innerHTML = systemView();
     bindCurrentView();
+    setupAdaptiveTextareas(main);
 }
 function navButton(page, label) {
     return `<button type="button" data-nav="${page}" class="${state.page === page ? 'active' : ''}">${label}</button>`;
@@ -185,7 +204,7 @@ function homeView() {
         <div class="quick-grid">
           ${quickCard('elaboraciones', '📚', 'Elaboraciones', 'Buscar, ver, editar o añadir a la práctica actual.')}
           ${quickCard('ingredientes', '🥕', 'Ingredientes', 'Consultar y editar productos, familias, alérgenos y pedido.')}
-          ${quickCard('imprimir', '🖨️', 'Imprimir / exportar', 'Seleccionar elaboraciones, cantidades y documento.')}
+          ${quickCard('imprimir', '🖨️', 'Sesión actual', 'Revisar la práctica activa y preparar fichas, pedido o PDF.')}
         </div>
       </div>
       <div class="card soft">
@@ -199,14 +218,91 @@ function homeView() {
         </div>
       </div>
     </section>
+    ${usageGuideHtml()}
   `;
 }
 function quickCard(page, icon, title, text) {
     return `<button class="quick-card" data-nav="${page}"><span>${icon}</span><b>${title}</b><small class="muted">${text}</small></button>`;
 }
+function usageGuideHtml() {
+    return `
+    <section class="card usage-guide-card">
+      <details class="usage-guide">
+        <summary>
+          <span>Guía de uso</span>
+          <small>Consulta rápida de las funciones principales de ObradORR.</small>
+        </summary>
+        <div class="usage-guide-body">
+          <details class="usage-guide-item" open>
+            <summary>Flujo rápido recomendado</summary>
+            <ol>
+              <li>Entra en <b>Sesión actual</b>.</li>
+              <li>Añade elaboraciones y ajusta raciones.</li>
+              <li>Escoge ficha, pedido o ficha + pedido.</li>
+              <li>Revisa la vista previa y guarda o imprime en PDF.</li>
+              <li>Guarda la sesión o descarga una copia SQLite si hiciste cambios importantes.</li>
+            </ol>
+            <div class="actions guide-actions">
+              <button class="btn accent" data-nav="imprimir">Ir a sesión actual</button>
+              <button class="btn" data-nav="elaboraciones">Ver elaboraciones</button>
+              <button class="btn" data-nav="sistema">Copias y sistema</button>
+            </div>
+          </details>
+          <details class="usage-guide-item">
+            <summary>Sesión actual</summary>
+            <p>Área de trabajo de la práctica activa: selecciona elaboraciones, ajusta cantidades, define el nivel documental y genera la vista previa/PDF.</p>
+            <p><b>Sesión actual</b> no sustituye una copia de seguridad. Para conservar cambios importantes, descarga una copia SQLite desde Sistema.</p>
+          </details>
+          <details class="usage-guide-item">
+            <summary>Sesiones guardadas</summary>
+            <p>Recupera selecciones de prácticas guardadas en este navegador. Útil para repetir prácticas o preparar varias sesiones.</p>
+            <p><b>Sesión guardada</b> = selección local de práctica. <b>Copia SQLite</b> = base completa portable.</p>
+          </details>
+          <details class="usage-guide-item">
+            <summary>Elaboraciones</summary>
+            <p>Consulta, edita, duplica, crea variantes y añade elaboraciones a la sesión actual.</p>
+            <p>Las fichas nuevas o modificadas son propuestas documentales hasta su comprobación real en obrador.</p>
+          </details>
+          <details class="usage-guide-item">
+            <summary>Ingredientes</summary>
+            <p>Revisa productos, familias, unidades, costes, zonas de almacenamiento y alérgenos asociados.</p>
+            <p>La eliminación se bloquea si el ingrediente está en uso en recetas o fórmulas.</p>
+          </details>
+          <details class="usage-guide-item">
+            <summary>Validación de obrador</summary>
+            <p>Registra comprobaciones reales de fichas. La validación no es automática: corresponde al profesorado tras prueba de producción.</p>
+          </details>
+          <details class="usage-guide-item">
+            <summary>Sistema y copias</summary>
+            <p>Gestiona guardado local, descarga/importación de SQLite, combinación de datos, diagnóstico y exportaciones técnicas.</p>
+            <ul>
+              <li><b>Trabajar aquí:</b> guardado local automático.</li>
+              <li><b>Copia seria:</b> descarga SQLite.</li>
+              <li><b>Móvil ↔ PC:</b> descarga SQLite e importa en otro dispositivo.</li>
+              <li><b>Combinar sin machacar:</b> importa y combina datos.</li>
+            </ul>
+          </details>
+          <details class="usage-guide-item">
+            <summary>Exportaciones técnicas</summary>
+            <p>Excel, CSV y JSON sirven para auditoría, respaldo o revisión externa. No son formatos maestros de edición.</p>
+          </details>
+          <details class="usage-guide-item">
+            <summary>Consejos de seguridad</summary>
+            <ul>
+              <li>Abre siempre con servidor local, no con <code>file://</code>.</li>
+              <li>Descarga una copia SQLite después de cambios importantes.</li>
+              <li>Antes de importar una base, conserva una copia de la actual.</li>
+              <li>Usa <code>reset_local_data.html</code> solo para limpiar datos locales del navegador.</li>
+            </ul>
+          </details>
+        </div>
+      </details>
+    </section>
+  `;
+}
 function selectionSummaryHtml() {
     if (!state.selection.length)
-        return `<div class="empty">Todavía no hay elaboraciones. Entra en <b>Imprimir / exportar</b> y añádelas de forma rápida.</div>`;
+        return `<div class="empty">Todavía no hay elaboraciones. Entra en <b>Sesión actual</b> y añádelas de forma rápida.</div>`;
     return `<div class="summary-list">${state.selection.slice(0, 6).map(item => `
     <div class="summary-row"><div><b>${escapeHtml(item.name)}</b><br><small>${escapeHtml(selectionQuantityLabel(item))}</small></div><button class="btn ghost" data-remove-selection="${item.uid}">Quitar</button></div>
   `).join('')}${state.selection.length > 6 ? `<small class="muted">...y ${state.selection.length - 6} más.</small>` : ''}</div>`;
@@ -216,7 +312,7 @@ function recipesView() {
     const visible = limitedRows(rows, state.recipeVisibleLimit);
     return `
     <section class="card">
-      <div class="panel-title"><div><h2>Elaboraciones</h2><p>Catálogo técnico. Puedes ver, crear, editar o añadir a la práctica actual.</p></div><div class="actions"><button class="btn primary" data-new-recipe>Nueva elaboración</button><button class="btn accent" data-nav="imprimir">Ir a imprimir / exportar</button></div></div>
+      <div class="panel-title"><div><h2>Elaboraciones</h2><p>Catálogo técnico. Puedes ver, crear, editar o añadir a la práctica actual.</p></div><div class="actions"><button class="btn primary" data-new-recipe>Nueva elaboración</button><button class="btn accent" data-nav="imprimir">Ir a sesión actual</button></div></div>
       <div class="toolbar"><div class="search"><input class="input" id="recipeSearch" value="${escapeAttr(state.recipeSearch)}" placeholder="Buscar elaboración..." /></div><span class="pill" id="recipeSearchCount">${resultCountText(rows.length, visible.length, 'resultados')}</span></div>
       <div id="recipeLimitControls">${listLimitControlsHtml('recipe', rows.length, visible.length, !!state.recipeSearch, 'elaboraciones')}</div>
       <div class="catalog-grid" id="recipeResults">${visible.map(recipeCard).join('')}</div>
@@ -231,11 +327,12 @@ function recipeCard(recipe) {
     const releaseStatus = recipe.release_status || 'pendiente';
     const blocked = releaseStatus === 'no_apta' || releaseStatus === 'bloqueante';
     return `<article class="recipe-card ${blocked ? 'recipe-card-blocked' : ''}">
-    <header><div><b>${escapeHtml(recipe.name)}</b><br><small class="muted">${escapeHtml(recipe.category_label || recipe.source_type)} · ${escapeHtml(recipe.family || 'Sin familia')}</small></div><div class="pill-stack"><span class="pill">${recipe.source_type === 'bakery' ? 'Panadería' : 'Cocina'}</span><span class="pill ${blocked ? 'danger-pill' : ''}">${escapeHtml(releaseStatusLabel(releaseStatus))}</span></div></header>
+    <header><div><b>${escapeHtml(recipe.name)}</b><br><small class="muted">${escapeHtml(recipe.category_label || recipe.source_type)} · ${escapeHtml(recipe.family || 'Sin familia')}</small></div><div class="pill-stack"><span class="pill">${recipe.source_type === 'bakery' ? 'Panadería' : 'Cocina'}</span><span class="pill ${blocked ? 'danger-pill' : ''}">${escapeHtml(releaseStatusLabel(releaseStatus))}</span><span class="pill ${validationStatusClass(recipeWorkshopStatus(recipe))}">${escapeHtml(validationStatusLabel(recipeWorkshopStatus(recipe)))}</span></div></header>
     <small class="muted">${escapeHtml(recipe.base_label || defaultQuantityLabel(recipe))}</small>
     ${blocked ? '<small class="warn">Ficha no apta para uso docente final. Puede revisarse, pero no se añade a práctica como ficha normal.</small>' : ''}
     <div class="actions">
       <button class="btn" data-preview-recipe="${recipe.uid}">Vista previa</button>
+      <button class="btn" data-register-workshop="${recipe.uid}">Obrador</button>
       <button class="btn" data-edit-recipe="${recipe.uid}">Editar</button>
       ${blocked ? '<button class="btn" disabled>No apta</button>' : `<button class="btn primary" data-add-recipe="${recipe.uid}">Añadir</button>`}
     </div>
@@ -255,7 +352,7 @@ function ingredientsView() {
 }
 function ingredientResultsHtml(rows) {
     const visible = limitedRows(rows, state.ingredientVisibleLimit);
-    return `<div class="table-wrap"><table><thead><tr><th>Ingrediente</th><th>Familia</th><th>Grupo pedido</th><th>Zona</th><th>Coste</th><th></th></tr></thead><tbody>
+    return `<div class="table-wrap ingredient-table-wrap"><table class="responsive-table ingredient-table"><thead><tr><th>Ingrediente</th><th>Familia</th><th>Grupo pedido</th><th>Zona</th><th>Coste</th><th></th></tr></thead><tbody>
     ${visible.map(ingredientRowHtml).join('')}
   </tbody></table></div>`;
 }
@@ -276,7 +373,7 @@ function listLimitControlsHtml(kind, total, shown, filtered, noun) {
     return `<div class="list-limit-actions actions"><button class="btn" data-list-more="${kind}">Mostrar más</button><button class="btn" data-list-all="${kind}">${allLabel}</button><small class="muted">${escapeHtml(resultCountText(t, s, noun || 'resultados'))}</small></div>`;
 }
 function ingredientRowHtml(i) {
-    return `<tr><td><b>${escapeHtml(i.name)}</b><br><small class="muted">${escapeHtml(i.id)}</small></td><td>${escapeHtml(i.family || '')}</td><td>${escapeHtml(i.order_group || '')}</td><td>${escapeHtml(i.storage_zone || '')}</td><td>${money(i.cost_per_base_unit_after_waste)} / ${escapeHtml(i.base_unit || '')}</td><td><button class="btn" data-edit-ingredient="${i.id}">Editar</button></td></tr>`;
+    return `<tr><td data-label="Ingrediente"><b>${escapeHtml(i.name)}</b><br><small class="muted">${escapeHtml(i.id)}</small></td><td data-label="Familia">${escapeHtml(i.family || '')}</td><td data-label="Grupo pedido">${escapeHtml(i.order_group || '')}</td><td data-label="Zona">${escapeHtml(i.storage_zone || '')}</td><td data-label="Coste">${money(i.cost_per_base_unit_after_waste)} / ${escapeHtml(i.base_unit || '')}</td><td data-label="Acción"><button class="btn" data-edit-ingredient="${i.id}">Editar</button></td></tr>`;
 }
 function printSearchResultsHtml(results) {
     return results.map(r => {
@@ -308,6 +405,24 @@ function bindDynamicActionButtons(scope = document) {
             return;
         b.dataset.bound = '1';
         b.addEventListener('click', () => showIngredientEditor(b.dataset.editIngredient));
+    });
+    scope.querySelectorAll('[data-register-workshop]').forEach(b => {
+        if (b.dataset.bound === '1')
+            return;
+        b.dataset.bound = '1';
+        b.addEventListener('click', () => showWorkshopValidationDialog(b.dataset.registerWorkshop));
+    });
+    scope.querySelectorAll('[data-workshop-history]').forEach(b => {
+        if (b.dataset.bound === '1')
+            return;
+        b.dataset.bound = '1';
+        b.addEventListener('click', () => showWorkshopHistory(b.dataset.workshopHistory));
+    });
+    scope.querySelectorAll('[data-workshop-acta]').forEach(b => {
+        if (b.dataset.bound === '1')
+            return;
+        b.dataset.bound = '1';
+        b.addEventListener('click', () => generateWorkshopValidationActa(b.dataset.workshopActa));
     });
 }
 function updateRecipeSearchResults() {
@@ -368,7 +483,7 @@ function printWorkspaceView() {
     return `
     <section class="workspace">
       <div class="card">
-        <div class="panel-title"><div><h2>Imprimir / exportar</h2><p>Busca elaboraciones, añade cantidades y genera el documento desde esta pantalla.</p></div></div>
+        <div class="panel-title"><div><h2>Sesión actual</h2><p>Busca elaboraciones, ajusta cantidades y genera fichas o pedido consolidado.</p></div></div>
         <div class="toolbar"><input class="input" id="printSearch" value="${escapeAttr(state.printSearch)}" placeholder="Buscar elaboración para añadir..." /><span class="pill" id="printSearchCount">${resultCountText(allResults.length, results.length, 'resultados')}</span></div>
         <div id="printLimitControls">${listLimitControlsHtml('print', allResults.length, results.length, !!state.printSearch, 'resultados')}</div>
         <div class="actions print-bulk-actions"><button class="btn" data-add-all-catalog>Añadir todo el catálogo</button></div>
@@ -640,7 +755,7 @@ function sheetOptionsHtml() {
     const o = state.printOptions;
     const mode = subrecipeMode();
     return `<div class="option-row"><label><input type="checkbox" id="includeCosts" ${o.includeCosts ? 'checked' : ''}/> Mostrar costes</label><small class="muted">El perfil marca el valor inicial; este check lo sobrescribe para esta exportación.</small></div>
-    <div class="option-row"><b>Subelaboraciones culinarias</b><div class="radio-row" style="margin-top:10px">
+    <div class="option-row subrecipe-option-block"><b>Subelaboraciones culinarias</b><div class="radio-row subrecipe-radio-row" style="margin-top:10px">
       ${subrecipeRadio('none', 'No desarrollar', 'Muestra solo las líneas directas de la ficha.')}
       ${subrecipeRadio('ingredients', 'Desglosar ingredientes', 'Expande ingredientes recursivos para ficha, coste y pedido.')}
       ${subrecipeRadio('sheets', 'Incluir subfichas', 'Imprime fichas hijas con rendimiento, proceso y APPCC.')}
@@ -652,10 +767,10 @@ function subrecipeMode() {
     return state.printOptions.subrecipeMode || (state.printOptions.expandSubrecipes ? 'ingredients' : 'none');
 }
 function subrecipeRadio(value, title, help) {
-    return `<label class="radio-card"><input type="radio" name="subrecipeMode" value="${value}" ${subrecipeMode() === value ? 'checked' : ''}/><b>${title}</b><br><small class="muted">${help}</small></label>`;
+    return `<label class="radio-card subrecipe-radio-card"><input type="radio" name="subrecipeMode" value="${value}" ${subrecipeMode() === value ? 'checked' : ''}/><span class="radio-card-body"><b>${title}</b><small class="muted">${help}</small></span></label>`;
 }
 function sessionsView() {
-    return `<section class="card"><div class="panel-title"><div><h2>Sesiones</h2><p>Sesiones guardadas en la copia SQLite activa.</p></div><button class="btn accent" data-save-session>Guardar práctica actual</button></div>
+    return `<section class="card"><div class="panel-title"><div><h2>Sesiones guardadas</h2><p>Sesiones guardadas en la copia SQLite activa.</p></div><button class="btn accent" data-save-session>Guardar práctica actual</button></div>
     ${state.sessions.length ? `<div class="summary-list">${state.sessions.map(s => `<div class="summary-row"><div><b>${escapeHtml(s.title || 'Sesión sin título')}</b><br><small>${escapeHtml(s.practice_date || '')} · ${Number(s.item_count || 0)} elaboraciones</small></div><div class="actions"><button class="btn" data-load-session="${s.id}">Usar de nuevo</button><button class="btn" data-print-session="${s.id}">Imprimir</button><button class="btn danger" data-delete-session="${s.id}">Eliminar</button></div></div>`).join('')}</div>` : `<div class="empty">No hay sesiones guardadas. Prepara una selección y pulsa <b>Guardar sesión</b>.</div>`}
   </section>`;
 }
@@ -667,6 +782,189 @@ function migrationStatusText() {
         return rows.length ? `${rows[0].version} · ${rows.length} registro(s)` : 'sin migraciones registradas';
     }
     catch (error) { return 'no disponible'; }
+}
+
+
+function validationStatusLabel(status) {
+    const map = { no_validada: 'Pendiente de obrador', probada_con_ajustes: 'Probada con ajustes', requiere_revision: 'Requiere revisión', validada: 'Validada en obrador', tested: 'Probada', pending: 'Pendiente' };
+    return map[status] || status || 'Pendiente de obrador';
+}
+function validationStatusClass(status) {
+    if (status === 'validada') return 'green';
+    if (status === 'probada_con_ajustes') return 'warning';
+    if (status === 'requiere_revision') return 'danger-pill';
+    return '';
+}
+function recipeWorkshopStatus(recipe) { return recipe.workshop_validation_status || 'no_validada'; }
+function validationRows() {
+    const q = normalize(state.validationSearch);
+    return state.recipes.filter(r => {
+        const status = recipeWorkshopStatus(r);
+        const statusOk = state.validationStatusFilter === 'all' || status === state.validationStatusFilter;
+        if (!statusOk) return false;
+        if (!q) return true;
+        return normalize([r.name, r.family, r.subfamily, r.category_label, status].join(' ')).includes(q);
+    });
+}
+function latestWorkshopValidation(recipe) {
+    return db.query(`SELECT * FROM workshop_validation_log WHERE recipe_type=$type AND recipe_id=$id ORDER BY COALESCE(validation_date,created_at) DESC, created_at DESC LIMIT 1`, { $type: recipe.source_type, $id: recipe.source_id })[0] || null;
+}
+function validationView() {
+    const rows = validationRows();
+    const counts = { all: state.recipes.length, no_validada: 0, probada_con_ajustes: 0, requiere_revision: 0, validada: 0 };
+    state.recipes.forEach(r => { const s = recipeWorkshopStatus(r); counts[s] = (counts[s] || 0) + 1; });
+    return `<section class="card validation-page"><div class="panel-title"><div><h2>Validación de obrador</h2><p>Registra pruebas reales, rendimientos medidos e incidencias. Esta pantalla no sustituye la prueba docente: la documenta.</p></div><span class="pill green">2.1</span></div>
+      <div class="notice"><b>Regla documental:</b> una ficha solo puede considerarse validada cuando existe prueba real registrada con fecha, responsable y resultado. Si se modifica una ficha validada, pasa a <b>requiere revisión</b>.</div>
+      <div class="toolbar"><input class="input" id="validationSearch" value="${escapeAttr(state.validationSearch)}" placeholder="Buscar elaboración para registrar prueba..." />
+        <select id="validationStatusFilter"><option value="all" ${state.validationStatusFilter==='all'?'selected':''}>Todos (${counts.all})</option><option value="no_validada" ${state.validationStatusFilter==='no_validada'?'selected':''}>Pendientes (${counts.no_validada||0})</option><option value="probada_con_ajustes" ${state.validationStatusFilter==='probada_con_ajustes'?'selected':''}>Probadas con ajustes (${counts.probada_con_ajustes||0})</option><option value="requiere_revision" ${state.validationStatusFilter==='requiere_revision'?'selected':''}>Requieren revisión (${counts.requiere_revision||0})</option><option value="validada" ${state.validationStatusFilter==='validada'?'selected':''}>Validadas (${counts.validada||0})</option></select>
+        <span class="pill">${rows.length} resultado(s)</span></div>
+      <div class="validation-list">${rows.slice(0, 120).map(validationRecipeRow).join('') || '<div class="empty">No hay elaboraciones con ese filtro.</div>'}</div>
+      ${rows.length > 120 ? '<p class="footer-note">Mostrando 120 resultados. Usa búsqueda o filtro para acotar.</p>' : ''}
+    </section>`;
+}
+function validationRecipeRow(recipe) {
+    const st = recipeWorkshopStatus(recipe);
+    const last = latestWorkshopValidation(recipe);
+    const lastText = last ? `${escapeHtml(last.validation_date || last.created_at || '')} · ${escapeHtml(last.responsible || 'sin responsable')} · ${escapeHtml(validationStatusLabel(last.result_status))}` : 'sin prueba registrada';
+    return `<article class="validation-row"><div><b>${escapeHtml(recipe.name)}</b><br><small class="muted">${escapeHtml(recipe.category_label || recipe.source_type)} · ${escapeHtml(recipe.family || '')}</small><br><small>Última prueba: ${lastText}</small></div><div class="validation-actions"><span class="pill ${validationStatusClass(st)}">${escapeHtml(validationStatusLabel(st))}</span><button class="btn primary" data-register-workshop="${escapeAttr(recipe.uid)}">Registrar prueba</button><button class="btn" data-workshop-history="${escapeAttr(recipe.uid)}">Histórico</button><button class="btn" data-workshop-acta="${escapeAttr(recipe.uid)}">Acta</button></div></article>`;
+}
+function showWorkshopValidationDialog(uid) {
+    const recipe = state.recipes.find(r => r.uid === uid);
+    if (!recipe) return;
+    const today = new Date().toISOString().slice(0, 10);
+    const teaching = state.printOptions.teaching || {};
+    const isBakery = recipe.source_type === 'bakery';
+    const planned = defaultQuantity(recipe);
+    const commonPlanned = selectionQuantityLabel(Object.assign({ sourceType: recipe.source_type }, planned));
+    showModal('Registrar prueba de obrador', `<div class="workshop-dialog"><div class="notice"><b>${escapeHtml(recipe.name)}</b><br><small>${escapeHtml(recipe.category_label || '')} · previsto base: ${escapeHtml(commonPlanned)}</small></div>
+      <div class="grid two"><label>Fecha de prueba<input class="input" id="wvDate" type="date" value="${escapeAttr(today)}" /></label><label>Responsable<input class="input" id="wvResponsible" value="${escapeAttr(teaching.responsible || '')}" /></label>
+      <label>Grupo / módulo<input class="input" id="wvGroupModule" value="${escapeAttr([teaching.group, teaching.module].filter(Boolean).join(' · '))}" /></label><label>Práctica<input class="input" id="wvPractice" value="${escapeAttr(teaching.title || '')}" /></label>
+      <label>Resultado<select id="wvResult"><option value="no_validada">No validada</option><option value="probada_con_ajustes">Probada con ajustes</option><option value="requiere_revision">Requiere revisión</option><option value="validada">Validada</option></select></label>
+      <label>Cantidad prevista<input class="input" id="wvPlannedQty" value="${escapeAttr(commonPlanned)}" /></label><label>Cantidad real obtenida<input class="input" id="wvActualQty" placeholder="Ej.: 10 raciones, 1,2 kg, 20 piezas" /></label></div>
+      ${isBakery ? workshopBakeryFieldsHtml() : workshopOrdinaryFieldsHtml()}
+      <label>Ajustes necesarios<textarea id="wvAdjustments" placeholder="Indicar cambios de fórmula, proceso, cocción, conservación o presentación."></textarea></label>
+      <label>Observaciones docentes<textarea id="wvNotes" placeholder="Resultado, incidencias, textura, aceptación, organización del aula-taller..."></textarea></label>
+      <div class="actions" style="margin-top:14px"><button class="btn" id="cancelWorkshopValidation">Cancelar</button><button class="btn primary" id="saveWorkshopValidation">Registrar prueba</button></div><div id="wvError" class="notice warning hidden" style="margin-top:12px"></div></div>`);
+    document.getElementById('cancelWorkshopValidation')?.addEventListener('click', closeModal);
+    document.getElementById('saveWorkshopValidation')?.addEventListener('click', async () => {
+        try { saveWorkshopValidation(recipe); await loadCatalogs(); scheduleDbAutosave('Prueba de obrador registrada'); closeModal(); state.page = 'validacion'; render(); }
+        catch (error) { workshopValidationError(error); }
+    });
+}
+function workshopOrdinaryFieldsHtml() {
+    return `<details open><summary><b>Datos reales de rendimiento</b></summary><div class="grid two"><label>Raciones previstas<input class="input" id="wvPlannedServings" type="number" step="0.01" /></label><label>Raciones reales<input class="input" id="wvActualServings" type="number" step="0.01" /></label><label>Peso/cantidad total real<input class="input" id="wvActualYield" placeholder="Ej.: 1,2 kg / 1 l" /></label><label>Merma observada<input class="input" id="wvLoss" placeholder="Ej.: 8 % / sin medir" /></label></div></details>`;
+}
+function workshopBakeryFieldsHtml() {
+    return `<details open><summary><b>Datos reales de formulación / panadería</b></summary><div class="grid two"><label>Harina objetivo g<input class="input" id="wvTargetFlour" type="number" step="1" /></label><label>Harina real g<input class="input" id="wvActualFlour" type="number" step="1" /></label><label>Masa cruda prevista g<input class="input" id="wvPlannedRaw" type="number" step="1" /></label><label>Masa cruda real g<input class="input" id="wvActualRaw" type="number" step="1" /></label><label>Piezas previstas<input class="input" id="wvPlannedPieces" type="number" step="1" /></label><label>Piezas reales<input class="input" id="wvActualPieces" type="number" step="1" /></label><label>Peso crudo/pieza g<input class="input" id="wvRawPiece" type="number" step="0.1" /></label><label>Peso cocido/pieza g<input class="input" id="wvBakedPiece" type="number" step="0.1" /></label><label>Merma real %<input class="input" id="wvBakeLoss" type="number" step="0.1" /></label><label>TFM ºC<input class="input" id="wvTfm" type="number" step="0.1" /></label><label>Fermentación real min<input class="input" id="wvFermentationTime" type="number" step="1" /></label><label>Temperatura fermentación ºC<input class="input" id="wvFermentationTemp" type="number" step="0.1" /></label><label style="grid-column:1/-1">Cocción / miga / corteza / greñado<textarea id="wvBakingNotes"></textarea></label></div></details>`;
+}
+function workshopValidationError(error) {
+    const box = document.getElementById('wvError');
+    const msg = error && error.message ? error.message : String(error || 'Error al registrar la prueba.');
+    if (box) { box.classList.remove('hidden'); box.textContent = msg; }
+    else alert(msg);
+}
+function saveWorkshopValidation(recipe) {
+    const status = document.getElementById('wvResult')?.value || 'no_validada';
+    const date = document.getElementById('wvDate')?.value || '';
+    const responsible = (document.getElementById('wvResponsible')?.value || '').trim();
+    const planned = (document.getElementById('wvPlannedQty')?.value || '').trim();
+    const actual = (document.getElementById('wvActualQty')?.value || '').trim();
+    if (!date) throw new Error('Indica la fecha de prueba.');
+    if (!responsible) throw new Error('Indica el responsable docente de la prueba.');
+    if (status === 'validada' && !actual) throw new Error('Para validar debes registrar una cantidad o rendimiento real obtenido.');
+    const isBakery = recipe.source_type === 'bakery';
+    const validationData = collectWorkshopValidationData(isBakery);
+    const id = uniqueId('WVL', `${recipe.source_type}-${recipe.source_id}-${status}`);
+    withTransaction(() => {
+        db.exec(`INSERT INTO workshop_validation_log (id,recipe_type,recipe_id,recipe_name_snapshot,validation_date,responsible,group_module,practice_title,result_status,planned_quantity,actual_quantity,planned_yield,actual_yield,planned_servings,actual_servings,planned_pieces,actual_pieces,target_flour_g,actual_flour_g,planned_raw_dough_g,actual_raw_dough_g,raw_piece_weight_g,baked_piece_weight_g,bake_loss_pct,tfm_c,fermentation_time_min,fermentation_temp_c,baking_notes,adjustments_required,notes,validation_data_json,created_at)
+          VALUES ($id,$type,$recipe,$name,$date,$responsible,$group,$practice,$status,$planned,$actual,$plannedYield,$actualYield,$plannedServings,$actualServings,$plannedPieces,$actualPieces,$targetFlour,$actualFlour,$plannedRaw,$actualRaw,$rawPiece,$bakedPiece,$bakeLoss,$tfm,$fermTime,$fermTemp,$bakingNotes,$adjustments,$notes,$json,CURRENT_TIMESTAMP)`, {
+            $id: id, $type: recipe.source_type, $recipe: recipe.source_id, $name: recipe.name, $date: date, $responsible: responsible,
+            $group: document.getElementById('wvGroupModule')?.value || '', $practice: document.getElementById('wvPractice')?.value || '', $status: status,
+            $planned: planned, $actual: actual, $plannedYield: planned, $actualYield: actual,
+            $plannedServings: validationData.plannedServings, $actualServings: validationData.actualServings,
+            $plannedPieces: validationData.plannedPieces, $actualPieces: validationData.actualPieces,
+            $targetFlour: validationData.targetFlour, $actualFlour: validationData.actualFlour,
+            $plannedRaw: validationData.plannedRaw, $actualRaw: validationData.actualRaw,
+            $rawPiece: validationData.rawPiece, $bakedPiece: validationData.bakedPiece, $bakeLoss: validationData.bakeLoss,
+            $tfm: validationData.tfm, $fermTime: validationData.fermentationTime, $fermTemp: validationData.fermentationTemp,
+            $bakingNotes: validationData.bakingNotes, $adjustments: document.getElementById('wvAdjustments')?.value || '',
+            $notes: document.getElementById('wvNotes')?.value || '', $json: JSON.stringify(validationData)
+        });
+        const table = recipe.source_type === 'bakery' ? 'bakery_recipes' : 'culinary_recipes';
+        const release = status === 'validada' ? 'validada' : 'pendiente';
+        db.exec(`UPDATE ${table} SET workshop_validation_status=$status, release_status=$release, documentary_status='contrastada', updated_at=CURRENT_TIMESTAMP WHERE id=$id`, { $status: status, $release: release, $id: recipe.source_id });
+        if (recipe.source_type === 'bakery') {
+            const yieldStatus = workshopStatusToBakeryYieldStatus(status);
+            db.exec(`UPDATE bakery_recipes SET yield_status=$yield WHERE id=$id`, { $yield: yieldStatus, $id: recipe.source_id });
+        }
+    });
+}
+function workshopStatusToBakeryYieldStatus(status) {
+    if (status === 'validada') return 'validated';
+    if (status === 'probada_con_ajustes') return 'tested';
+    return 'pending';
+}
+function collectWorkshopValidationData(isBakery) {
+    const num = id => nullableNumber(document.getElementById(id)?.value);
+    const text = id => (document.getElementById(id)?.value || '').trim();
+    return {
+        plannedServings: num('wvPlannedServings'), actualServings: num('wvActualServings'), actualYield: text('wvActualYield'), loss: text('wvLoss'),
+        targetFlour: isBakery ? num('wvTargetFlour') : null, actualFlour: isBakery ? num('wvActualFlour') : null,
+        plannedRaw: isBakery ? num('wvPlannedRaw') : null, actualRaw: isBakery ? num('wvActualRaw') : null,
+        plannedPieces: isBakery ? num('wvPlannedPieces') : null, actualPieces: isBakery ? num('wvActualPieces') : null,
+        rawPiece: isBakery ? num('wvRawPiece') : null, bakedPiece: isBakery ? num('wvBakedPiece') : null,
+        bakeLoss: isBakery ? num('wvBakeLoss') : null, tfm: isBakery ? num('wvTfm') : null,
+        fermentationTime: isBakery ? num('wvFermentationTime') : null, fermentationTemp: isBakery ? num('wvFermentationTemp') : null,
+        bakingNotes: isBakery ? text('wvBakingNotes') : ''
+    };
+}
+function showWorkshopHistory(uid) {
+    const recipe = state.recipes.find(r => r.uid === uid);
+    if (!recipe) return;
+    const rows = db.query(`SELECT * FROM workshop_validation_log WHERE recipe_type=$type AND recipe_id=$id ORDER BY COALESCE(validation_date,created_at) DESC, created_at DESC`, { $type: recipe.source_type, $id: recipe.source_id });
+    const html = rows.length ? `<div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Resultado</th><th>Responsable</th><th>Cantidad real</th><th>Notas</th></tr></thead><tbody>${rows.map(r => `<tr><td>${escapeHtml(r.validation_date || r.created_at || '')}</td><td>${escapeHtml(validationStatusLabel(r.result_status))}</td><td>${escapeHtml(r.responsible || '')}</td><td>${escapeHtml(r.actual_quantity || r.actual_yield || '')}</td><td>${escapeHtml([r.adjustments_required, r.notes].filter(Boolean).join(' · '))}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">No hay pruebas registradas para esta ficha.</div>';
+    showModal('Histórico de obrador', `<div class="notice"><b>${escapeHtml(recipe.name)}</b><br><small>${escapeHtml(validationStatusLabel(recipeWorkshopStatus(recipe)))}</small></div>${html}`);
+}
+
+function generateWorkshopValidationActa(uid) {
+    const recipe = state.recipes.find(r => r.uid === uid);
+    if (!recipe) return;
+    const row = latestWorkshopValidation(recipe);
+    if (!row) return alert('No hay pruebas de obrador registradas para generar acta.');
+    const extra = [];
+    if (recipe.source_type === 'bakery') {
+        if (row.target_flour_g) extra.push(['Harina objetivo', `${formatQty(row.target_flour_g)} g`]);
+        if (row.actual_flour_g) extra.push(['Harina real', `${formatQty(row.actual_flour_g)} g`]);
+        if (row.planned_raw_dough_g) extra.push(['Masa cruda prevista', `${formatQty(row.planned_raw_dough_g)} g`]);
+        if (row.actual_raw_dough_g) extra.push(['Masa cruda real', `${formatQty(row.actual_raw_dough_g)} g`]);
+        if (row.planned_pieces) extra.push(['Piezas previstas', formatQty(row.planned_pieces)]);
+        if (row.actual_pieces) extra.push(['Piezas reales', formatQty(row.actual_pieces)]);
+        if (row.raw_piece_weight_g) extra.push(['Peso crudo/pieza', `${formatQty(row.raw_piece_weight_g)} g`]);
+        if (row.baked_piece_weight_g) extra.push(['Peso cocido/pieza', `${formatQty(row.baked_piece_weight_g)} g`]);
+        if (row.bake_loss_pct) extra.push(['Merma real', `${formatQty(row.bake_loss_pct)} %`]);
+        if (row.tfm_c) extra.push(['TFM', `${formatQty(row.tfm_c)} ºC`]);
+        if (row.fermentation_time_min) extra.push(['Fermentación real', `${formatQty(row.fermentation_time_min)} min`]);
+        if (row.fermentation_temp_c) extra.push(['Temperatura fermentación', `${formatQty(row.fermentation_temp_c)} ºC`]);
+        if (row.baking_notes) extra.push(['Cocción / miga / corteza', row.baking_notes]);
+    }
+    const rows = [
+        ['Elaboración', recipe.name], ['Tipo', recipe.category_label || recipe.source_type], ['Fecha de prueba', row.validation_date || ''], ['Responsable', row.responsible || ''], ['Grupo / módulo', row.group_module || ''], ['Práctica', row.practice_title || ''], ['Resultado', validationStatusLabel(row.result_status)], ['Cantidad prevista', row.planned_quantity || row.planned_yield || ''], ['Cantidad real', row.actual_quantity || row.actual_yield || ''], ['Ajustes necesarios', row.adjustments_required || ''], ['Observaciones', row.notes || '']
+    ].concat(extra);
+    const table = `<table><tbody>${rows.map(([k,v]) => `<tr><th>${escapeHtml(k)}</th><td>${escapeHtml(v || '')}</td></tr>`).join('')}</tbody></table>`;
+    const html = printDocumentShell(`<section class="doc-cover"><h1>Acta de prueba de obrador</h1><p>Registro docente de prueba real. No sustituye el manual APPCC del centro ni otros registros oficiales.</p></section><section class="print-sheet">${table}<p class="footer-note">Firma/responsable docente: ________________________________</p></section>`, `Acta_obrador_${safeFilenamePart(recipe.name)}_${getIsoTimestampForFilename(new Date())}`);
+    presentPrintDocument(html, 'Acta de prueba de obrador', `ObradORR_Acta_obrador_${safeFilenamePart(recipe.name)}_${getIsoTimestampForFilename(new Date())}`);
+}
+
+function invalidateWorkshopValidationIfNeeded(recipe, reason) {
+    if (!recipe || !recipe.source_type || !recipe.source_id) return;
+    const table = recipe.source_type === 'bakery' ? 'bakery_recipes' : 'culinary_recipes';
+    const row = db.query(`SELECT release_status,workshop_validation_status,name FROM ${table} WHERE id=$id`, { $id: recipe.source_id })[0];
+    if (!row || (row.release_status !== 'validada' && row.workshop_validation_status !== 'validada')) return;
+    const id = uniqueId('WVL-REV', recipe.source_id);
+    db.exec(`UPDATE ${table} SET release_status='pendiente', workshop_validation_status='requiere_revision', updated_at=CURRENT_TIMESTAMP WHERE id=$id`, { $id: recipe.source_id });
+    if (recipe.source_type === 'bakery') db.exec(`UPDATE bakery_recipes SET yield_status='pending' WHERE id=$id`, { $id: recipe.source_id });
+    db.exec(`INSERT INTO workshop_validation_log (id,recipe_type,recipe_id,recipe_name_snapshot,validation_date,responsible,result_status,notes,adjustments_required,created_at)
+       VALUES ($log,$type,$recipe,$name,date('now'),'sistema','requiere_revision',$notes,$adj,CURRENT_TIMESTAMP)`, { $log: id, $type: recipe.source_type, $recipe: recipe.source_id, $name: row.name || recipe.name, $notes: 'Ficha validada modificada. La validación previa queda pendiente de confirmación.', $adj: reason || 'Cambio sustancial de ficha' });
 }
 
 function systemView() {
@@ -706,17 +1004,23 @@ function systemView() {
           <div class="safe-action"><b>Guardar recuperación local</b><small>Actualiza la copia IndexedDB de este navegador. No sustituye a una copia SQLite descargada.</small><button class="btn accent" data-save-local-db>Guardar en este dispositivo</button></div>
         </div>
       </div>
-      <div class="system-actions-group"><h3>Importación</h3><p>Para conservar tu trabajo, usa primero la combinación segura. La sustitución completa queda separada como acción delicada.</p>
+      <div class="system-actions-group"><h3>Cambiar base activa</h3><p>Acciones delicadas: sustituyen la base activa. Descarga una copia antes si quieres conservar tu trabajo.</p>
+        <div class="data-actions-safe">
+          <div class="safe-action danger-zone"><b>Usar base incluida en la aplicación</b><small>Vuelve al catálogo docente incluido en este paquete de ObradORR.</small><button class="btn danger" data-restore-public-db>Usar base incluida</button></div>
+          <div class="safe-action danger-zone"><b>Crear base nueva limpia</b><small>Inicia una base ObradORR compatible, sin elaboraciones ni ingredientes propios. Conserva estructura, unidades, alérgenos y tablas necesarias.</small><button class="btn danger" data-create-blank-db>Crear base nueva limpia</button></div>
+          <div class="safe-action danger-zone"><b>Restaurar SQLite sustituyendo</b><small>Carga una base externa compatible y sustituye la base activa tras validación.</small><button class="btn" data-load-db>Cargar copia SQLite sustituyendo</button></div>
+        </div>
+      </div>
+      <div class="system-actions-group"><h3>Combinar datos</h3><p>Para traer fichas o variantes sin machacar tu base, usa la combinación segura.</p>
         <div class="data-actions-safe">
           <div class="safe-action"><b>Importar y combinar SQLite</b><small>Modo staging: no sobreescribe. Los duplicados se omiten y los conflictos se crean como variantes.</small><button class="btn primary" data-merge-db>Importar y combinar SQLite</button></div>
-          <div class="safe-action danger-zone"><b>Restaurar / sustituir manualmente</b><small>Acción delicada: sustituye la base activa o vuelve a la base incluida. Descarga una copia antes.</small><div class="actions"><button class="btn" data-load-db>Cargar copia SQLite sustituyendo</button><button class="btn danger" data-restore-public-db>Volver a base incluida</button></div></div>
         </div>
       </div>
       <div class="notice warning system-mobile-note"><b>Uso móvil/Termux</b><br><small>Android puede cerrar pestañas en segundo plano. Al terminar una sesión importante, descarga una copia SQLite. La recuperación local depende del navegador, dispositivo y puerto actual.</small></div>
     </div>
-    <div class="card"><h2>Sesiones, exportaciones y diagnóstico</h2><p>Accesos de mantenimiento diario. El diagnóstico avanzado queda plegado para no saturar la vista.</p>
-      <div class="system-actions-group"><h3>Sesiones y selección</h3><div class="actions"><button class="btn" data-download-selection>Exportar selección JSON</button><button class="btn" data-clear-local-ui>Limpiar selección y sesiones locales</button><button class="btn" data-diagnostics>Ver diagnóstico</button></div></div>
-      <div class="safe-action"><b>Exportaciones externas</b><small>Formatos abiertos para aula virtual, Excel/LibreOffice, respaldo y práctica.</small><div class="actions"><button class="btn primary" data-export-practice-zip>Práctica ZIP</button><button class="btn" data-export-order-csv>Pedido CSV</button><button class="btn" data-export-order-tsv>Pedido TSV</button><button class="btn" data-export-practice-json>Práctica JSON</button><button class="btn" data-export-technical-json>JSON técnico</button><button class="btn" data-export-catalog-csv>Catálogo CSV</button><button class="btn" data-export-ingredients-csv>Ingredientes CSV</button><button class="btn" data-export-allergens-csv>Alérgenos CSV</button></div></div>
+    <div class="card"><h2>Sesiones guardadas, exportaciones y diagnóstico</h2><p>Accesos de mantenimiento diario. El diagnóstico avanzado queda plegado para no saturar la vista.</p>
+      <div class="system-actions-group"><h3>Sesiones guardadas y selección</h3><div class="actions"><button class="btn" data-download-selection>Exportar selección JSON</button><button class="btn" data-clear-local-ui>Limpiar selección y sesiones locales</button><button class="btn" data-diagnostics>Ver diagnóstico</button><button class="btn" data-validate-active-db>Validar base activa</button></div></div>
+      <details class="safe-action technical-exports"><summary><b>Exportaciones técnicas</b><small>Salidas para auditoría, respaldo o revisión externa. No son formatos maestros de edición.</small></summary><div class="actions export-grid"><button class="btn" data-export-practice-zip>Práctica ZIP</button><button class="btn" data-export-order-csv>Pedido CSV</button><button class="btn" data-export-order-tsv>Pedido TSV</button><button class="btn" data-export-practice-json>Práctica JSON</button><button class="btn" data-export-technical-json>JSON técnico</button><button class="btn" data-export-catalog-excel>Catálogo Excel</button><button class="btn" data-export-catalog-csv>Catálogo CSV</button><button class="btn" data-export-ingredients-csv>Ingredientes CSV</button><button class="btn" data-export-allergens-csv>Alérgenos CSV</button></div></details>
       <div class="system-origin-note"><b>Origen de esta instalación</b><br><code>${escapeHtml(location.href.split('?')[0])}</code><small>Para pasar datos entre puertos, dispositivos o navegadores, usa copia SQLite descargada/importada.</small></div>
       <div id="diagnosticsBox" class="notice hidden" style="margin-top:14px"></div>
     </div>
@@ -725,6 +1029,22 @@ function systemView() {
 function bindCurrentView() {
     var _a, _b, _c, _d, _e, _f, _g, _h;
     document.querySelectorAll('[data-nav]').forEach(b => b.addEventListener('click', () => { state.page = b.dataset.nav; render(); }));
+    const statusToggle = document.querySelector('[data-status-toggle]');
+    if (statusToggle)
+        statusToggle.addEventListener('click', () => {
+            statusToggle.classList.toggle('expanded');
+            if (statusToggle.classList.contains('expanded'))
+                setTimeout(() => statusToggle.classList.remove('expanded'), 5000);
+        });
+    const validationSearch = document.getElementById('validationSearch');
+    if (validationSearch)
+        validationSearch.addEventListener('input', e => { state.validationSearch = e.target.value; render(); });
+    const validationStatusFilter = document.getElementById('validationStatusFilter');
+    if (validationStatusFilter)
+        validationStatusFilter.addEventListener('change', e => { state.validationStatusFilter = e.target.value; render(); });
+    document.querySelectorAll('[data-register-workshop]').forEach(b => b.addEventListener('click', () => showWorkshopValidationDialog(b.dataset.registerWorkshop)));
+    document.querySelectorAll('[data-workshop-history]').forEach(b => b.addEventListener('click', () => showWorkshopHistory(b.dataset.workshopHistory)));
+    document.querySelectorAll('[data-workshop-acta]').forEach(b => b.addEventListener('click', () => generateWorkshopValidationActa(b.dataset.workshopActa)));
     const recipeSearch = document.getElementById('recipeSearch');
     if (recipeSearch)
         recipeSearch.addEventListener('input', e => { state.recipeSearch = e.target.value; state.recipeVisibleLimit = LIST_PAGE_SIZE; updateRecipeSearchResults(); });
@@ -766,6 +1086,8 @@ function bindCurrentView() {
     document.querySelectorAll('[data-load-db]').forEach(b => b.addEventListener('click', triggerLoadDb));
     (_d = document.querySelector('[data-save-local-db]')) === null || _d === void 0 ? void 0 : _d.addEventListener('click', () => saveWorkingCopy('Guardado manual', { silent: false, rerender: false }));
     (_e = document.querySelector('[data-restore-public-db]')) === null || _e === void 0 ? void 0 : _e.addEventListener('click', restorePublicDatabase);
+    document.querySelector('[data-create-blank-db]')?.addEventListener('click', createBlankDatabase);
+    document.querySelector('[data-validate-active-db]')?.addEventListener('click', validateActiveDatabaseForUser);
     (_f = document.querySelector('[data-clear-local-ui]')) === null || _f === void 0 ? void 0 : _f.addEventListener('click', clearLocalUiData);
     (_g = document.querySelector('[data-diagnostics]')) === null || _g === void 0 ? void 0 : _g.addEventListener('click', showDiagnostics);
     const dbInput = document.getElementById('dbFileInput');
@@ -779,6 +1101,7 @@ function bindCurrentView() {
     document.querySelector('[data-export-order-tsv]')?.addEventListener('click', exportCurrentOrderTsv);
     document.querySelector('[data-export-practice-json]')?.addEventListener('click', exportCurrentPracticeJson);
     document.querySelector('[data-export-technical-json]')?.addEventListener('click', exportTechnicalJson);
+    document.querySelector('[data-export-catalog-excel]')?.addEventListener('click', exportCatalogExcel);
     document.querySelector('[data-export-catalog-csv]')?.addEventListener('click', exportCatalogCsv);
     document.querySelector('[data-export-ingredients-csv]')?.addEventListener('click', exportIngredientsCsv);
     document.querySelector('[data-export-allergens-csv]')?.addEventListener('click', exportAllergensCsv);
@@ -960,27 +1283,6 @@ function confirmQuantityDialog(item, editing) {
     render();
 }
 
-function addRecipeToSelection(uid) {
-    const recipe = state.recipes.find(r => r.uid === uid);
-    if (!recipe)
-        return;
-    const releaseStatus = recipe.release_status || '';
-    if (releaseStatus === 'no_apta' || releaseStatus === 'bloqueante') {
-        alert('Ficha no apta para uso docente final. No se añade a la práctica como ficha normal.');
-        return;
-    }
-    const existing = state.selection.find(i => i.uid === uid);
-    if (existing) {
-        existing.qty = round2(Number(existing.qty || 0) + Number(defaultQuantity(recipe).qty || 1));
-    }
-    else {
-        state.selection.push(makeSelectionItem(uid));
-    }
-    saveSelection();
-    scheduleDbAutosave('Selección actualizada');
-    state.page = 'imprimir';
-    render();
-}
 function removeSelection(uid) {
     state.selection = state.selection.filter(i => i.uid !== uid);
     saveSelection();
@@ -1172,20 +1474,25 @@ async function showRecipePreview(uid) {
     showModal('Vista previa', html);
 }
 function showRecipeCreator() {
-    var _a, _b;
-    showModal('Nueva elaboración', `<div class="grid two">
-    <button class="quick-card" id="newCulinaryRecipe"><span>🍲</span><b>Ficha de cocina</b><small class="muted">Elaboración culinaria con raciones, proceso y APPCC.</small></button>
-    <button class="quick-card" id="newBakeryRecipe"><span>🥐</span><b>Formulación de panadería/pastelería</b><small class="muted">Fórmula panadera por porcentaje de harina.</small></button>
-  </div>`);
-    (_a = document.getElementById('newCulinaryRecipe')) === null || _a === void 0 ? void 0 : _a.addEventListener('click', () => createEmptyRecipe('culinary'));
-    (_b = document.getElementById('newBakeryRecipe')) === null || _b === void 0 ? void 0 : _b.addEventListener('click', () => createEmptyRecipe('bakery'));
+    showModal('Nueva elaboración', `<div class="notice"><b>Alta controlada:</b> no se crea ninguna ficha hasta pulsar <b>Crear y editar</b>. Puedes cancelar sin dejar registros de prueba.</div><div class="grid two">
+    <label>Tipo de ficha<select id="newRecipeKind"><option value="culinary">Ficha de cocina / pastelería</option><option value="bakery">Formulación de panadería / pastelería</option></select></label>
+    <label>Nombre<input class="input" id="newRecipeName" placeholder="Ejemplo: Crema pastelera base" autocomplete="off" /></label>
+  </div><div class="actions"><button class="btn primary" id="confirmCreateRecipe">Crear y editar</button><button class="btn" id="cancelCreateRecipe">Cancelar</button></div>`);
+    document.getElementById('cancelCreateRecipe')?.addEventListener('click', closeModal);
+    const nameInput = document.getElementById('newRecipeName');
+    if (nameInput)
+        nameInput.focus();
+    document.getElementById('confirmCreateRecipe')?.addEventListener('click', () => {
+        const kind = document.getElementById('newRecipeKind')?.value || 'culinary';
+        const recipeName = String(document.getElementById('newRecipeName')?.value || '').trim();
+        createEmptyRecipe(kind, recipeName);
+    });
 }
-async function createEmptyRecipe(kind) {
+async function createEmptyRecipe(kind, recipeName) {
     try {
-        const name = prompt(kind === 'bakery' ? 'Nombre de la nueva formulación' : 'Nombre de la nueva elaboración');
-        const recipeName = String(name || '').trim();
+        recipeName = String(recipeName || '').trim();
         if (!recipeName)
-            return;
+            return showFormError('Indica un nombre antes de crear la ficha.');
         const duplicate = findRecipeNameDuplicate(recipeName);
         if (duplicate)
             return showFormError(duplicateRecipeMessage(duplicate, recipeName));
@@ -1222,7 +1529,7 @@ function showRecipeEditor(uid) {
     const familyOptions = familyOptionsHtml(recipe.source_type, detail.family_id);
     const subfamilyOptions = subfamilyOptionsHtml(detail.family_id, detail.subfamily_id);
     const form = recipe.source_type === 'culinary' ? culinaryRecipeForm(detail, familyOptions, subfamilyOptions) : bakeryRecipeForm(detail, familyOptions, subfamilyOptions);
-    showModal('Editar elaboración', `<div class="editor-toolbar-rc1 actions"><button class="btn primary" id="saveRecipeEdit">Guardar y cerrar</button><button class="btn accent" id="saveRecipeEditStay">Guardar y seguir</button><button class="btn" id="saveEditorDraftLocal">Guardar borrador local</button><button class="btn" id="previewRecipeEdit">Vista previa</button><button class="btn" id="preflightRecipeButton">Preflight</button><button class="btn" id="duplicateRecipeButton">Duplicar</button><button class="btn" id="variantRecipeButton">Crear variante</button></div><div class="editor-layout editor-layout-rc1">
+    showModal('Editar elaboración', `<div class="editor-toolbar-rc1 actions"><button class="btn primary" id="saveRecipeEdit">Guardar y cerrar</button><button class="btn accent" id="saveRecipeEditStay">Guardar y seguir</button><button class="btn" id="saveEditorDraftLocal">Guardar borrador local</button><button class="btn" id="previewRecipeEdit">Vista previa</button><button class="btn" id="preflightRecipeButton">Preflight</button><button class="btn" id="duplicateRecipeButton">Duplicar</button><button class="btn" id="variantRecipeButton">Crear variante</button><button class="btn danger" id="deleteRecipeButton">Eliminar elaboración</button></div><div class="notice editor-help-note"><b>Edición cómoda:</b> los campos largos crecen con el texto. En móvil, las tablas de edición se convierten en tarjetas para evitar columnas comprimidas.</div><div class="editor-layout editor-layout-rc1">
     <section class="card-flat editor-main-section"><h3>Datos de ficha</h3>${safeEditorImpactHtml(recipe)}${form}<p class="footer-note">Edición local-first: los cambios se validan y se guardan en la SQLite activa. El borrador local protege texto largo antes de guardar.</p></section>
     <section class="card-flat"><details open><summary><b>${recipe.source_type === 'bakery' ? 'Fórmula panadera' : 'Ingredientes de la ficha'}</b></summary>${recipeLinesEditor(recipe)}<div class="actions"><button class="btn primary" id="saveRecipeLines">Guardar líneas</button><button class="btn accent" id="addRecipeLine">Añadir línea</button></div></details>${recipe.source_type === 'bakery' ? bakeryPrefermentEditor(recipe) + bakeryProcessStepsEditor(recipe) + bakeryComponentsEditor(recipe) : ''}</section>
   </div>`);
@@ -1316,7 +1623,7 @@ function setupEditorComfort(recipe) {
     const toolbar = document.querySelector('.editor-toolbar-rc1');
     if (toolbar && draft && draft.values) {
         toolbar.insertAdjacentHTML('beforeend', `<button class="btn" id="restoreEditorDraft">Restaurar borrador local</button><button class="btn danger" id="discardEditorDraft">Descartar borrador</button>`);
-        document.getElementById('restoreEditorDraft')?.addEventListener('click', () => { restoreEditorMainValues(draft.values); alert('Borrador local restaurado. Revisa y guarda la ficha.'); });
+        document.getElementById('restoreEditorDraft')?.addEventListener('click', () => { restoreEditorMainValues(draft.values); setupAdaptiveTextareas(modalRoot); alert('Borrador local restaurado. Revisa y guarda la ficha.'); });
         document.getElementById('discardEditorDraft')?.addEventListener('click', () => { localStorage.removeItem(key); alert('Borrador local descartado.'); closeModal(); showRecipeEditor(recipe.uid); });
     }
     const saveDraft = () => saveJson(key, { savedAt: new Date().toISOString(), values: editorMainValues() });
@@ -1332,8 +1639,24 @@ function setupEditorComfort(recipe) {
     document.getElementById('duplicateRecipeButton')?.addEventListener('click', async () => duplicateRecipe(recipe, false));
     document.getElementById('variantRecipeButton')?.addEventListener('click', async () => duplicateRecipe(recipe, true));
     document.getElementById('preflightRecipeButton')?.addEventListener('click', () => showRecipePreflight(recipe));
+    document.getElementById('deleteRecipeButton')?.addEventListener('click', () => deleteRecipeSafely(recipe));
 }
 function debounce(fn, ms) { let t = null; return function(){ clearTimeout(t); t = setTimeout(fn, ms); }; }
+
+function autoResizeTextarea(el) {
+    if (!el || el.tagName !== 'TEXTAREA') return;
+    el.style.height = 'auto';
+    const min = el.classList.contains('line-note') ? 70 : el.classList.contains('textarea-large') ? 170 : 110;
+    el.style.height = `${Math.max(min, el.scrollHeight + 2)}px`;
+}
+function setupAdaptiveTextareas(root = document) {
+    root.querySelectorAll('textarea').forEach(el => {
+        autoResizeTextarea(el);
+        if (el.dataset.autosizeBound === '1') return;
+        el.dataset.autosizeBound = '1';
+        el.addEventListener('input', () => autoResizeTextarea(el));
+    });
+}
 function duplicateRecipe(recipe, asVariant) {
     try {
         const base = state.recipes.find(r => r.uid === recipe.uid) || recipe;
@@ -1421,9 +1744,10 @@ function bakeryRecipeForm(detail, familyOptions, subfamilyOptions) {
     <label>Piezas base<input class="input" id="recipeBasePieces" type="number" step="0.01" value="${escapeAttr(detail.base_pieces || '')}" /></label>
     <label>Pérdida cocción %<input class="input" id="recipeBakingLoss" type="number" step="0.01" value="${escapeAttr(detail.baking_loss_pct || 0)}" /></label>
     <label>Temperatura masa ºC<input class="input" id="recipeDoughTemp" type="number" step="0.1" value="${escapeAttr(detail.target_dough_temp_c || '')}" /></label>
-    <label style="grid-column:1/-1">Proceso / fermentación<textarea id="recipeProcess">${escapeHtml(detail.fermentation_notes || '')}</textarea></label>
-    <label style="grid-column:1/-1">Notas<textarea id="recipeNotes">${escapeHtml(detail.notes || '')}</textarea></label>
-  </div>`;
+    </div></details><details open><summary><b>Proceso y observaciones</b></summary><div class="grid two">
+    <label style="grid-column:1/-1">Proceso / fermentación<textarea class="textarea-large" id="recipeProcess">${escapeHtml(detail.fermentation_notes || '')}</textarea></label>
+    <label style="grid-column:1/-1">Notas<textarea class="textarea-large" id="recipeNotes">${escapeHtml(detail.notes || '')}</textarea></label>
+  </div></details></div>`;
 }
 function saveRecipeMain(recipe) {
     var _a;
@@ -1445,6 +1769,7 @@ function saveRecipeMain(recipe) {
         $notes: ((_a = document.getElementById('recipeNotes')) === null || _a === void 0 ? void 0 : _a.value.trim()) || ''
     };
     withTransaction(() => {
+        invalidateWorkshopValidationIfNeeded(recipe, 'Datos principales, proceso, APPCC o rendimiento modificados');
         if (recipe.source_type === 'culinary') {
             db.exec(`UPDATE culinary_recipes SET name=$name,family_id=$family,subfamily_id=$subfamily,status=$status,base_servings=$servings,serving_weight_g=$servingWeight,yield_quantity=$yieldQty,default_production_mode=$mode,process=$process,appcc_notes=$appcc,service_notes=$service,notes=$notes,updated_at=CURRENT_TIMESTAMP WHERE id=$id`, Object.assign(Object.assign({}, common), { $servings: positiveNumber(document.getElementById('recipeServings').value, 1), $servingWeight: nullableNumber(document.getElementById('recipeServingWeight').value), $yieldQty: nullableNumber(document.getElementById('recipeYieldQty').value), $mode: document.getElementById('recipeProdMode').value || 'servings', $appcc: document.getElementById('recipeAppcc').value.trim(), $service: document.getElementById('recipeService').value.trim() }));
         }
@@ -1464,14 +1789,14 @@ function culinaryLinesEditor(recipe) {
     FROM culinary_recipe_lines l LEFT JOIN ingredients i ON i.id=l.ingredient_id LEFT JOIN culinary_recipes s ON s.id=l.subrecipe_id LEFT JOIN units u ON u.id=l.unit_id WHERE l.recipe_id=$id ORDER BY l.sort_order,l.id`, { $id: recipe.source_id });
     if (!rows.length)
         return '<div class="empty">Todavía no hay líneas. Añade ingredientes para que la ficha pueda imprimirse.</div>';
-    return `<div class="table-wrap"><table><thead><tr><th>Ingrediente/subelaboración</th><th>Cantidad</th><th>Unidad</th><th>Nota</th><th></th></tr></thead><tbody>${rows.map(r => `<tr><td><b>${escapeHtml(r.label || '')}</b><br><small>${escapeHtml(r.line_type || '')}</small></td><td><input class="input compact" data-line-qty="${escapeAttr(r.id)}" value="${escapeAttr(r.quantity || 0)}" type="number" step="0.0001" /></td><td><select data-line-unit="${escapeAttr(r.id)}">${unitOptionsHtml(r.unit_id)}</select></td><td><input class="input" data-line-note="${escapeAttr(r.id)}" value="${escapeAttr(r.technical_note || '')}" /></td><td><button class="btn danger" data-delete-line="${escapeAttr(r.id)}">Eliminar</button></td></tr>`).join('')}</tbody></table></div>`;
+    return `<div class="table-wrap editor-table-wrap"><table class="responsive-table editor-line-table"><thead><tr><th>Ingrediente/subelaboración</th><th>Cantidad</th><th>Unidad</th><th>Nota</th><th></th></tr></thead><tbody>${rows.map(r => `<tr><td data-label="Ingrediente/subelaboración"><b>${escapeHtml(r.label || '')}</b><br><small>${escapeHtml(r.line_type || '')}</small></td><td data-label="Cantidad"><input class="input compact" data-line-qty="${escapeAttr(r.id)}" value="${escapeAttr(r.quantity || 0)}" type="number" step="0.0001" /></td><td data-label="Unidad"><select data-line-unit="${escapeAttr(r.id)}">${unitOptionsHtml(r.unit_id)}</select></td><td data-label="Nota"><textarea class="line-note" data-line-note="${escapeAttr(r.id)}">${escapeHtml(r.technical_note || '')}</textarea></td><td data-label="Acción"><button class="btn danger" data-delete-line="${escapeAttr(r.id)}">Eliminar</button></td></tr>`).join('')}</tbody></table></div>`;
 }
 function bakeryLinesEditor(recipe) {
     const rows = db.query(`SELECT l.id,l.ingredient_id,l.bakery_role,l.baker_pct,l.preferment_pct,l.final_dough_pct,l.unit_id,l.technical_note,l.sort_order,l.line_group,l.calculation_base,l.quantity_value,l.quantity_unit_id,l.include_in_dough,i.name AS ingredient_name,u.symbol AS unit_symbol
     FROM bakery_recipe_lines l JOIN ingredients i ON i.id=l.ingredient_id LEFT JOIN units u ON u.id=l.unit_id WHERE l.recipe_id=$id ORDER BY l.sort_order,l.id`, { $id: recipe.source_id });
     if (!rows.length)
         return '<div class="empty">Todavía no hay fórmula. Añade ingredientes con porcentaje panadero o acabados directos.</div>';
-    return `<div class="notice" style="margin-bottom:10px">Las fórmulas separan masa/prefermento de acabados directos. Los componentes elaborados van en una sección independiente.</div><div class="table-wrap"><table><thead><tr><th>Ingrediente</th><th>Grupo</th><th>Cálculo</th><th>% total</th><th>% pref.</th><th>% final</th><th>Valor</th><th>Unidad</th><th>Rol</th><th>Nota</th><th></th></tr></thead><tbody>${rows.map(r => `<tr><td><b>${escapeHtml(r.ingredient_name || '')}</b></td><td><select data-line-group="${escapeAttr(r.id)}">${lineGroupOptionsHtml(r.line_group)}</select></td><td><select data-line-calc="${escapeAttr(r.id)}">${calcBaseOptionsHtml(r.calculation_base)}</select></td><td><input class="input compact" data-line-pct="${escapeAttr(r.id)}" value="${escapeAttr(r.baker_pct || 0)}" type="number" step="0.01" /></td><td><input class="input compact" data-line-pref="${escapeAttr(r.id)}" value="${escapeAttr(r.preferment_pct || 0)}" type="number" step="0.01" /></td><td><input class="input compact" data-line-final="${escapeAttr(r.id)}" value="${escapeAttr(r.final_dough_pct || 0)}" type="number" step="0.01" /></td><td><input class="input compact" data-line-qvalue="${escapeAttr(r.id)}" value="${escapeAttr(r.quantity_value || 0)}" type="number" step="0.01" /></td><td><select data-line-qunit="${escapeAttr(r.id)}">${unitOptionsHtml(r.quantity_unit_id || r.unit_id || 'UNIT_G')}</select></td><td><input class="input compact" data-line-role="${escapeAttr(r.id)}" value="${escapeAttr(r.bakery_role || 'other')}" /></td><td><input class="input" data-line-note="${escapeAttr(r.id)}" value="${escapeAttr(r.technical_note || '')}" /></td><td><button class="btn danger" data-delete-line="${escapeAttr(r.id)}">Eliminar</button></td></tr>`).join('')}</tbody></table></div>`;
+    return `<div class="notice" style="margin-bottom:10px">Las fórmulas separan masa/prefermento de acabados directos. Los componentes elaborados van en una sección independiente.</div><div class="table-wrap editor-table-wrap"><table class="responsive-table editor-line-table bakery-line-table"><thead><tr><th>Ingrediente</th><th>Grupo</th><th>Cálculo</th><th>% total</th><th>% pref.</th><th>% final</th><th>Valor</th><th>Unidad</th><th>Rol</th><th>Nota</th><th></th></tr></thead><tbody>${rows.map(r => `<tr><td data-label="Ingrediente"><b>${escapeHtml(r.ingredient_name || '')}</b></td><td data-label="Grupo"><select data-line-group="${escapeAttr(r.id)}">${lineGroupOptionsHtml(r.line_group)}</select></td><td data-label="Cálculo"><select data-line-calc="${escapeAttr(r.id)}">${calcBaseOptionsHtml(r.calculation_base)}</select></td><td data-label="% total"><input class="input compact" data-line-pct="${escapeAttr(r.id)}" value="${escapeAttr(r.baker_pct || 0)}" type="number" step="0.01" /></td><td data-label="% pref."><input class="input compact" data-line-pref="${escapeAttr(r.id)}" value="${escapeAttr(r.preferment_pct || 0)}" type="number" step="0.01" /></td><td data-label="% final"><input class="input compact" data-line-final="${escapeAttr(r.id)}" value="${escapeAttr(r.final_dough_pct || 0)}" type="number" step="0.01" /></td><td data-label="Valor"><input class="input compact" data-line-qvalue="${escapeAttr(r.id)}" value="${escapeAttr(r.quantity_value || 0)}" type="number" step="0.01" /></td><td data-label="Unidad"><select data-line-qunit="${escapeAttr(r.id)}">${unitOptionsHtml(r.quantity_unit_id || r.unit_id || 'UNIT_G')}</select></td><td data-label="Rol"><input class="input compact" data-line-role="${escapeAttr(r.id)}" value="${escapeAttr(r.bakery_role || 'other')}" /></td><td data-label="Nota"><textarea class="line-note" data-line-note="${escapeAttr(r.id)}">${escapeHtml(r.technical_note || '')}</textarea></td><td data-label="Acción"><button class="btn danger" data-delete-line="${escapeAttr(r.id)}">Eliminar</button></td></tr>`).join('')}</tbody></table></div>`;
 }
 function lineGroupOptionsHtml(selected = 'dough') {
     const groups = [['dough', 'Masa'], ['filling', 'Relleno directo'], ['topping', 'Cobertura directa'], ['decoration', 'Decoración / acabado directo'], ['other', 'Otro']];
@@ -1490,6 +1815,7 @@ function bakeryComponentsEditor(recipe) {
 }
 function saveRecipeLines(recipe) {
     withTransaction(() => {
+        invalidateWorkshopValidationIfNeeded(recipe, 'Datos principales, proceso, APPCC o rendimiento modificados');
         if (recipe.source_type === 'culinary') {
             document.querySelectorAll('[data-line-qty]').forEach(el => {
                 var _a, _b;
@@ -1623,22 +1949,25 @@ function saveBakeryPreferment(recipe) {
         throw new Error('La harina prefermentada debe estar entre 0 y 100 %.');
     if (mode === 'preferment_total_pct' && (totalPct === null || totalPct < 0))
         throw new Error('El porcentaje de prefermento total debe ser positivo.');
-    withTransaction(() => db.exec(`INSERT INTO bakery_preferments (recipe_id,preferment_type,calculation_mode,hydration_pct,flour_prefermented_pct,preferment_total_pct,yeast_pct,yeast_pct_base,time_hours,temperature_c,notes,active,updated_at)
+    withTransaction(() => {
+        invalidateWorkshopValidationIfNeeded(recipe, 'Prefermento modificado');
+        db.exec(`INSERT INTO bakery_preferments (recipe_id,preferment_type,calculation_mode,hydration_pct,flour_prefermented_pct,preferment_total_pct,yeast_pct,yeast_pct_base,time_hours,temperature_c,notes,active,updated_at)
       VALUES ($id,$type,$mode,$hydration,$flourPct,$totalPct,$yeast,$yeastBase,$time,$temp,$notes,$active,CURRENT_TIMESTAMP)
       ON CONFLICT(recipe_id) DO UPDATE SET preferment_type=excluded.preferment_type,calculation_mode=excluded.calculation_mode,hydration_pct=excluded.hydration_pct,flour_prefermented_pct=excluded.flour_prefermented_pct,preferment_total_pct=excluded.preferment_total_pct,yeast_pct=excluded.yeast_pct,yeast_pct_base=excluded.yeast_pct_base,time_hours=excluded.time_hours,temperature_c=excluded.temperature_c,notes=excluded.notes,active=excluded.active,updated_at=CURRENT_TIMESTAMP`, {
-        $id: recipe.source_id,
-        $type: document.getElementById('prefType').value.trim() || 'Prefermento',
-        $mode: mode,
-        $hydration: hydration,
-        $flourPct: flourPct,
-        $totalPct: totalPct,
-        $yeast: yeast,
-        $yeastBase: document.getElementById('prefYeastBase').value || 'total_flour',
-        $time: nullableNumber(document.getElementById('prefTime').value),
-        $temp: nullableNumber(document.getElementById('prefTemp').value),
-        $notes: document.getElementById('prefNotes').value.trim(),
-        $active: Number(document.getElementById('prefActive').value || 0)
-    }));
+            $id: recipe.source_id,
+            $type: document.getElementById('prefType').value.trim() || 'Prefermento',
+            $mode: mode,
+            $hydration: hydration,
+            $flourPct: flourPct,
+            $totalPct: totalPct,
+            $yeast: yeast,
+            $yeastBase: document.getElementById('prefYeastBase').value || 'total_flour',
+            $time: nullableNumber(document.getElementById('prefTime').value),
+            $temp: nullableNumber(document.getElementById('prefTemp').value),
+            $notes: document.getElementById('prefNotes').value.trim(),
+            $active: Number(document.getElementById('prefActive').value || 0)
+        });
+    });
 }
 function bakeryProcessStepsEditor(recipe) {
     const rows = db.query('SELECT * FROM bakery_process_steps WHERE recipe_id=$id ORDER BY block, step_number, id', { $id: recipe.source_id });
@@ -1651,6 +1980,7 @@ function processBlockOptionsHtml(selected = 'other') {
 }
 function saveBakerySteps(recipe) {
     withTransaction(() => {
+        invalidateWorkshopValidationIfNeeded(recipe, 'Pasos técnicos de proceso modificados');
         document.querySelectorAll('[data-step-number]').forEach(el => {
             const id = el.dataset.stepNumber;
             const stepNumber = Math.max(1, Math.round(Number(el.value || 1)));
@@ -1683,7 +2013,7 @@ function showAddBakeryStep(recipe) {
         const instruction = document.getElementById('newStepInstruction').value.trim();
         if (!instruction)
             return showFormError('El paso necesita instrucción.');
-        withTransaction(() => db.exec(`INSERT INTO bakery_process_steps (id,recipe_id,block,step_number,instruction,duration_min,temperature_c,notes)
+        withTransaction(() => { invalidateWorkshopValidationIfNeeded(recipe, 'Paso técnico añadido'); db.exec(`INSERT INTO bakery_process_steps (id,recipe_id,block,step_number,instruction,duration_min,temperature_c,notes)
         VALUES ($id,$recipe,$block,$step,$instruction,$duration,$temp,$notes)`, {
             $id: uniqueId('BST', recipe.source_id),
             $recipe: recipe.source_id,
@@ -1693,7 +2023,7 @@ function showAddBakeryStep(recipe) {
             $duration: nullableNumber(document.getElementById('newStepDuration').value),
             $temp: nullableNumber(document.getElementById('newStepTemp').value),
             $notes: document.getElementById('newStepNotes').value.trim()
-        }));
+        }); });
         await loadCatalogs();
         scheduleDbAutosave('Paso técnico añadido');
         closeModal();
@@ -1703,7 +2033,9 @@ function showAddBakeryStep(recipe) {
 function deleteBakeryStep(id) {
     if (!confirm('¿Eliminar este paso técnico?'))
         return false;
-    withTransaction(() => db.exec('DELETE FROM bakery_process_steps WHERE id=$id', { $id: id }));
+    const row = db.query('SELECT recipe_id FROM bakery_process_steps WHERE id=$id', { $id: id })[0];
+    const recipe = row ? state.recipes.find(r => r.source_type === 'bakery' && r.source_id === row.recipe_id) : null;
+    withTransaction(() => { if (recipe) invalidateWorkshopValidationIfNeeded(recipe, 'Paso técnico eliminado'); db.exec('DELETE FROM bakery_process_steps WHERE id=$id', { $id: id }); });
     return true;
 }
 function showAddBakeryComponent(recipe) {
@@ -1730,8 +2062,8 @@ function showAddBakeryComponent(recipe) {
         const sort = Number(db.value('SELECT COALESCE(MAX(sort_order),0)+10 FROM bakery_recipe_components WHERE bakery_recipe_id=$id', { $id: recipe.source_id }) || 10);
         if (type === 'bakery' && wouldCreateBakeryComponentCycle(recipe.source_id, compId))
             return showFormError('Ese componente crearía un ciclo entre formulaciones panaderas.');
-        withTransaction(() => db.exec(`INSERT INTO bakery_recipe_components (id,bakery_recipe_id,component_culinary_recipe_id,component_bakery_recipe_id,usage_role,component_status,calculation_base,quantity_value,unit_id,technical_note,sort_order,include_in_order,include_in_cost)
-      VALUES ($id,$recipe,$culinary,$bakery,$role,$status,$calc,$qty,$unit,$note,$sort,$order,$cost)`, { $id: id, $recipe: recipe.source_id, $culinary: type === 'culinary' ? compId : null, $bakery: type === 'bakery' ? compId : null, $role: document.getElementById('componentRole').value || 'other', $status: document.getElementById('componentStatus').value || 'required', $calc: document.getElementById('componentCalc').value || 'fixed', $qty: qty, $unit: document.getElementById('componentUnit').value || 'UNIT_KG', $note: document.getElementById('componentNote').value || '', $sort: sort, $order: (document.getElementById('componentStatus').value || 'required') === 'required' ? 1 : 0, $cost: (document.getElementById('componentStatus').value || 'required') === 'required' ? 1 : 0 }));
+        withTransaction(() => { invalidateWorkshopValidationIfNeeded(recipe, 'Componente elaborado añadido'); db.exec(`INSERT INTO bakery_recipe_components (id,bakery_recipe_id,component_culinary_recipe_id,component_bakery_recipe_id,usage_role,component_status,calculation_base,quantity_value,unit_id,technical_note,sort_order,include_in_order,include_in_cost)
+      VALUES ($id,$recipe,$culinary,$bakery,$role,$status,$calc,$qty,$unit,$note,$sort,$order,$cost)`, { $id: id, $recipe: recipe.source_id, $culinary: type === 'culinary' ? compId : null, $bakery: type === 'bakery' ? compId : null, $role: document.getElementById('componentRole').value || 'other', $status: document.getElementById('componentStatus').value || 'required', $calc: document.getElementById('componentCalc').value || 'fixed', $qty: qty, $unit: document.getElementById('componentUnit').value || 'UNIT_KG', $note: document.getElementById('componentNote').value || '', $sort: sort, $order: (document.getElementById('componentStatus').value || 'required') === 'required' ? 1 : 0, $cost: (document.getElementById('componentStatus').value || 'required') === 'required' ? 1 : 0 }); });
         await loadCatalogs();
         scheduleDbAutosave('Componente añadido');
         closeModal();
@@ -1747,7 +2079,9 @@ function deleteBakeryComponent(id) {
         return false;
     if (!window.ObradORRSafeEditor && !confirm('¿Eliminar este componente elaborado?'))
         return false;
-    withTransaction(() => db.exec('DELETE FROM bakery_recipe_components WHERE id=$id', { $id: id }));
+    const row = db.query('SELECT bakery_recipe_id FROM bakery_recipe_components WHERE id=$id', { $id: id })[0];
+    const recipe = row ? state.recipes.find(r => r.source_type === 'bakery' && r.source_id === row.bakery_recipe_id) : null;
+    withTransaction(() => { if (recipe) invalidateWorkshopValidationIfNeeded(recipe, 'Componente elaborado eliminado'); db.exec('DELETE FROM bakery_recipe_components WHERE id=$id', { $id: id }); });
     return true;
 }
 function showEditBakeryComponent(recipe, id) {
@@ -1786,7 +2120,7 @@ function showEditBakeryComponent(recipe, id) {
             return showFormError('Revisa el componente y la cantidad.');
         if (type2 === 'bakery' && wouldCreateBakeryComponentCycle(recipe.source_id, compId, id))
             return showFormError('Ese componente crearía un ciclo entre formulaciones panaderas.');
-        withTransaction(() => db.exec(`UPDATE bakery_recipe_components SET component_culinary_recipe_id=$culinary,component_bakery_recipe_id=$bakery,usage_role=$role,component_status=$status,calculation_base=$calc,quantity_value=$qty,unit_id=$unit,technical_note=$note,include_in_order=$order,include_in_cost=$cost,updated_at=CURRENT_TIMESTAMP WHERE id=$id`, {
+        withTransaction(() => { invalidateWorkshopValidationIfNeeded(recipe, 'Componente elaborado modificado'); db.exec(`UPDATE bakery_recipe_components SET component_culinary_recipe_id=$culinary,component_bakery_recipe_id=$bakery,usage_role=$role,component_status=$status,calculation_base=$calc,quantity_value=$qty,unit_id=$unit,technical_note=$note,include_in_order=$order,include_in_cost=$cost,updated_at=CURRENT_TIMESTAMP WHERE id=$id`, {
             $id: id,
             $culinary: type2 === 'culinary' ? compId : null,
             $bakery: type2 === 'bakery' ? compId : null,
@@ -1798,7 +2132,7 @@ function showEditBakeryComponent(recipe, id) {
             $note: document.getElementById('componentNote').value || '',
             $order: (document.getElementById('componentStatus').value || 'required') === 'required' ? Number(document.getElementById('componentOrder').value || 1) : 0,
             $cost: (document.getElementById('componentStatus').value || 'required') === 'required' ? Number(document.getElementById('componentCost').value || 1) : 0
-        }));
+        }); });
         await loadCatalogs();
         scheduleDbAutosave('Componente editado');
         closeModal();
@@ -1824,35 +2158,125 @@ function wouldCreateBakeryComponentCycle(parentId, childId, ignoreComponentId = 
     }
     return false;
 }
+
+function usageCount(sql, params) {
+    const row = db.query(sql, params)[0];
+    return Number((row && (row.n !== undefined ? row.n : Object.values(row)[0])) || 0);
+}
+function usageSummaryText(usages) {
+    return usages.filter(u => u.count > 0).map(u => `${u.label}: ${u.count}`).join(' · ');
+}
+function recipeUsageReport(recipe) {
+    const id = recipe.source_id;
+    if (recipe.source_type === 'culinary') {
+        return [
+            { label: 'usada como subreceta culinaria', count: usageCount('SELECT COUNT(*) AS n FROM culinary_recipe_lines WHERE subrecipe_id=$id', { $id: id }) },
+            { label: 'usada como componente panadero/pastelero', count: usageCount('SELECT COUNT(*) AS n FROM bakery_recipe_components WHERE component_culinary_recipe_id=$id AND COALESCE(active,1)=1', { $id: id }) },
+            { label: 'presente en la sesión actual', count: usageCount("SELECT COUNT(*) AS n FROM work_selection_items WHERE item_type='culinary' AND culinary_recipe_id=$id", { $id: id }) },
+            { label: 'presente en sesiones guardadas', count: usageCount("SELECT COUNT(*) AS n FROM class_session_items WHERE item_type='culinary' AND culinary_recipe_id=$id", { $id: id }) }
+        ];
+    }
+    return [
+        { label: 'usada como componente panadero/pastelero', count: usageCount('SELECT COUNT(*) AS n FROM bakery_recipe_components WHERE component_bakery_recipe_id=$id AND COALESCE(active,1)=1', { $id: id }) },
+        { label: 'presente en la sesión actual', count: usageCount("SELECT COUNT(*) AS n FROM work_selection_items WHERE item_type='bakery' AND bakery_recipe_id=$id", { $id: id }) },
+        { label: 'presente en sesiones guardadas', count: usageCount("SELECT COUNT(*) AS n FROM class_session_items WHERE item_type='bakery' AND bakery_recipe_id=$id", { $id: id }) }
+    ];
+}
+async function deleteRecipeSafely(recipe) {
+    try {
+        const usages = recipeUsageReport(recipe).filter(u => u.count > 0);
+        if (usages.length) {
+            return showFormError(`No se puede eliminar esta elaboración porque está en uso. Retira primero sus vínculos: ${usageSummaryText(usages)}.`);
+        }
+        const label = `${recipe.name || recipe.source_id}`;
+        if (!confirm(`¿Eliminar definitivamente la elaboración “${label}”?\n\nSolo se eliminará porque no está en uso en otras fichas, componentes, sesión actual ni sesiones guardadas.`))
+            return false;
+        withTransaction(() => {
+            db.exec('DELETE FROM recipe_documentary_reviews WHERE recipe_kind=$kind AND recipe_id=$id', { $kind: recipe.source_type, $id: recipe.source_id });
+            if (recipe.source_type === 'bakery')
+                db.exec('DELETE FROM bakery_recipes WHERE id=$id', { $id: recipe.source_id });
+            else
+                db.exec('DELETE FROM culinary_recipes WHERE id=$id', { $id: recipe.source_id });
+        });
+        await loadCatalogs();
+        scheduleDbAutosave('Elaboración eliminada');
+        closeModal();
+        render();
+        return true;
+    }
+    catch (error) {
+        return showFormError(error);
+    }
+}
+function ingredientUsageReport(id) {
+    return [
+        { label: 'líneas de recetas culinarias', count: usageCount('SELECT COUNT(*) AS n FROM culinary_recipe_lines WHERE ingredient_id=$id', { $id: id }) },
+        { label: 'líneas de fórmulas panaderas/pasteleras', count: usageCount('SELECT COUNT(*) AS n FROM bakery_recipe_lines WHERE ingredient_id=$id', { $id: id }) }
+    ];
+}
+async function deleteIngredientSafely(id) {
+    try {
+        const row = db.query('SELECT id,name FROM ingredients WHERE id=$id', { $id: id })[0];
+        if (!row)
+            return showFormError('No se localizó el ingrediente.');
+        const usages = ingredientUsageReport(id).filter(u => u.count > 0);
+        if (usages.length) {
+            return showFormError(`No se puede eliminar este ingrediente porque está en uso. Retíralo primero de las fichas: ${usageSummaryText(usages)}.`);
+        }
+        if (!confirm(`¿Eliminar definitivamente el ingrediente “${row.name}”?\n\nSolo se eliminará porque no aparece en recetas ni fórmulas.`))
+            return false;
+        withTransaction(() => db.exec('DELETE FROM ingredients WHERE id=$id', { $id: id }));
+        await loadCatalogs();
+        scheduleDbAutosave('Ingrediente eliminado');
+        closeModal();
+        render();
+        return true;
+    }
+    catch (error) {
+        return showFormError(error);
+    }
+}
+
 function deleteRecipeLine(recipe, lineId) {
     if (window.ObradORRSafeEditor && !window.ObradORRSafeEditor.confirmDeleteLine(db, recipe.source_type, lineId))
         return false;
     if (!window.ObradORRSafeEditor && !confirm('¿Eliminar esta línea?'))
         return false;
-    withTransaction(() => db.exec(recipe.source_type === 'bakery' ? 'DELETE FROM bakery_recipe_lines WHERE id=$id' : 'DELETE FROM culinary_recipe_lines WHERE id=$id', { $id: lineId }));
+    withTransaction(() => { invalidateWorkshopValidationIfNeeded(recipe, 'Línea de ingrediente o subreceta eliminada'); db.exec(recipe.source_type === 'bakery' ? 'DELETE FROM bakery_recipe_lines WHERE id=$id' : 'DELETE FROM culinary_recipe_lines WHERE id=$id', { $id: lineId }); });
     return true;
 }
 function showIngredientCreator() {
-    var _a, _b, _c;
-    try {
-        const name = prompt('Nombre del nuevo ingrediente');
-        const ingredientName = String(name || '').trim();
-        if (!ingredientName)
-            return;
-        const duplicate = findIngredientNameDuplicate(ingredientName);
-        if (duplicate)
-            return showFormError(duplicateIngredientMessage(duplicate, ingredientName));
-        const id = uniqueId('ING', ingredientName);
-        const family = defaultFamilyId('ingredient');
-        const orderGroup = ((_a = state.orderGroups[0]) === null || _a === void 0 ? void 0 : _a.id) || null;
-        const storage = ((_b = state.storageZones.find(z => z.name === 'Seco')) === null || _b === void 0 ? void 0 : _b.id) || ((_c = state.storageZones[0]) === null || _c === void 0 ? void 0 : _c.id) || null;
-        withTransaction(() => db.exec(`INSERT INTO ingredients (id,name,family_id,subfamily_id,order_group_id,storage_zone_id,base_unit_id,purchase_unit_id,purchase_price,purchase_net_quantity,waste_pct,use_culinary,use_bakery,notes,active)
+    showModal('Nuevo ingrediente', `<div class="notice"><b>Alta controlada:</b> no se crea ningún ingrediente hasta pulsar <b>Crear y editar</b>. Puedes cancelar sin dejar registros de prueba.</div><div class="grid two">
+    <label style="grid-column:1/-1">Nombre<input class="input" id="newIngredientName" placeholder="Ejemplo: Harina de trigo panificable" autocomplete="off" /></label>
+  </div><div class="actions"><button class="btn primary" id="confirmCreateIngredient">Crear y editar</button><button class="btn" id="cancelCreateIngredient">Cancelar</button></div>`);
+    document.getElementById('cancelCreateIngredient')?.addEventListener('click', closeModal);
+    const nameInput = document.getElementById('newIngredientName');
+    if (nameInput)
+        nameInput.focus();
+    document.getElementById('confirmCreateIngredient')?.addEventListener('click', async () => {
+        var _a, _b, _c;
+        try {
+            const ingredientName = String(document.getElementById('newIngredientName')?.value || '').trim();
+            if (!ingredientName)
+                return showFormError('Indica un nombre antes de crear el ingrediente.');
+            const duplicate = findIngredientNameDuplicate(ingredientName);
+            if (duplicate)
+                return showFormError(duplicateIngredientMessage(duplicate, ingredientName));
+            const id = uniqueId('ING', ingredientName);
+            const family = defaultFamilyId('ingredient');
+            const orderGroup = ((_a = state.orderGroups[0]) === null || _a === void 0 ? void 0 : _a.id) || null;
+            const storage = ((_b = state.storageZones.find(z => z.name === 'Seco')) === null || _b === void 0 ? void 0 : _b.id) || ((_c = state.storageZones[0]) === null || _c === void 0 ? void 0 : _c.id) || null;
+            withTransaction(() => db.exec(`INSERT INTO ingredients (id,name,family_id,subfamily_id,order_group_id,storage_zone_id,base_unit_id,purchase_unit_id,purchase_price,purchase_net_quantity,waste_pct,use_culinary,use_bakery,notes,active)
         VALUES ($id,$name,$family,NULL,$order,$storage,'UNIT_KG','UNIT_KG',0,1,0,1,0,'',1)`, { $id: id, $name: ingredientName, $family: family, $order: orderGroup, $storage: storage }));
-        loadCatalogs().then(() => { scheduleDbAutosave('Ingrediente creado'); showIngredientEditor(id); }).catch(showFormError);
-    }
-    catch (error) {
-        return showFormError(error);
-    }
+            await loadCatalogs();
+            scheduleDbAutosave('Ingrediente creado');
+            closeModal();
+            showIngredientEditor(id);
+        }
+        catch (error) {
+            return showFormError(error);
+        }
+    });
 }
 function showIngredientEditor(id) {
     var _a, _b;
@@ -1860,7 +2284,7 @@ function showIngredientEditor(id) {
     if (!row)
         return;
     const selectedAllergens = new Set(db.query('SELECT allergen_id FROM ingredient_allergens WHERE ingredient_id=$id', { $id: id }).map(a => a.allergen_id));
-    showModal('Editar ingrediente', `<div class="editor-layout"><section class="card-flat"><h3>Datos técnicos</h3><div class="grid two">
+    showModal('Editar ingrediente', `<div class="editor-toolbar-rc1 actions ingredient-editor-toolbar"><button class="btn primary" id="saveIngEdit">Guardar ingrediente</button><button class="btn danger" id="deleteIngButton">Eliminar ingrediente</button></div><div class="notice editor-help-note"><b>Edición de ingrediente:</b> usa notas amplias para criterios de compra, mermas reales, marcas docentes o incidencias. Los alérgenos se mantienen como bloque independiente.</div><div class="editor-layout ingredient-editor-layout"><section class="card-flat"><h3>Identificación, compra y coste</h3><div class="grid two">
     <label>Nombre<input class="input" id="ingName" value="${escapeAttr(row.name || '')}" /></label>
     <label>Activo<select id="ingActive"><option value="1" ${row.active ? 'selected' : ''}>Sí</option><option value="0" ${!row.active ? 'selected' : ''}>No</option></select></label>
     <label>Familia<select id="ingFamily">${familyOptionsHtml('ingredient', row.family_id)}</select></label>
@@ -1873,16 +2297,20 @@ function showIngredientEditor(id) {
     <label>Cantidad neta compra<input class="input" id="ingNet" type="number" step="0.0001" value="${escapeAttr(row.purchase_net_quantity || 1)}" /></label>
     <label>Merma %<input class="input" id="ingWaste" type="number" step="0.01" value="${escapeAttr(row.waste_pct || 0)}" /></label>
     <label>Densidad g/ml<input class="input" id="ingDensity" type="number" step="0.001" value="${escapeAttr(row.density_g_ml || '')}" /></label>
-    <label><input type="checkbox" id="ingUseCulinary" ${row.use_culinary ? 'checked' : ''}/> Uso cocina</label>
-    <label><input type="checkbox" id="ingUseBakery" ${row.use_bakery ? 'checked' : ''}/> Uso panadería/pastelería</label>
-    <label style="grid-column:1/-1">Notas<textarea id="ingNotes">${escapeHtml(row.notes || '')}</textarea></label>
-  </div><div class="actions"><button class="btn primary" id="saveIngEdit">Guardar ingrediente</button></div></section>
-  <section class="card-flat"><h3>Alérgenos</h3><div class="check-grid">${state.allergens.map(a => `<label><input type="checkbox" data-allergen="${escapeAttr(a.id)}" ${selectedAllergens.has(a.id) ? 'checked' : ''}/> ${escapeHtml(a.name)}</label>`).join('')}</div></section></div>`);
+    <label class="check-inline"><input type="checkbox" id="ingUseCulinary" ${row.use_culinary ? 'checked' : ''}/> Uso cocina</label>
+    <label class="check-inline"><input type="checkbox" id="ingUseBakery" ${row.use_bakery ? 'checked' : ''}/> Uso panadería/pastelería</label>
+    <label style="grid-column:1/-1">Notas<textarea class="textarea-large" id="ingNotes">${escapeHtml(row.notes || '')}</textarea></label>
+  </div></section>
+  <section class="card-flat ingredient-allergen-panel"><h3>Alérgenos</h3><p class="footer-note">Marca únicamente alérgenos presentes o que deban declararse en el ingrediente.</p><div class="check-grid allergen-check-grid">${state.allergens.map(a => `<label><input type="checkbox" data-allergen="${escapeAttr(a.id)}" ${selectedAllergens.has(a.id) ? 'checked' : ''}/> ${escapeHtml(a.name)}</label>`).join('')}</div></section></div>`);
+    const modal = modalRoot.querySelector('.modal');
+    if (modal) modal.classList.add('editor-modal', 'editor-modal-full');
+    setupAdaptiveTextareas(modalRoot);
     (_a = document.getElementById('ingFamily')) === null || _a === void 0 ? void 0 : _a.addEventListener('change', e => {
         const target = document.getElementById('ingSubfamily');
         if (target)
             target.innerHTML = subfamilyOptionsHtml(e.target.value, '');
     });
+    document.getElementById('deleteIngButton')?.addEventListener('click', () => deleteIngredientSafely(id));
     (_b = document.getElementById('saveIngEdit')) === null || _b === void 0 ? void 0 : _b.addEventListener('click', async () => {
         try {
             const price = Number(document.getElementById('ingPrice').value || 0);
@@ -1938,7 +2366,7 @@ function buildPrintDocumentModel(items, opts = {}) {
     const preflight = window.ObradORRPreflight ? window.ObradORRPreflight.run({ db, state, items: items.slice(), options }) : { warnings: [], summary: {}, byRecipe: {} };
     const normalized = window.ObradORRDocumentModel ? window.ObradORRDocumentModel.normalizeSelection({ db, state, items: items.slice(), options, preflight }) : null;
     return {
-        schema: 'ObradORRPrintDocumentModel/2.0',
+        schema: 'ObradORRPrintDocumentModel/2.1',
         items: items.slice(),
         options,
         context: createPrintContext(items, options),
@@ -2978,10 +3406,10 @@ async function orderHtml(items, opts) {
     if (window.ObradORRRecursiveEngine && window.ObradORRRecursiveEngine.canonical) {
         try {
             rows = window.ObradORRRecursiveEngine.selectionOrderLines(db, items, opts);
-            engineLabel = 'motor recursivo único 2.0';
+            engineLabel = 'motor recursivo único 2.1';
         }
         catch (error) {
-            console.warn('[ObradORR] Motor recursivo 2.0 no disponible; se usa fallback clásico.', error);
+            console.warn('[ObradORR] Motor recursivo 2.1 no disponible; se usa fallback clásico.', error);
             rows = [];
         }
     }
@@ -3309,11 +3737,14 @@ function validateCurrentDatabase() {
     const missing = required.filter(name => !db.value("SELECT COUNT(*) FROM sqlite_master WHERE name=$name", { $name: name }));
     if (missing.length)
         throw new Error(`La copia no contiene estructura ObradORR completa: ${missing.join(', ')}`);
-    const tortaCritical = db.query("SELECT ingredient AS ingredient_name, grams_for_base_flour AS base_qty_g FROM v_print_bakery_formula WHERE recipe_id='torta-de-nata-pedro' AND ingredient IN ('Nata 35 % MG','Azúcar blanco')");
-    if (tortaCritical.length < 2 || tortaCritical.some(r => Number(r.base_qty_g || 0) <= 0))
-        throw new Error('Regresión panadera crítica: Torta de nata tiene nata o azúcar con cantidad 0.');
+    const activeBakeryCount = Number(db.value('SELECT COUNT(*) FROM bakery_recipes WHERE COALESCE(active,1)=1') || 0);
+    if (activeBakeryCount > 0) {
+        const tortaCritical = db.query("SELECT ingredient AS ingredient_name, grams_for_base_flour AS base_qty_g FROM v_print_bakery_formula WHERE recipe_id='torta-de-nata-pedro' AND ingredient IN ('Nata 35 % MG','Azúcar blanco')");
+        if (tortaCritical.length < 2 || tortaCritical.some(r => Number(r.base_qty_g || 0) <= 0))
+            throw new Error('Regresión panadera crítica: Torta de nata tiene nata o azúcar con cantidad 0.');
+    }
     if (window.ObradORRMigrations)
-        window.ObradORRMigrations.ensure(db, { version: VERSION, releaseTag: EXPECTED_RELEASE_TAG });
+        window.ObradORRMigrations.ensure(db, { version: VERSION, releaseTag: EXPECTED_RELEASE_TAG, cacheTag: EXPECTED_CACHE_TAG });
 }
 
 function hasUnsavedWork() {
@@ -3362,14 +3793,52 @@ function dataSafetyPanelHtml() {
     return `<div class="data-safety-panel ${dataSafetyLevel()}"><b>${escapeHtml(dataSafetyLevel() === 'warning' ? 'Atención: cambios pendientes' : dataSafetyLevel() === 'error' ? 'Error de recuperación local' : 'Protección de datos')}</b><p>${escapeHtml(dataStatusText())}</p><small>${escapeHtml(storageSupportSummary())}</small></div>`;
 }
 async function confirmBackupBeforeDestructiveAction(actionLabel) {
-    if (hasUnsavedWork()) {
-        const wantDownload = confirm(`Hay cambios pendientes antes de ${actionLabel}. ¿Quieres descargar ahora una copia SQLite de seguridad?`);
-        if (wantDownload)
-            downloadDb({ reason: `Copia previa a ${actionLabel}` });
+    const proceedBackup = confirm(`Antes de ${actionLabel}, ObradORR generará una copia SQLite de seguridad de la base activa.\n\nLa descarga puede quedar en la carpeta de descargas del navegador. No continúes si no quieres crear esa copia previa.\n\n¿Crear copia SQLite previa ahora?`);
+    if (!proceedBackup)
+        return false;
+    try {
+        downloadDb({ reason: `Copia previa obligatoria a ${actionLabel}` });
     }
-    return confirm(`Confirmación final: ${actionLabel} sustituirá o borrará datos locales de trabajo. ¿Continuar?`);
+    catch (error) {
+        console.error('[ObradORR] No se pudo iniciar la descarga de copia previa.', error);
+        alert(`No se pudo iniciar la copia SQLite previa: ${error.message || error}\n\nNo se continuará con la acción.`);
+        return false;
+    }
+    return confirm(`Confirmación final: ${actionLabel} sustituirá o borrará datos de la base activa.\n\nContinúa solo si ya se ha iniciado/descargado la copia SQLite previa. ¿Continuar?`);
 }
 
+
+function headerStatusLabel(custom = '') {
+    if (custom)
+        return String(custom).replace(/\.{3,}$/,'').trim().toUpperCase();
+    if (state.dataSaveError)
+        return 'ERROR';
+    if (state.autosaveInFlight)
+        return 'GUARDANDO';
+    if (hasUnsavedWork())
+        return 'CAMBIOS';
+    return state.ready ? 'LISTO' : 'CARGANDO';
+}
+function statusDotClass() {
+    if (state.dataSaveError)
+        return 'error';
+    if (state.autosaveInFlight)
+        return 'saving';
+    if (hasUnsavedWork())
+        return 'warning';
+    return state.ready ? 'ok' : '';
+}
+function flashStatusIndicator(el, nextLabel) {
+    if (!el)
+        return;
+    const previous = state.statusIndicatorLabel || '';
+    state.statusIndicatorLabel = nextLabel || '';
+    if (!previous || previous === nextLabel)
+        return;
+    el.classList.add('flash');
+    clearTimeout(state.statusFlashTimer);
+    state.statusFlashTimer = setTimeout(() => el.classList.remove('flash'), 1400);
+}
 function dataStatusText() {
     const when = state.dataSavedAt ? ` · ${new Date(state.dataSavedAt).toLocaleString('es-ES')}` : '';
     const dirty = hasUnsavedWork() ? ' · cambios pendientes' : '';
@@ -3399,8 +3868,14 @@ function dataSafetyHeadline() {
 }
 function updateStatusIndicator() {
     const status = document.querySelector('.topbar .status');
-    if (status)
-        status.innerHTML = `<span class="dot ${state.ready ? 'ok' : ''}"></span>${escapeHtml(state.ready ? dataStatusText() : (state.dataStatus || 'Cargando'))}`;
+    if (status) {
+        const label = headerStatusLabel();
+        const title = state.ready ? dataStatusText() : (state.dataStatus || label);
+        status.innerHTML = `<span class="dot ${statusDotClass()}"></span><span class="status-text">${escapeHtml(label)}</span>`;
+        status.setAttribute('aria-label', `Estado: ${title}`);
+        status.setAttribute('title', title);
+        flashStatusIndicator(status, label);
+    }
     const banner = document.querySelector('.data-safety');
     if (banner && state.ready) {
         const wrap = document.createElement('div');
@@ -3566,6 +4041,7 @@ async function restorePublicDatabase() {
         state.dataSource = 'base incluida';
         state.dataSavedAt = '';
         state.dataSaveError = '';
+        state.dataRevision += 1;
         state.lastSavedRevision = state.dataRevision;
         state.lastDownloadedRevision = state.dataRevision;
         state.dataDirty = false;
@@ -3580,6 +4056,51 @@ async function restorePublicDatabase() {
         alert(`No se pudo restaurar la base incluida: ${error.message}`);
     }
 }
+
+async function createBlankDatabase() {
+    if (!(await confirmBackupBeforeDestructiveAction('crear una base nueva limpia compatible con ObradORR')))
+        return;
+    const previous = db.exportBytes();
+    try {
+        await db.loadFromUrl(BLANK_DB_URL);
+        validateCurrentDatabase();
+        await loadCatalogs();
+        state.dataSource = 'base nueva limpia';
+        state.dataStatus = 'Base nueva limpia creada';
+        state.dataSavedAt = '';
+        state.dataSaveError = '';
+        state.selection = [];
+        state.sessions = [];
+        state.dataRevision += 1;
+        state.dataDirty = true;
+        await saveWorkingCopy('Base nueva limpia creada', { silent: false, rerender: false });
+        state.page = 'sistema';
+        render();
+    }
+    catch (error) {
+        try { db.loadFromBytes(previous); await loadCatalogs(); } catch (_a) { }
+        console.error(error);
+        alert(`No se pudo crear la base nueva limpia: ${error.message || error}
+
+Se conserva la base anterior.`);
+        render();
+    }
+}
+function validateActiveDatabaseForUser() {
+    try {
+        validateCurrentDatabase();
+        const recipes = Number(db.value('SELECT COUNT(*) FROM v_elaborations_unified WHERE COALESCE(active,1)=1') || 0);
+        const ingredients = Number(db.value('SELECT COUNT(*) FROM ingredients WHERE COALESCE(active,1)=1') || 0);
+        const fk = db.query('PRAGMA foreign_key_check;').length;
+        alert(`Base activa correcta.
+Elaboraciones activas: ${recipes}
+Ingredientes activos: ${ingredients}
+Errores de claves foráneas: ${fk}`);
+    } catch (error) {
+        alert(`La base activa no supera la validación: ${error.message || error}`);
+    }
+}
+
 function clearLocalUiData() {
     if (!confirm('Esta acción borra la selección actual y las sesiones guardadas dentro de la copia SQLite activa. Antes de continuar, descarga una copia si quieres conservarlas. ¿Continuar?'))
         return;
@@ -3853,6 +4374,7 @@ function printDocumentFilenameBase(items, opts = {}) {
     return `${safeFilenamePart('ObradORR')}_${safeFilenamePart(docTitle(opts.documentType || 'documento'))}_${safeFilenamePart(profileLabel(printProfile(opts)))}_${safeFilenamePart(label)}_${getIsoTimestampForFilename(new Date())}`;
 }
 
+
 // ────────────────────────────────────────────────────────────────────────────
 // Wrappers de exportación externa
 // ────────────────────────────────────────────────────────────────────────────
@@ -3877,6 +4399,10 @@ function exportTechnicalJson() {
 function exportCatalogCsv() {
     if (!window.ObradORRExportTools) return alert('Módulo de exportación no cargado.');
     window.ObradORRExportTools.exportCatalogCsv(db);
+}
+function exportCatalogExcel() {
+    if (!window.ObradORRExportTools) return alert('Módulo de exportación no cargado.');
+    window.ObradORRExportTools.exportCatalogExcel(db);
 }
 function exportIngredientsCsv() {
     if (!window.ObradORRExportTools) return alert('Módulo de exportación no cargado.');
@@ -3984,6 +4510,7 @@ function showModal(title, html) {
         if (e.target.classList.contains('modal-backdrop'))
             closeModal();
     });
+    setupAdaptiveTextareas(modalRoot);
 }
 function closeModal() { modalRoot.innerHTML = ''; }
 

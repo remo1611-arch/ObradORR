@@ -11,9 +11,9 @@
 [OK] node --check app/js/storage/migrations.js
 [OK] node --check app/js/ui/safe-editor.js
 [OK] node --check app/js/utils/file-tools.js
-[OK] token presente: 2.0.0
-[OK] token presente: 2.0.0-stable
-[OK] token presente: obradorr-200-stable
+[OK] token presente: 2.1.0
+[OK] token presente: 2.1.0-rc7
+[OK] token presente: obradorr-210-rc7-release-candidate
 [OK] token presente: ObradORRExportTools
 [OK] token presente: exportPracticeZip
 [OK] token presente: ObradORRRecursiveEngine
@@ -30,6 +30,7 @@
 [OK] token presente: pagehide
 [OK] token presente: visibilitychange
 [OK] token presente: previous-db-1
+[OK] token presente: obradorr-data-210-rc5-excel-export
 [OK] token presente: modeSelect
 [OK] token presente: rawDoughG
 [OK] token presente: flourG
@@ -37,6 +38,18 @@
 [OK] token presente: Piezas + peso unitario
 [OK] token presente: Masa total
 [OK] token presente: Harina total
+[OK] token presente: Ejemplo: Remo J. Pereira González
+[OK] token presente: Ejemplo: Práctica de masas fermentadas dulces
+[OK] token presente: mise en place previa
+[OK] token presente: Validación de obrador
+[OK] token presente: Registrar prueba de obrador
+[OK] token presente: workshop_validation_flow
+[OK] token presente: probada_con_ajustes
+[OK] token presente: requiere_revision
+[OK] token presente: Crear base nueva limpia
+[OK] token presente: Usar base incluida
+[OK] token presente: Restaurar SQLite sustituyendo
+[OK] token presente: Validar base activa
 [OK] ausente: texto interno preflight antiguo
 [OK] ausente: texto interno via antigua
 [OK] ausente: criterio interno B1 antiguo
@@ -45,14 +58,16 @@
 [OK] ausente: criterio interno B4 antiguo
 [OK] ausente: mención RC en portada
 [OK] ausente: nota APPCC sin puntuación
+[OK] ausente: terminología antigua masa/pasta total
+[OK] ausente: terminología antigua masa/pasta cruda
 [OK] SQLite integrity_check ok
 [OK] SQLite foreign_key_check sin errores
-[OK] app_meta app_version=2.0.0
-[OK] app_meta schema_version=2.0.0
-[OK] app_meta release_tag=2.0.0-stable
-[OK] app_meta cache_tag=obradorr-200-stable
-[OK] app_meta stable=1
-[OK] app_meta public_release=1
+[OK] app_meta app_version=2.1.0
+[OK] app_meta schema_version=2.1.0
+[OK] app_meta release_tag=2.1.0-rc7
+[OK] app_meta cache_tag=obradorr-210-rc7-release-candidate
+[OK] app_meta stable=0
+[OK] app_meta public_release=0
 [OK] culinary_recipes activas sin validada
 [OK] bakery_recipes activas sin validada
 [OK] bakery yield_status pending
@@ -61,5 +76,16 @@
 [OK] Quiche sin masa quebrada dulce real
 [OK] Pasta choux APPCC corregido
 [OK] migración pública final registrada
+[OK] workshop_validation_log 2.1 ampliada
+[OK] migración 2.1 registrada
+[OK] prueba yield_status panadero validated/tested/pending
+[OK] prueba validación culinaria transaccional
+[OK] yield_status no permitido bloqueado: measured
+[OK] yield_status no permitido bloqueado: adjusted
+[OK] plantilla limpia presente
+[OK] plantilla limpia integrity_check ok
+[OK] plantilla limpia foreign_key_check sin errores
+[OK] plantilla limpia sin catálogo/ingredientes/validaciones
+[OK] plantilla limpia app_meta compatible
 
 RESULTADO: OK

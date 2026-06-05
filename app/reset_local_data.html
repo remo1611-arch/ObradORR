@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>ObradORR · Reinicio local</title>
-  <link rel="stylesheet" href="./css/obradorr.css?v=obradorr-200-public-release-final-ui-hints" />
+  <link rel="stylesheet" href="./css/obradorr.css?v=obradorr-210-rc8-release-candidate" />
 </head>
 <body>
   <main class="main">
@@ -19,7 +19,7 @@
       </label>
       <div class="actions" style="margin-top:14px">
         <button class="btn danger" id="resetBtn">Borrar recuperación local</button>
-        <a class="btn primary" href="./obradorr.html?v=obradorr-200-public-release-final-ui-hints-reset">Abrir ObradORR</a>
+        <a class="btn primary" href="./obradorr.html?v=obradorr-210-rc8-release-candidate-reset">Abrir ObradORR</a>
       </div>
       <div id="status" class="notice" style="margin-top:16px">No se ha borrado nada todavía.</div>
     </section>
@@ -39,30 +39,7 @@
       }
       if (!confirm('Confirmación final: se borrará la recuperación local de ObradORR en este navegador. ¿Continuar?')) return;
       localStorage.removeItem('obradorr_ui_print_options_v1');
-      const stale = [
-        'obradorr-data-200-public-release-final-ui-hints',
-        'obradorr-data-200-public-release-final',
-        'obradorr-data-200-stable',
-        'obradorr-data-200-public-stable',
-        'obradorr-data-100-rc21',
-        'obradorr-data-100-rc8',
-        'obradorr-data-100-rc7',
-        'obradorr-data-100-rc6',
-        'obradorr-data-100-rc5',
-        'obradorr-data-100-rc4',
-        'obradorr-data-100-rc3',
-        'obradorr-data-100-rc2',
-        'obradorr-data-100-rc1',
-        'obradorr-data-' + '100' + 'rc5',
-        'obradorr-data-' + '100' + 'rc4',
-        'obradorr-data-' + '100' + 'rc3',
-        'obradorr-data-' + '100' + 'rc2',
-        'obradorr-data-' + '100' + 'rc1',
-        'obradorr-data-' + '100' + 'rc1-' + 'final',
-        'obradorr-data-' + '100' + 'rc1-' + 'fin' + 'al3-' + 'stable',
-        'obradorr-data-200-public',
-        'obradorr-data-200-public-release'
-      ];
+      const stale = ['obradorr-data-210-rc7-release-candidate','obradorr-data-210-rc5-excel-export','obradorr-data-210-rc4-hardening-bases','obradorr-data-210-rc3-gestion-bases','obradorr-data-210-workshop-validation','obradorr-data-200-public-release-final-ui-hints','obradorr-data-200-public-release-final','obradorr-data-200-public-release','obradorr-data-200-stable','obradorr-data-200-stable-candidate'];
       const results = [];
       for (const name of stale) results.push(name + ': ' + await deleteDb(name));
       status.className = 'notice success';

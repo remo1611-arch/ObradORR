@@ -39,7 +39,7 @@
     const orderLines = recursive ? recursive.selectionOrderLines(db, items, options) : [];
     const aggregated = recursive ? recursive.aggregate(orderLines) : [];
     return {
-      schema: "ObradORRDocumentModel/2.0",
+      schema: "ObradORRDocumentModel/2.1",
       generatedAt: new Date().toISOString(),
       profile: profiles ? profiles.get(options.documentProfile || "aula_taller") : null,
       profilePrint: profiles ? profiles.printConfig(options.documentProfile || "aula_taller", options.documentType || "fichas_pedido") : null,
@@ -49,5 +49,5 @@
       warnings: preflight ? preflight.warnings : []
     };
   }
-  window.ObradORRDocumentModel = { version: "2.0.0", normalizeSelection };
+  window.ObradORRDocumentModel = { version: "2.1.0", normalizeSelection };
 })();

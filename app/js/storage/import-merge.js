@@ -1,7 +1,22 @@
 (function(){
   "use strict";
-  const VERSION = "2.0.0";
-  const CORE_TABLES = ['ingredients','ingredient_allergens','culinary_recipes','culinary_recipe_lines','bakery_recipes','bakery_preferments','bakery_recipe_lines','bakery_process_steps','bakery_recipe_components','class_sessions','class_session_items'];
+  const VERSION = "2.1.0";
+  const CORE_TABLES = [
+    'ingredients','ingredient_allergens',
+    'culinary_recipes','culinary_recipe_lines',
+    'bakery_recipes','bakery_preferments','bakery_recipe_lines','bakery_process_steps','bakery_recipe_components',
+    'appcc_doc_blocks','recipe_documentary_reviews','media_assets','recipe_media','recipe_photos',
+    'workshop_validation_log',
+    'class_sessions','class_session_items'
+  ];
+  const POLICY = {
+    version: VERSION,
+    overwriteExisting: false,
+    validateByImport: false,
+    validationPolicy: 'Las validaciones externas se importan como evidencia histórica si la ficha destino se identifica de forma inequívoca. Nunca convierten una ficha en validada por sí solas.',
+    mediaPolicy: 'Los assets embebidos en SQLite se importan si existen en media_assets; recipe_photos con rutas externas se omiten para evitar fotos rotas.',
+    documentaryReviewPolicy: 'recipe_documentary_reviews se importa como cobertura documental; no acredita validación de obrador.'
+  };
   function q(db, sql, bind){ return db.query(sql, bind || {}); }
   function val(db, sql, bind){ return db.value(sql, bind || {}); }
   function nowStamp(){ return (window.ObradORRFileTools && window.ObradORRFileTools.isoStamp) ? window.ObradORRFileTools.isoStamp() : new Date().toISOString().replace(/[:.]/g,'-').slice(0,19); }
@@ -23,6 +38,21 @@
     if(!cols.length) return;
     const sql = `INSERT INTO ${table} (${cols.join(',')}) VALUES (${cols.map(c=>'$'+c).join(',')})`;
     const bind = {}; cols.forEach(c => bind['$'+c] = row[c]); db.exec(sql, bind);
+  }
+  function mappedRecipeId(kind, id, culMap, bakMap){
+    if(!id) return id;
+    const k = String(kind || '').toLowerCase();
+    if(k.includes('bakery') || k.includes('pan')) return bakMap[id] || id;
+    return culMap[id] || id;
+  }
+  function recipeExists(db, kind, id){
+    if(!id) return false;
+    const k = String(kind || '').toLowerCase();
+    const table = (k.includes('bakery') || k.includes('pan')) ? 'bakery_recipes' : 'culinary_recipes';
+    return !!rowById(db, table, id);
+  }
+  function sourceTableExists(importDb, currentDb, table){
+    return existsTable(importDb, table) && existsTable(currentDb, table);
   }
   function updateFk(row, key, map){ if(row[key] && map[row[key]]) row[key] = map[row[key]]; }
   function ensureImportLog(db){
@@ -57,7 +87,7 @@
   function merge(currentDb, importDb, sourceName){
     schemaOk(importDb); ensureImportLog(currentDb);
     const suffix = nowStamp();
-    const summary = { importedAt:new Date().toISOString(), sourceName: sourceName || '', sourceVersion: val(importDb, "SELECT value FROM app_meta WHERE key='app_version'") || '', nuevos:0, identicos:0, conflictosVariantes:0, omitidos:0, tables:{} };
+    const summary = { importedAt:new Date().toISOString(), sourceName: sourceName || '', sourceVersion: val(importDb, "SELECT value FROM app_meta WHERE key='app_version'") || '', policy: POLICY, nuevos:0, identicos:0, conflictosVariantes:0, omitidos:0, tables:{} };
     const ingMap = {}, culMap = {}, bakMap = {}, sessionMap = {};
     currentDb.exec('BEGIN IMMEDIATE;');
     try{
@@ -124,6 +154,86 @@
       importLineTable('bakery_recipe_lines','recipe_id',bakMap, r=>{ updateFk(r,'ingredient_id',ingMap); });
       importLineTable('bakery_process_steps','recipe_id',bakMap, null);
       importLineTable('bakery_recipe_components','bakery_recipe_id',bakMap, r=>{ updateFk(r,'component_culinary_recipe_id',culMap); updateFk(r,'component_bakery_recipe_id',bakMap); });
+
+      // APPCC documentary blocks: import only if recipe target is mapped and exists. Does not validate recipes.
+      if(sourceTableExists(importDb,currentDb,'appcc_doc_blocks')){
+        summary.tables.appcc_doc_blocks = { nuevos:0, identicos:0, omitidos:0 };
+        for(const r0 of q(importDb,'SELECT * FROM appcc_doc_blocks')){
+          const r = Object.assign({}, r0);
+          const kind = r.recipe_kind || r.recipe_type || '';
+          r.recipe_id = mappedRecipeId(kind, r.recipe_id, culMap, bakMap);
+          if(!recipeExists(currentDb, kind, r.recipe_id)){ summary.omitidos++; summary.tables.appcc_doc_blocks.omitidos++; continue; }
+          const cur = r.id ? rowById(currentDb,'appcc_doc_blocks',r.id) : null;
+          if(cur && signature(cur)===signature(r)){ summary.identicos++; summary.tables.appcc_doc_blocks.identicos++; continue; }
+          if(cur || !r.id) r.id = uniqueId(currentDb,'appcc_doc_blocks',`${r0.id || 'APPCC'}-IMPORT-${suffix}`);
+          try{ insertRow(currentDb,'appcc_doc_blocks',r); summary.nuevos++; summary.tables.appcc_doc_blocks.nuevos++; }
+          catch(error){ console.warn('[ObradORRImportMerge] appcc omitido', error); summary.omitidos++; summary.tables.appcc_doc_blocks.omitidos++; }
+        }
+      }
+      // Documentary reviews: import as coverage only; never as workshop validation.
+      if(sourceTableExists(importDb,currentDb,'recipe_documentary_reviews')){
+        summary.tables.recipe_documentary_reviews = { nuevos:0, identicos:0, omitidos:0 };
+        for(const r0 of q(importDb,'SELECT * FROM recipe_documentary_reviews')){
+          const r = Object.assign({}, r0);
+          r.recipe_id = mappedRecipeId(r.recipe_kind, r.recipe_id, culMap, bakMap);
+          if(!recipeExists(currentDb, r.recipe_kind, r.recipe_id)){ summary.omitidos++; summary.tables.recipe_documentary_reviews.omitidos++; continue; }
+          const cur = r.id ? rowById(currentDb,'recipe_documentary_reviews',r.id) : null;
+          if(cur && signature(cur)===signature(r)){ summary.identicos++; summary.tables.recipe_documentary_reviews.identicos++; continue; }
+          if(cur || !r.id) r.id = uniqueId(currentDb,'recipe_documentary_reviews',`${r0.id || 'DOCREV'}-IMPORT-${suffix}`);
+          r.summary = `${r.summary || ''}\n\nImportada como cobertura documental; no valida la ficha en obrador.`.trim();
+          try{ insertRow(currentDb,'recipe_documentary_reviews',r); summary.nuevos++; summary.tables.recipe_documentary_reviews.nuevos++; }
+          catch(error){ console.warn('[ObradORRImportMerge] revisión documental omitida', error); summary.omitidos++; summary.tables.recipe_documentary_reviews.omitidos++; }
+        }
+      }
+      // Media assets embedded in SQLite: import if present; path-based recipe_photos are intentionally omitted.
+      const mediaMap = {};
+      if(sourceTableExists(importDb,currentDb,'media_assets')){
+        summary.tables.media_assets = { nuevos:0, identicos:0, conflictosVariantes:0 };
+        for(const r0 of q(importDb,'SELECT * FROM media_assets')){
+          const r = Object.assign({}, r0);
+          let cur = r.id ? rowById(currentDb,'media_assets',r.id) : null;
+          if(!cur && r.sha256) cur = q(currentDb,'SELECT * FROM media_assets WHERE sha256=$sha', {$sha:r.sha256})[0] || null;
+          if(!cur){ insertRow(currentDb,'media_assets',r); mediaMap[r0.id]=r.id; summary.nuevos++; summary.tables.media_assets.nuevos++; continue; }
+          if(signature(cur)===signature(r)){ mediaMap[r0.id]=cur.id; summary.identicos++; summary.tables.media_assets.identicos++; continue; }
+          const newId = uniqueId(currentDb,'media_assets',`${r.id || 'MEDIA'}-IMPORT-${suffix}`);
+          r.id = newId; insertRow(currentDb,'media_assets',r); mediaMap[r0.id]=newId; summary.conflictosVariantes++; summary.tables.media_assets.conflictosVariantes++;
+        }
+      }
+      if(sourceTableExists(importDb,currentDb,'recipe_media')){
+        summary.tables.recipe_media = { nuevos:0, identicos:0, omitidos:0 };
+        for(const r0 of q(importDb,'SELECT * FROM recipe_media')){
+          const r = Object.assign({}, r0);
+          r.recipe_id = mappedRecipeId(r.recipe_kind, r.recipe_id, culMap, bakMap);
+          r.media_id = mediaMap[r.media_id] || r.media_id;
+          if(!recipeExists(currentDb, r.recipe_kind, r.recipe_id) || !rowById(currentDb,'media_assets',r.media_id)){ summary.omitidos++; summary.tables.recipe_media.omitidos++; continue; }
+          const exists = q(currentDb,'SELECT * FROM recipe_media WHERE recipe_kind=$k AND recipe_id=$r AND media_id=$m AND COALESCE(role,"")=COALESCE($role,"")', {$k:r.recipe_kind,$r:r.recipe_id,$m:r.media_id,$role:r.role || ''})[0];
+          if(exists){ summary.identicos++; summary.tables.recipe_media.identicos++; continue; }
+          try{ insertRow(currentDb,'recipe_media',r); summary.nuevos++; summary.tables.recipe_media.nuevos++; }
+          catch(error){ console.warn('[ObradORRImportMerge] recipe_media omitido', error); summary.omitidos++; summary.tables.recipe_media.omitidos++; }
+        }
+      }
+      if(sourceTableExists(importDb,currentDb,'recipe_photos')){
+        const count = q(importDb,'SELECT * FROM recipe_photos').length;
+        summary.tables.recipe_photos = { nuevos:0, identicos:0, omitidos:count, policy:'omitidas rutas de fotos externas para evitar referencias rotas' };
+        summary.omitidos += count;
+      }
+      // Workshop validation logs: import as evidence only. They do not change release_status or workshop_validation_status.
+      if(sourceTableExists(importDb,currentDb,'workshop_validation_log')){
+        summary.tables.workshop_validation_log = { nuevos:0, identicos:0, omitidos:0 };
+        for(const r0 of q(importDb,'SELECT * FROM workshop_validation_log')){
+          const r = Object.assign({}, r0);
+          const kind = r.recipe_type || r.recipe_kind || '';
+          r.recipe_id = mappedRecipeId(kind, r.recipe_id, culMap, bakMap);
+          if(!recipeExists(currentDb, kind, r.recipe_id)){ summary.omitidos++; summary.tables.workshop_validation_log.omitidos++; continue; }
+          const cur = r.id ? rowById(currentDb,'workshop_validation_log',r.id) : null;
+          if(cur && signature(cur)===signature(r)){ summary.identicos++; summary.tables.workshop_validation_log.identicos++; continue; }
+          if(cur || !r.id) r.id = uniqueId(currentDb,'workshop_validation_log',`${r0.id || 'WV'}-IMPORT-${suffix}`);
+          r.notes = `${r.notes || ''}\n\nRegistro de prueba importado desde base externa; no cambia el estado de validación de la ficha por sí solo.`.trim();
+          try{ insertRow(currentDb,'workshop_validation_log',r); summary.nuevos++; summary.tables.workshop_validation_log.nuevos++; }
+          catch(error){ console.warn('[ObradORRImportMerge] validación externa omitida', error); summary.omitidos++; summary.tables.workshop_validation_log.omitidos++; }
+        }
+      }
+
       // Sessions imported as copies only.
       if(existsTable(importDb,'class_sessions')){
         summary.tables.class_sessions = { nuevos:0, omitidos:0 };
@@ -138,7 +248,7 @@
         }
       }
       const logId = `IMPORT-${suffix}`;
-      currentDb.exec("INSERT INTO import_log (id,source_name,source_schema,summary_json,notes) VALUES ($id,$src,$schema,$summary,$notes)", {$id:logId,$src:sourceName || '',$schema:summary.sourceVersion,$summary:JSON.stringify(summary),$notes:'Importación combinada segura: sin sobreescritura; conflictos como variantes.'});
+      currentDb.exec("INSERT INTO import_log (id,source_name,source_schema,summary_json,notes) VALUES ($id,$src,$schema,$summary,$notes)", {$id:logId,$src:sourceName || '',$schema:summary.sourceVersion,$summary:JSON.stringify(summary),$notes:'Importación combinada segura 2.1: sin sobreescritura; conflictos como variantes; validaciones externas importadas solo como evidencia si hay correspondencia inequívoca; fotos por ruta omitidas.'});
       currentDb.exec('COMMIT;');
       return summary;
     } catch(error){ try{currentDb.exec('ROLLBACK;')}catch(_){} throw error; }
@@ -150,5 +260,5 @@
     imported.loadFromBytes(bytes);
     try { return await fn(imported); } finally { imported.close(); }
   }
-  window.ObradORRImportMerge = { version: VERSION, preview, merge, withImportedDb };
+  window.ObradORRImportMerge = { version: VERSION, policy: POLICY, preview, merge, withImportedDb };
 })();

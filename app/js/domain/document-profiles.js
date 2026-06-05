@@ -89,5 +89,5 @@
   function isAudit(id) { return !!(PROFILES[id] && PROFILES[id].audit); }
   function isCompact(id) { return !!(PROFILES[id] && PROFILES[id].compact); }
   function preflightMode(id, documentType) { return defaults(id, documentType || "fichas_pedido").preflightMode || "summary"; }
-  window.ObradORRDocumentProfiles = { get, list, defaults, printConfig, label, isAudit, isCompact, preflightMode, version: "2.0.0" };
+  window.ObradORRDocumentProfiles = { get, list, defaults, printConfig, label, isAudit, isCompact, preflightMode, version: "2.1.0" };
 })();
