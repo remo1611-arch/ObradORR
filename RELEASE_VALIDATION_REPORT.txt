@@ -6,6 +6,7 @@
 [OK] node --check app/js/obradorr-app.js
 [OK] node --check app/js/obradorr-db-classic.js
 [OK] node --check app/js/obradorr-db.js
+[OK] node --check app/js/print/print-sections.js
 [OK] node --check app/js/qa/preflight-engine.js
 [OK] node --check app/js/storage/import-merge.js
 [OK] node --check app/js/storage/migrations.js
@@ -108,6 +109,10 @@
 [OK] migración RC6 registrada
 [OK] migración RC7 registrada
 [OK] migración 2.1 registrada
+[OK] RC9 Ajoblanco: alérgenos Frutos de cáscara, Gluten
+[OK] RC9 Tortilla Betanzos: alérgenos Huevos
+[OK] RC9 Torta de nata panadera directa: alérgenos Gluten, Huevos, Leche
+[OK] RC9 Crema chantilly componente: alérgenos Leche
 [OK] regresión exportación 00_AUX units ok: 3 filas leídas
 [OK] regresión exportación 00_AUX familias ok: 3 filas leídas
 [OK] regresión exportación 00_AUX subfamilias ok: 3 filas leídas
@@ -151,22 +156,108 @@
 [OK] plantilla limpia foreign_key_check sin errores
 [OK] plantilla limpia sin catálogo/ingredientes/validaciones
 [OK] plantilla limpia app_meta compatible
-[OK] cierre RC8 token presente: obradorr-210-rc8-release-candidate
-[OK] cierre RC8 token presente: Sesión actual
-[OK] cierre RC8 token presente: Sesiones guardadas
-[OK] cierre RC8 token presente: Guía de uso
-[OK] cierre RC8 token presente: Eliminar elaboración
-[OK] cierre RC8 token presente: Eliminar ingrediente
-[OK] cierre RC8 token presente: Crear y editar
-[OK] cierre RC8 ausente: obradorr-210-rc7-exports-discreet
-[OK] cierre RC8 ausente: Sesiones / prácticas
-[OK] cierre RC8 ausente: data-import-template-excel
-[OK] cierre RC8 ausente: data-export-template-excel
-[OK] cierre RC8 ausente: excelImportFileInput
-[OK] cierre RC8 ausente: js/import/excel-import.js
+[OK] RC9 token presente: obradorr-210-rc9-release-candidate
+[OK] RC9 token presente: Sesión actual
+[OK] RC9 token presente: Sesiones guardadas
+[OK] RC9 token presente: Guía de uso
+[OK] RC9 token presente: Eliminar elaboración
+[OK] RC9 token presente: Eliminar ingrediente
+[OK] RC9 token presente: Crear y editar
+[OK] RC9 token presente: Modelo de ficha
+[OK] RC9 token presente: Ficha de trabajo
+[OK] RC9 token presente: Ficha técnica
+[OK] RC9 token presente: Ficha técnica ampliada
+[OK] RC9 token presente: Dossier completo de producción
+[OK] RC9 token presente: Pedido de producción
+[OK] RC9 token presente: Bloques imprimibles del modelo
+[OK] RC9 token presente: Ajustes avanzados del modelo
+[OK] RC9 token presente: ObradORRDocumentProfiles.resolve
+[OK] RC9 token presente: printBlocks
+[OK] RC9 token presente: printConfig
+[OK] RC9 token presente: ObradORRPrintSections
+[OK] RC9 token presente: SECTION_CONTRACT
+[OK] RC9 token presente: renderDocumentBody
+[OK] RC9 token presente: sectionPlan
+[OK] RC9 token presente: RC9
+[OK] RC9 token presente: print-view.html
+[OK] RC9 token presente: ObradORRPrintView/2.1-rc9
+[OK] RC9 token presente: createPrintViewPayload
+[OK] RC9 token presente: escandalloBlockHtml
+[OK] RC9 token presente: traceabilityBlockHtml
+[OK] RC9 token presente: appccPrintMode
+[OK] RC9 token presente: bakeryComponentsSummaryHtml
+[OK] RC9 token presente: Escandallo técnico docente
+[OK] RC9 token presente: Trazabilidad técnica
+[OK] RC9 token presente: Componentes elaborados
+[OK] RC9 token presente: resolveRecipeAllergens
+[OK] RC9 token presente: resolveRecipeAllergenBundle
+[OK] RC9 token presente: visitedWithoutCurrent
+[OK] RC9 token presente: Detalle completo incluido en este modelo
+[OK] RC9 ausente: obradorr-210-rc7-exports-discreet
+[OK] RC9 ausente: data-import-template-excel
+[OK] RC9 ausente: data-export-template-excel
+[OK] RC9 ausente: excelImportFileInput
+[OK] RC9 ausente: js/import/excel-import.js
+[OK] RC9 ausente: Usar visor integrado
+[OK] RC9 ausente: printFallbackButton
+[OK] RC9 ausente: presentPrintDocumentFallbackIframe
+[OK] RC9 ausente: se usa visor integrado
+[OK] etiqueta visible retirada: FPB ·
+[OK] etiqueta visible retirada: CM ·
+[OK] etiqueta visible retirada: GS ·
+[OK] etiqueta visible retirada: Ciclo Medio
+[OK] etiqueta visible retirada: Ciclo Superior
+[OK] etiqueta visible retirada: Nivel documental
+[OK] etiqueta visible retirada: Pedido consolidado
 [OK] entrada actualizada: index.html
 [OK] entrada actualizada: Abrir_ObradORR.html
 [OK] entrada actualizada: app/reset_local_data.html
+[OK] RC9 print-sections.js presente
+[OK] RC9 print-sections token presente: SECTION_CONTRACT
+[OK] RC9 print-sections token presente: document_header
+[OK] RC9 print-sections token presente: recipe_sheets
+[OK] RC9 print-sections token presente: production_order
+[OK] RC9 print-sections token presente: renderDocumentBody
+[OK] RC9 print-sections token presente: 2.1.0-rc9
+[OK] RC9 print-sections cargado en HTML
+[OK] RC9 print-view.html presente
+[OK] RC9 print-view token presente: ObradORRPrintView:
+[OK] RC9 print-view token presente: printBtn
+[OK] RC9 print-view token presente: docFrame
+[OK] RC9 print-view token presente: Imprimir / guardar PDF
+[OK] RC9 app print-view token presente: createPrintViewPayload
+[OK] RC9 app print-view token presente: print-view.html?doc=
+[OK] RC9 app print-view token presente: shouldShowIngredientLineCosts
+[OK] RC9 app print-view token presente: escandalloBlockHtml
+[OK] RC9 app print-view token presente: traceabilityBlockHtml
+[OK] RC9 app print-view token presente: appccPrintMode
+[OK] RC9 app print-view token presente: bakeryComponentsSummaryHtml
+[OK] RC9 app print-view token presente: Escandallo técnico docente
+[OK] RC9 app print-view token presente: Trazabilidad técnica
+[OK] RC9 app print-view token presente: Componentes elaborados
+[OK] RC9 app print-view token presente: resolveRecipeAllergens
+[OK] RC9 app print-view token presente: resolveRecipeAllergenBundle
+[OK] RC9 app print-view token presente: visitedWithoutCurrent
+[OK] RC9 app print-view token presente: Detalle completo incluido en este modelo
+[OK] RC9 print-document.css presente
+[OK] RC9 print CSS token presente: @page{size:A4
+[OK] RC9 print CSS token presente: RC9
+[OK] RC9 print CSS token presente: print-color-adjust
+[OK] RC9 print CSS token presente: .sheet-head.has-photo
+[OK] RC9 print CSS token presente: .order-table
+[OK] RC9 print CSS token presente: .structured-appcc
+[OK] RC9 print CSS token presente: @media print
+[OK] RC9 app/js/obradorr-app-classic.js enlaza print-document.css
+[OK] RC9 app/js/obradorr-app-classic.js sin @page largo embebido en shell
+[OK] RC9 app/js/obradorr-app.js enlaza print-document.css
+[OK] RC9 app/js/obradorr-app.js sin @page largo embebido en shell
 [OK] namespace IndexedDB RC7 conservado por compatibilidad
+[OK] RC9 ficha ampliada incluye costes por defecto
+[OK] RC9 ficha ampliada sin escandallo
+[OK] RC9 escandallo reservado a dossier
+[OK] RC9 costes de líneas no duplican escandallo
+[OK] RC9 no muestra modal si window.open abre print-view.html
+[OK] RC9 no conserva mensaje modal de apertura exitosa
+[OK] RC9 conserva apertura manual solo para bloqueo
 
 RESULTADO: OK

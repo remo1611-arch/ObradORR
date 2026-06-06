@@ -1,0 +1,8 @@
+RC9 valida:
+- token de caché obradorr-210-rc9-release-candidate;
+- modelo documental 2.1-rc9;
+- funciones de control printBlockValue / appccPrintMode / shouldPrintEscandallo;
+- escandallo técnico docente;
+- trazabilidad técnica;
+- resumen de componentes panaderos;
+- base SQLite intacta.

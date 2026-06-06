@@ -1,3 +1,12 @@
+# Changelog
+
+## 2.1.0-RC9-F · Print View
+
+- Añadida vista independiente de impresión `app/print-view.html`.
+- Conservado fallback al visor integrado clásico.
+- Actualizado token de caché a `obradorr-210-rc9-release-candidate`.
+- Sin cambios en SQLite ni datos gastronómicos.
+
 # CHANGELOG
 
 ## 2.1.0-RC7 · Release candidate integral
@@ -62,3 +71,19 @@
 - Sin cambios en SQLite, fichas, ingredientes, APPCC, alérgenos, costes, impresión ni exportaciones.
 
 - Cierre RC8: navegación final fijada como Inicio, Sesión actual, Sesiones guardadas, Elaboraciones, Ingredientes, Validación de obrador, Sistema.
+
+## RC9-F · CSS print y maquetación A4
+
+- Separada la hoja de estilos de impresión en `app/css/print-document.css`.
+- `printDocumentShell()` deja de contener el bloque CSS largo incrustado.
+- Se mantiene `print-view.html` como vista de impresión principal y el visor integrado como respaldo.
+- Ajustes conservadores de A4, fotos, tablas, APPCC y saltos de página sin tocar datos gastronómicos.
+
+
+## 2.1.0-RC9 · Print Final Cleanup
+
+- Aplicada matriz de bloques imprimibles por modelo documental.
+- Añadido escandallo técnico docente para modelos avanzados/completos.
+- Añadida trazabilidad técnica para dossier completo.
+- Ajustadas subelaboraciones culinarias y componentes panaderos por modelo.
+- Base SQLite intacta.

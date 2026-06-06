@@ -1,0 +1,2 @@
+RC9-C valida matriz de bloques imprimibles, resolución de opciones y compatibilidad con render clásico.
+No altera db/obradorr.sqlite ni db/obradorr_blank.sqlite.

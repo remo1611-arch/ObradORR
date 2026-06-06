@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ObradORR · Vista de impresión</title>
+  <style>
+    :root{color-scheme:light;--brand:#7c3f1d;--bg:#f7f2ea;--ink:#1f2933;--muted:#5b6472;--line:#e2d8c7;--card:#fffaf2}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:var(--ink)}
+    .print-view-toolbar{position:sticky;top:0;z-index:10;display:flex;gap:10px;align-items:center;justify-content:space-between;padding:10px 12px;background:#fff;border-bottom:1px solid var(--line);box-shadow:0 1px 8px rgba(31,41,51,.08)}
+    .print-view-title{min-width:0}.print-view-title strong{display:block;color:var(--brand);font-size:15px}.print-view-title span{display:block;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:62vw}
+    .actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}.btn{border:1px solid var(--line);border-radius:999px;background:#fff;padding:8px 12px;color:var(--ink);text-decoration:none;font-weight:700;cursor:pointer}.btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}.btn:disabled{opacity:.6;cursor:not-allowed}
+    .print-view-frame{display:block;width:100%;height:calc(100vh - 62px);border:0;background:white}.fallback{max-width:760px;margin:40px auto;background:white;border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:0 12px 28px rgba(31,41,51,.10)}.fallback h1{margin-top:0;color:var(--brand)}.fallback code{background:#f5efe6;padding:1px 4px;border-radius:4px}.fallback .note{color:var(--muted)}
+    @media(max-width:640px){.print-view-toolbar{align-items:flex-start}.actions{gap:6px}.btn{padding:7px 9px}.print-view-title span{max-width:48vw}.print-view-frame{height:calc(100vh - 74px)}}
+    @media print{.print-view-toolbar{display:none!important}.print-view-frame{height:100vh!important}}
+  </style>
+</head>
+<body>
+  <div id="root" class="fallback">
+    <h1>ObradORR · Vista de impresión</h1>
+    <p>Cargando documento imprimible...</p>
+  </div>
+  <script>
+    (function(){
+      'use strict';
+      const ROOT = document.getElementById('root');
+      const params = new URLSearchParams(location.search);
+      const docId = params.get('doc') || '';
+      const key = docId ? `ObradORRPrintView:${docId}` : '';
+      function esc(s){return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+      function errorView(title, message){
+        document.title = 'ObradORR · Vista no disponible';
+        ROOT.className = 'fallback';
+        ROOT.innerHTML = `<h1>${esc(title)}</h1><p>${esc(message)}</p><p class="note">Vuelve a ObradORR y genera de nuevo la vista previa. Si abriste esta página desde un enlace antiguo, el documento temporal puede haber caducado.</p>`;
+      }
+      function cleanupExpired(){
+        const now = Date.now();
+        try{
+          for(let i=localStorage.length-1;i>=0;i--){
+            const k = localStorage.key(i);
+            if(!k || !k.startsWith('ObradORRPrintView:')) continue;
+            try{
+              const p = JSON.parse(localStorage.getItem(k) || '{}');
+              if(!p.expiresAt || Number(p.expiresAt) < now) localStorage.removeItem(k);
+            }catch(_){ localStorage.removeItem(k); }
+          }
+        }catch(_){ }
+      }
+      cleanupExpired();
+      if(!key) return errorView('Falta el identificador del documento', 'No se ha recibido el parámetro de impresión.');
+      let payload;
+      try{ payload = JSON.parse(localStorage.getItem(key) || 'null'); }
+      catch(e){ return errorView('Documento no legible', 'La cola temporal de impresión está dañada o no es JSON válido.'); }
+      if(!payload || !payload.html) return errorView('Documento no encontrado', 'No se encontró el documento imprimible asociado a esta vista.');
+      if(payload.expiresAt && Number(payload.expiresAt) < Date.now()){
+        try{ localStorage.removeItem(key); }catch(_){ }
+        return errorView('Documento caducado', 'El documento temporal de impresión ha caducado.');
+      }
+      const title = payload.title || 'Documento';
+      const suggestedTitle = payload.suggestedTitle || payload.filenameBase || title;
+      document.title = suggestedTitle;
+      ROOT.className = '';
+      ROOT.innerHTML = `<header class="print-view-toolbar"><div class="print-view-title"><strong>ObradORR · Vista de impresión</strong><span>${esc(title)}</span></div><div class="actions"><button class="btn primary" id="printBtn">Imprimir / guardar PDF</button><button class="btn" id="closeBtn">Cerrar</button></div></header><iframe id="docFrame" class="print-view-frame" title="Documento imprimible"></iframe>`;
+      const frame = document.getElementById('docFrame');
+      const printBtn = document.getElementById('printBtn');
+      const closeBtn = document.getElementById('closeBtn');
+      frame.srcdoc = payload.html;
+      frame.addEventListener('load', () => {
+        try { if(frame.contentDocument) frame.contentDocument.title = suggestedTitle; } catch(_){ }
+      });
+      printBtn.addEventListener('click', () => {
+        const w = frame.contentWindow;
+        if(!w) return alert('La vista de impresión todavía no está lista.');
+        try { if(w.document) w.document.title = suggestedTitle; } catch(_){ }
+        w.focus();
+        w.print();
+      });
+      closeBtn.addEventListener('click', () => {
+        try { window.close(); } catch(_){ }
+        if(!window.closed) history.back();
+      });
+    })();
+  </script>
+</body>
+</html>

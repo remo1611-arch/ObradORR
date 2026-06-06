@@ -1,40 +1,58 @@
-# ObradORR 2.1.0-RC8 · Release Candidate
+# ObradORR 2.1.0-RC9 · Release Candidate
 
-Aplicación web offline para aula-taller de cocina, pastelería y panadería.
+Aula taller digital offline para cocina, pastelería y panadería.
 
-Esta release candidate consolida la línea 2.1.0-RC8 tras los refinamientos de interfaz, edición segura, eliminación controlada y guía de uso. El objetivo es cerrar una versión de prueba docente coherente antes de una posible publicación estable.
+ObradORR permite trabajar con fichas técnicas, ingredientes, subelaboraciones, pedido de producción, alérgenos, APPCC docente, modelos de impresión, escandallos, escalado de producción y copias SQLite sin depender de servidor externo.
 
-## Navegación final
+## Estado de la versión
 
-`Inicio · Sesión actual · Sesiones guardadas · Elaboraciones · Ingredientes · Validación de obrador · Sistema`
+- Versión: `2.1.0-RC9`.
+- Canal: `release candidate`.
+- Token de carga web: `obradorr-210-rc9-release-candidate`.
+- Ejecución: navegador moderno con servidor local desde la raíz del proyecto.
+- Base incluida: SQLite local.
+- Fuente de verdad: `db/obradorr.sqlite`.
 
-## Incluye
+## Navegación principal
 
-- Sesión actual como flujo guiado para preparar fichas, pedido o ficha + pedido.
-- Sesiones guardadas en la copia SQLite activa.
-- Edición cómoda de elaboraciones e ingredientes.
-- Alta cancelable: no se crea una elaboración o ingrediente hasta confirmar `Crear y editar`.
-- Eliminación segura de elaboraciones e ingredientes, bloqueada si el registro está en uso.
-- Guía de uso plegada en Inicio.
-- Validación de obrador preparada sin validar automáticamente fichas.
-- Exportaciones técnicas discretas y plegadas.
-- Importación Excel retirada; Excel/CSV/JSON quedan como salidas de consulta, auditoría o respaldo.
-- Copias SQLite, restauración y combinación segura.
+Inicio · Sesión actual · Sesiones guardadas · Elaboraciones · Ingredientes · Validación de obrador · Sistema
 
-## Metadatos técnicos
+## Modelos de impresión
 
-- Versión visual: `2.1.0-RC8 Release Candidate`.
-- Base SQLite incluida: `2.1.0-RC7`.
-- `release_tag` interno de base: `2.1.0-rc7`.
-- `cache_tag` interno de base: `obradorr-210-rc7-release-candidate`.
-- Token de carga web de esta compilación: `obradorr-210-rc8-release-candidate`.
+Los modelos se nombran por finalidad documental, no por nivel educativo:
 
-Se mantiene el espacio de datos local de RC7 para no invalidar copias de trabajo compatibles. El parámetro `?v=` cambia para forzar recarga de HTML/CSS/JS.
+- **Ficha de trabajo**: ingredientes, cantidades, foto si existe y proceso esencial. Sin escandallo.
+- **Ficha técnica**: documento ordinario de práctica con proceso, alérgenos, conservación/servicio y subelaboraciones resumidas.
+- **Ficha técnica ampliada**: documento técnico de preparación de práctica con APPCC, subelaboraciones desarrolladas, observaciones técnicas y costes estimados.
+- **Dossier completo de producción**: documento completo con escandallo, costes, APPCC, validación documental y trazabilidad técnica.
 
-## Estado
+El antiguo `Pedido` queda normalizado como **Pedido de producción**.
 
-Release candidate integral para prueba final en PC y Termux/Android. No debe considerarse publicación estable hasta superar prueba manual de uso real.
+## Uso básico
 
-## Regla documental
+1. Descomprime el ZIP o clona el repositorio.
+2. Arranca un servidor local desde la raíz del proyecto.
+3. Abre `index.html` o `app/obradorr.html` en el navegador.
+4. Prepara la práctica en **Sesión actual**.
+5. Genera la vista de impresión y guarda PDF si procede.
+6. Después de cambios importantes, descarga una copia `.sqlite` desde **Sistema**.
 
-Ninguna ficha se considera validada por IA ni por importación. La validación real corresponde al profesorado tras prueba de obrador.
+## Límites importantes
+
+SQLite sigue siendo la fuente de verdad. Excel, CSV y JSON son salidas de auditoría, respaldo o revisión externa; no son formatos maestros de edición.
+
+Las fichas son propuestas documentales. La validación real de rendimiento, textura, merma, tiempos y aceptación organoléptica corresponde al profesorado tras prueba en obrador.
+
+## Documentación
+
+- `GUIA_TERMUX.md`
+- `GUIA_WINDOWS.md`
+- `BACKUPS.md`
+- `EXPORTACIONES.md`
+- `IMPORTACION_SEGURA.md`
+- `VALIDACION_OBRADOR.md`
+- `docs/print_refactor/`
+
+## Autoría
+
+© 2026 Remo José Pereira González. Uso docente personal autorizado. Sin licencia abierta de redistribución o explotación comercial salvo permiso expreso.

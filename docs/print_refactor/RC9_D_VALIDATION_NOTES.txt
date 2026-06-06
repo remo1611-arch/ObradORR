@@ -1,0 +1,8 @@
+RC9-E valida:
+- presencia de app/js/print/print-sections.js;
+- carga del módulo en app/obradorr.html;
+- token de caché obradorr-210-rc9-e-print-view;
+- plan de secciones en buildPrintDocumentModel;
+- uso de ObradORRPrintSections.renderDocumentBody;
+- conservación de salida clásica por iframe srcdoc;
+- ausencia de cambios SQLite.

@@ -487,3 +487,17 @@ textarea[data-step-instruction], textarea[data-step-notes]{min-width:240px;min-h
 .usage-guide-item code{background:#f4efe5;border:1px solid var(--line);border-radius:6px;padding:1px 4px;font-size:.9em}
 .guide-actions{margin:0 14px 14px}
 @media(max-width:760px){.usage-guide-card{margin-top:12px}.usage-guide>summary{padding:14px}.usage-guide-body{padding:0 14px 14px}.guide-actions .btn{flex:1 1 100%;justify-content:center}}
+
+/* RC9-C · Matriz de bloques imprimibles */
+.print-block-matrix{margin-top:12px;padding:12px;border:1px solid var(--border,#d9e2ec);border-radius:14px;background:#f8fafc}
+.print-block-matrix h4{margin:0 0 10px;font-size:.96rem}
+.print-block-chips{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.block-chip{display:flex;flex-direction:column;gap:2px;padding:8px 10px;border-radius:12px;border:1px solid rgba(30,64,175,.16);background:#fff;min-width:0}
+.block-chip b{font-size:.88rem;line-height:1.15;overflow-wrap:normal;word-break:normal}
+.block-chip small{font-size:.76rem;color:var(--muted,#667085);line-height:1.2}
+.block-chip.on{border-color:rgba(22,163,74,.28)}
+.block-chip.optional{border-color:rgba(217,119,6,.32);background:#fffaf0}
+.block-chip.off{opacity:.58;background:#f3f4f6}
+.print-block-matrix.compact{background:transparent;border-style:dashed}
+.print-block-matrix.compact .print-block-chips{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
+@media (max-width: 720px){.print-block-chips{grid-template-columns:1fr}.print-block-matrix{padding:10px}.block-chip{padding:8px}}

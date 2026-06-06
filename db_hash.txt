@@ -1,0 +1,2 @@
+ded1f31aa95a7ce36a828da96a8936c0c20b8182ebd7af72143c518978529502  db/obradorr.sqlite
+76e848d16cdab39318b7ca6a08f710dd2d36d96f19b3a3e0970cbd6dd402954a  db/obradorr_blank.sqlite

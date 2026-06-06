@@ -1,0 +1,9 @@
+RC9-A es una fase documental y de auditoría.
+
+Validación funcional esperada:
+- La base SQLite permanece intacta.
+- El código funcional no se modifica.
+- La validación RC8 sigue pasando.
+- Se añaden solo documentos de análisis en docs/print_refactor/.
+
+La fase siguiente debe empezar por modelos neutrales y resolución de opciones, no por CSS ni por cambio visual profundo.

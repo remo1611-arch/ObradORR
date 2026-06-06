@@ -1,5 +1,8 @@
-# Capa ObradORR 2.1
+# ObradORR 2.1.0-RC9 · Release Candidate
 
-Carpeta reservada para la separación progresiva de ObradORR 2.1.
+RC9-F separa la preparación documental, la vista de impresión y la hoja CSS A4.
 
-La compilación pública mantiene el cargador clásico `app/js/obradorr-app-classic.js` para máxima compatibilidad Android/Termux. Esta carpeta documenta la arquitectura objetivo y permite extraer módulos sin romper la versión estable.
+- `print-sections.js` mantiene el contrato de secciones imprimibles.
+- `app/print-view.html` muestra el documento en una vista independiente.
+- `print-view.html` es la salida oficial de impresión; el visor clásico integrado ya no se ofrece en la interfaz.
+- El CSS profundo del documento no se refactoriza todavía en esta fase.

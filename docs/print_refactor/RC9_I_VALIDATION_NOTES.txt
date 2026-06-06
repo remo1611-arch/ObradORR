@@ -1,0 +1,6 @@
+RC9 valida:
+- token de caché obradorr-210-rc9-release-candidate;
+- resolvedor común de alérgenos por ficha;
+- caso panadero Torta de nata con Gluten, Huevos y Leche;
+- textos de dossier y APPCC ajustados;
+- SQLite intacta.

@@ -1,0 +1,73 @@
+@page{size:A4;margin:11mm 12mm}*{box-sizing:border-box}body{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#1f2933;line-height:1.28;font-size:13px}h1{font-size:27px;margin:0 0 3px}h2{font-size:20px;margin:0 0 5px;break-after:avoid;page-break-after:avoid}h3{margin:11px 0 5px;color:#7c3f1d;break-after:avoid;page-break-after:avoid}h4{margin:8px 0 3px;color:#7c3f1d;break-after:avoid;page-break-after:avoid}.doc-cover{border-bottom:3px solid #7c3f1d;padding-bottom:12px;margin-bottom:12px}.doc-cover dl{display:grid;grid-template-columns:130px 1fr;gap:3px 10px;font-size:12px}.doc-cover dt{font-weight:800}.doc-cover dd{margin:0}.print-index{margin:8px 0 12px}.print-index ol{margin:4px 0 0 20px}.sheet-head{display:flex;gap:12px;align-items:flex-start;justify-content:space-between;border-bottom:1px solid #ddd;padding-bottom:7px;margin-bottom:8px;break-inside:avoid;page-break-inside:avoid}.sheet-head-text{min-width:0;flex:1 1 auto}.sheet-head h2{margin:0 0 4px}.sheet-head p{margin:0;color:#374151}.sheet-head-figure{flex:0 0 46mm;max-width:46mm;margin:0 0 0 auto;display:flex;justify-content:flex-end}.sheet-head-photo,.sheet-photo{width:46mm;max-width:46mm;height:auto;max-height:34mm;object-fit:contain;border-radius:8px;border:1px solid #ddd;background:#faf7f0}.sheet-head:not(.has-photo){display:block}.sheet-head:not(.has-photo) .sheet-head-text{width:100%}table{width:100%;border-collapse:collapse;margin:6px 0 9px;table-layout:fixed;page-break-inside:auto}thead{display:table-header-group}th,td{border:1px solid #ddd;padding:4px 6px;text-align:left;vertical-align:top;overflow-wrap:break-word;word-break:normal;hyphens:auto}th{background:#f4efe6;font-size:10.5px;text-transform:uppercase}tr{break-inside:avoid;page-break-inside:avoid}.lines-table th:nth-child(1){width:48%}.lines-table th:nth-child(2){width:18%}.lines-table th:nth-child(3){width:34%}.lines-table.with-costs th:nth-child(1){width:43%}.lines-table.with-costs th:nth-child(2){width:17%}.lines-table.with-costs th:nth-child(3){width:14%}.lines-table.with-costs th:nth-child(4){width:26%}.order-table th:nth-child(1){width:36%}.order-table th:nth-child(2){width:14%}.order-table th:nth-child(3){width:15%}.order-table th:nth-child(4){width:35%}.order-table.with-costs th:nth-child(1){width:33%}.order-table.with-costs th:nth-child(2){width:13%}.order-table.with-costs th:nth-child(3){width:14%}.order-table.with-costs th:nth-child(4){width:30%}.order-table.with-costs th:nth-child(5){width:10%}.qty,.money-cell{white-space:nowrap}.money-cell{text-align:right}.note-cell{font-size:11px}.page-break{break-before:page}.print-sheet:first-of-type{break-before:auto}.print-sheet,.print-order,.process-block,.appcc-block{break-inside:auto;page-break-inside:auto}.prose{max-width:100%;display:block}.prose p{margin:.30rem 0;break-inside:avoid;page-break-inside:avoid;overflow-wrap:normal;word-break:normal}.cost-line{background:#f6f0e6;padding:6px;border-radius:7px;margin:7px 0}.subrecipe-summary,.formula-meta,.component-block,.bakery-block,.warning-block{border:1px solid #e2d8c7;border-radius:9px;padding:7px 9px;margin:7px 0;break-inside:avoid;page-break-inside:avoid}.sub-sheet{border:1px solid #e2d8c7;border-radius:9px;padding:7px 9px;margin:8px 0;background:#fffaf2;break-inside:auto;page-break-inside:auto}.sub-sheet .sub-sheet-head{display:flex;gap:8px;align-items:flex-start;justify-content:space-between;break-inside:avoid;page-break-inside:avoid}.sub-sheet .sub-sheet-head>div{min-width:0;flex:1}.sub-sheet img,.sub-sheet-photo{max-width:26mm;max-height:20mm;width:auto;height:auto;object-fit:contain;border-radius:7px;justify-self:end;background:#faf7f0}.formula-meta dl{display:grid;grid-template-columns:150px 1fr;gap:3px 8px;margin:0}.formula-meta dt{font-weight:800}.formula-meta dd{margin:0}.warning-block{background:#fff7ed;border-color:#fdba74}.sub-sheet-reference{background:#f8fafc;border-style:dashed}.technical-base-collapsed{background:#fafafa}.appcc-brief .appcc-table th{width:22%}.allergen-block{border:1px solid #f0c36b;background:#fff8e8;border-radius:9px;padding:7px 9px;margin:8px 0;break-inside:avoid;page-break-inside:avoid}.allergen-block h3{margin-top:0}.allergen-block h4{margin:6px 0 3px;color:#7c3f1d}.allergen-block ul{margin:3px 0 5px 18px;padding:0}.allergen-block .pending{color:#9a3412}.allergen-block .may-contain{color:#6b4e16}.allergen-source,.allergen-note{font-size:10.5px;color:#5b6472}.allergen-note{margin:4px 0 0}.optional-allergens{background:#fffaf2}.structured-appcc{border:1px solid #b7c8a9;background:#f8fff2;border-radius:9px;padding:7px 9px;margin:8px 0;break-inside:auto;page-break-inside:auto}.appcc-disclaimer,.appcc-note{font-size:10.5px;color:#4f5d43;margin:4px 0 6px}.appcc-row-block{break-inside:auto;page-break-inside:auto;margin:6px 0 8px}.appcc-table th{width:24%;background:#eaf4df}.structured-appcc h3{break-after:avoid-page}.structured-appcc table{break-inside:auto;page-break-inside:auto}.appcc-table td{width:76%}.appcc-cell p{margin:.20rem 0}.appcc-unstructured{background:#fff7ed;border-color:#fdba74}.warn{color:#9a3412;font-weight:700}.bakery-block h3,.component-block h3{margin-top:0}.preflight-print{break-inside:auto;page-break-inside:auto}.preflight-print table{font-size:11px}.print-legal-footer{border-top:1px solid #ddd;margin-top:12px;padding-top:6px;color:#5b6472;font-size:10px;text-align:center}.print-legal-footer strong{color:#1f2933}@media(max-width:760px){.sheet-head{display:block}.sheet-head-figure{margin:8px 0 0;max-width:100%;justify-content:flex-start}.sheet-head-photo,.sheet-photo{width:auto;max-width:100%;max-height:38mm}.sub-sheet .sub-sheet-head{display:block}.sub-sheet img,.sub-sheet-photo{max-width:100%;max-height:18mm;margin-top:5px}}@media print{button{display:none}h1,h2,h3,h4,.section-title{break-after:avoid;page-break-after:avoid}.sheet-head,.sub-sheet-head,.allergen-block,.warning-block,.appcc-card{break-inside:avoid;page-break-inside:avoid}.sub-sheet,.structured-appcc,.process-block{break-inside:auto;page-break-inside:auto}}
+/* Maquetación de impresión final */
+.sheet-head.has-photo{display:grid;grid-template-columns:minmax(0,1fr) 46mm;gap:10px;align-items:start}
+.sheet-head-figure{grid-column:2;margin:0;max-width:46mm;justify-content:flex-end;align-self:start}
+.sheet-head-text{grid-column:1;min-width:0}
+.appcc-brief-card{border:1px solid #d9e6cf;background:#fbfff7;border-radius:8px;padding:6px 8px;margin:6px 0 8px;break-inside:avoid;page-break-inside:avoid}
+.appcc-brief-card h4{margin:0 0 4px}
+.appcc-brief-grid{display:grid;grid-template-columns:22% 1fr;border:1px solid #d9e6cf;border-bottom:0}
+.appcc-brief-label,.appcc-brief-value{padding:4px 6px;border-bottom:1px solid #d9e6cf;overflow-wrap:break-word}
+.appcc-brief-label{font-weight:800;text-transform:uppercase;font-size:10.5px;background:#edf7e7}
+.appcc-brief-value .appcc-cell p{margin:0}
+.sub-sheet-intro{break-inside:avoid;page-break-inside:avoid;break-after:avoid;page-break-after:avoid}
+@media print{.sheet-head.has-photo{display:grid!important;grid-template-columns:minmax(0,1fr) 44mm!important;gap:8px!important}.sheet-head-figure{grid-column:2!important;max-width:44mm!important;margin:0!important}.sheet-head-text{grid-column:1!important}.sheet-head-photo,.sheet-photo{width:44mm!important;max-width:44mm!important;max-height:32mm!important;object-fit:contain!important}.appcc-brief-card{break-inside:avoid!important;page-break-inside:avoid!important}.appcc-brief-grid{grid-template-columns:23% 1fr}.sub-sheet-intro{break-inside:avoid!important;page-break-inside:avoid!important}}
+@media screen and (max-width:760px){.sheet-head.has-photo{display:block}.sheet-head-figure{margin-top:8px;max-width:100%;justify-content:flex-start}.sheet-head-photo,.sheet-photo{width:auto!important;max-width:100%!important;max-height:38mm!important}}
+
+/* RC9-F · Separación y ajuste de maquetación A4
+   Este archivo es la fuente de estilo del documento imprimible. Mantiene
+   compatibilidad con el render clásico, print-view.html y el visor integrado. */
+:root{color-scheme:light;--orr-brand:#7c3f1d;--orr-ink:#1f2933;--orr-muted:#5b6472;--orr-line:#ddd;--orr-soft:#f4efe6;--orr-soft-2:#fffaf2}
+html{background:#fff}
+body{margin:0 auto;max-width:190mm;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.doc-cover{break-after:avoid;page-break-after:avoid}
+.doc-cover h1{overflow-wrap:normal;word-break:normal}
+.print-index{break-inside:avoid;page-break-inside:avoid}
+.print-sheet,.print-order{padding-top:0}
+.print-sheet.page-break,.print-order.page-break{break-before:page;page-break-before:always}
+.print-sheet:first-of-type{break-before:auto!important;page-break-before:auto!important}
+.sheet-head{break-after:avoid;page-break-after:avoid}
+.sheet-head.has-photo{grid-template-columns:minmax(0,1fr) 42mm;gap:9px}
+.sheet-head-figure{max-width:42mm}.sheet-head-photo,.sheet-photo{width:42mm;max-width:42mm;max-height:31mm}
+.prose,.process-block{orphans:3;widows:3}.prose p{line-height:1.32}
+.process-block,.bakery-block,.component-block,.subrecipe-summary,.formula-meta,.allergen-block,.warning-block{margin-top:6px;margin-bottom:8px}
+.sub-sheet{margin:7px 0 9px;padding:7px 8px}.sub-sheet h4{margin-top:0}.sub-sheet .sub-sheet-head{break-after:avoid;page-break-after:avoid}
+.structured-appcc{margin-top:8px}.appcc-row-block{break-inside:avoid;page-break-inside:avoid}.appcc-table{table-layout:fixed}.appcc-table th{width:24%}.appcc-table td{width:76%}
+table{font-size:11.5px}.lines-table,.order-table{table-layout:fixed}.lines-table td,.order-table td{line-height:1.25}.qty,.money-cell{font-variant-numeric:tabular-nums}.note-cell{font-size:10.5px;color:#4b5563}
+.order-table.with-costs th:nth-child(5),.order-table.with-costs td:nth-child(5){text-align:right}
+.print-legal-footer{break-inside:avoid;page-break-inside:avoid}
+@media screen{body{box-shadow:0 0 0 1px rgba(31,41,51,.08),0 18px 50px rgba(31,41,51,.12);padding:10mm 11mm;margin:18px auto}.print-legal-footer{margin-bottom:0}}
+@media print{html,body{max-width:none;margin:0;padding:0;box-shadow:none}body{font-size:12.5px}.doc-cover{margin-top:0}.sheet-head.has-photo{grid-template-columns:minmax(0,1fr) 40mm!important}.sheet-head-figure{max-width:40mm!important}.sheet-head-photo,.sheet-photo{width:40mm!important;max-width:40mm!important;max-height:30mm!important}table{font-size:11px}thead{display:table-header-group}tfoot{display:table-footer-group}.doc-cover,.print-index,.sheet-head,.formula-meta,.allergen-block,.warning-block,.appcc-brief-card,.sub-sheet-intro,.print-legal-footer{break-inside:avoid!important;page-break-inside:avoid!important}.structured-appcc,.sub-sheet,.process-block{break-inside:auto!important;page-break-inside:auto!important}.page-break{break-before:page!important;page-break-before:always!important}.print-sheet:first-of-type{break-before:auto!important;page-break-before:auto!important}}
+@media screen and (max-width:760px){body{max-width:none;margin:0;padding:12px;box-shadow:none}.doc-cover dl,.formula-meta dl{grid-template-columns:1fr}.sheet-head.has-photo{display:block}.sheet-head-photo,.sheet-photo{width:auto!important;max-width:100%!important;max-height:38mm!important}table{font-size:11px}}
+
+/* RC9 · Bloques documentales por modelo */
+.escandallo-block,
+.traceability-block,
+.conservation-block,
+.component-summary{
+  border:1px solid #d9e2d0;
+  border-radius:10px;
+  padding:10px 12px;
+  margin:12px 0;
+  background:#fffef8;
+  break-inside:avoid;
+  page-break-inside:avoid;
+}
+.escandallo-block h3,
+.traceability-block h3,
+.conservation-block h3,
+.component-summary h3{margin-top:0;}
+.escandallo-table{width:100%; border-collapse:collapse; margin-top:8px; font-size:.92rem;}
+.escandallo-table th,.escandallo-table td{border:1px solid #d7ddcf; padding:5px 6px; vertical-align:top;}
+.escandallo-table tfoot th{background:#eef4e8;}
+.traceability-block dl{display:grid; grid-template-columns:minmax(120px, 190px) 1fr; gap:4px 10px; margin:0;}
+.traceability-block dt{font-weight:700; color:#405030;}
+.traceability-block dd{margin:0;}
+.component-summary ul{margin:.35rem 0 .25rem 1.2rem; padding:0;}
+.document-status-warning.critical-only{border-color:#c87575; background:#fff7f7;}
+@media print{
+  .escandallo-block,.traceability-block,.conservation-block,.component-summary{background:#fff;}
+}
+@media (max-width:700px){
+  .traceability-block dl{grid-template-columns:1fr;}
+  .traceability-block dt{margin-top:.35rem;}
+}

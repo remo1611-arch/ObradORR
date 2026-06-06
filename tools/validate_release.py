@@ -9,10 +9,12 @@ for js in sorted((ROOT/'app/js').rglob('*.js')):
     r=subprocess.run(['node','--check',str(js)],capture_output=True,text=True)
     ok(f'node --check {js.relative_to(ROOT)}') if r.returncode==0 else fail(f'node --check falla {js.relative_to(ROOT)}: {r.stderr}')
 html=(ROOT/'app/obradorr.html').read_text(encoding='utf-8')
+print_view_html=(ROOT/'app/print-view.html').read_text(encoding='utf-8') if (ROOT/'app/print-view.html').exists() else ''
 alljs='\n'.join(p.read_text(encoding='utf-8') for p in (ROOT/'app/js').rglob('*.js'))
 css=(ROOT/'app/css/obradorr.css').read_text(encoding='utf-8')
+print_css=(ROOT/'app/css/print-document.css').read_text(encoding='utf-8') if (ROOT/'app/css/print-document.css').exists() else ''
 docs='\n'.join(p.read_text(encoding='utf-8', errors='ignore') for p in [ROOT/'README.md',ROOT/'RELEASE_NOTES.md',ROOT/'CHANGELOG.md',ROOT/'GUIA_TERMUX.md',ROOT/'GUIA_WINDOWS.md'] if p.exists())
-blob=html+'\n'+alljs+'\n'+css+'\n'+docs
+blob=html+'\n'+alljs+'\n'+css+'\n'+print_css+'\n'+docs
 required_tokens = [
     '2.1.0','2.1.0-rc7','obradorr-210-rc7-release-candidate','obradorr-data-210-rc7-release-candidate',
     'ObradORRExportTools','exportPracticeZip','ObradORRRecursiveEngine','ObradORRPreflight','ObradORRSafeEditor','ObradORRImportMerge',
@@ -80,6 +82,44 @@ if cur.execute("SELECT 1 FROM migrations_log WHERE id='20260605_210_rc7_release_
 else: fail('migración RC7 ausente')
 if cur.execute("SELECT 1 FROM migrations_log WHERE id='20260605_210_workshop_validation'").fetchone(): ok('migración 2.1 registrada')
 else: fail('migración 2.1 ausente')
+
+# RC9 · Allergen resolver unification: casos mínimos por ficha.
+def assert_allergens_for_ingredients(label, ingredient_query, expected_allergen_names):
+    ingredient_ids = [r[0] for r in cur.execute(ingredient_query)]
+    if not ingredient_ids:
+        fail(f'RC9 {label}: sin ingredientes para comprobar')
+        return
+    placeholders = ','.join('?' for _ in ingredient_ids)
+    rows = cur.execute(f"""SELECT DISTINCT a.name
+        FROM ingredient_allergens ia
+        JOIN allergens a ON a.id=ia.allergen_id
+        WHERE a.regulation_order BETWEEN 1 AND 14
+          AND ia.declaration_status='confirmed'
+          AND ia.ingredient_id IN ({placeholders})""", ingredient_ids).fetchall()
+    found = {r[0] for r in rows}
+    missing = sorted(set(expected_allergen_names) - found)
+    ok(f'RC9 {label}: alérgenos {", ".join(sorted(found))}') if not missing else fail(f'RC9 {label}: faltan alérgenos {missing}; encontrados {sorted(found)}')
+
+assert_allergens_for_ingredients(
+    'Ajoblanco',
+    "SELECT DISTINCT ingredient_id FROM v_culinary_expanded_ingredient_lines WHERE recipe_id='REC-AJOBLANCO' AND ingredient_id IS NOT NULL",
+    ['Gluten', 'Frutos de cáscara']
+)
+assert_allergens_for_ingredients(
+    'Tortilla Betanzos',
+    "SELECT DISTINCT ingredient_id FROM v_culinary_expanded_ingredient_lines WHERE recipe_id='REC-TORTILLA-BETANZOS' AND ingredient_id IS NOT NULL",
+    ['Huevos']
+)
+assert_allergens_for_ingredients(
+    'Torta de nata panadera directa',
+    "SELECT DISTINCT ingredient_id FROM bakery_recipe_lines WHERE recipe_id='torta-de-nata-pedro' AND ingredient_id IS NOT NULL",
+    ['Gluten', 'Huevos', 'Leche']
+)
+assert_allergens_for_ingredients(
+    'Crema chantilly componente',
+    "SELECT DISTINCT ingredient_id FROM v_culinary_expanded_ingredient_lines WHERE recipe_id='REC-PAST-CHANTILLY' AND ingredient_id IS NOT NULL",
+    ['Leche']
+)
 
 # Regresión SQL del exportador: ejecutar todas las consultas usadas por las hojas del
 # catálogo completo y por las exportaciones auxiliares. Esto evita falsos OK cuando
@@ -173,19 +213,69 @@ if blank_path.exists():
 else:
     fail('falta db/obradorr_blank.sqlite')
 
-# Cierre RC8: coherencia de interfaz y ausencia de restos obsoletos de entrada.
-closure_text = html + "\n" + alljs + "\n" + css
-for token in ['obradorr-210-rc8-release-candidate', 'Sesión actual', 'Sesiones guardadas', 'Guía de uso', 'Eliminar elaboración', 'Eliminar ingrediente', 'Crear y editar']:
-    ok(f'cierre RC8 token presente: {token}') if token in closure_text else fail(f'cierre RC8 token ausente: {token}')
-for old in ['obradorr-210-rc7-exports-discreet', 'Sesiones / prácticas', 'data-import-template-excel', 'data-export-template-excel', 'excelImportFileInput', 'js/import/excel-import.js']:
-    ok(f'cierre RC8 ausente: {old}') if old not in closure_text else fail(f'cierre RC8 conserva resto obsoleto: {old}')
+# RC9: modelos imprimibles aplicados sobre subelaboraciones, panadería y escandallo.
+closure_text = html + "\n" + print_view_html + "\n" + alljs + "\n" + css + "\n" + print_css
+for token in ['obradorr-210-rc9-release-candidate', 'Sesión actual', 'Sesiones guardadas', 'Guía de uso', 'Eliminar elaboración', 'Eliminar ingrediente', 'Crear y editar', 'Modelo de ficha', 'Ficha de trabajo', 'Ficha técnica', 'Ficha técnica ampliada', 'Dossier completo de producción', 'Pedido de producción', 'Bloques imprimibles del modelo', 'Ajustes avanzados del modelo', 'ObradORRDocumentProfiles.resolve', 'printBlocks', 'printConfig', 'ObradORRPrintSections', 'SECTION_CONTRACT', 'renderDocumentBody', 'sectionPlan', 'RC9', 'print-view.html', 'ObradORRPrintView/2.1-rc9', 'createPrintViewPayload', 'escandalloBlockHtml', 'traceabilityBlockHtml', 'appccPrintMode', 'bakeryComponentsSummaryHtml', 'Escandallo técnico docente', 'Trazabilidad técnica', 'Componentes elaborados', 'resolveRecipeAllergens', 'resolveRecipeAllergenBundle', 'visitedWithoutCurrent', 'Detalle completo incluido en este modelo']:
+    ok(f'RC9 token presente: {token}') if token in closure_text else fail(f'RC9 token ausente: {token}')
+for old in ['obradorr-210-rc7-exports-discreet', 'data-import-template-excel', 'data-export-template-excel', 'excelImportFileInput', 'js/import/excel-import.js', 'Usar visor integrado', 'printFallbackButton', 'presentPrintDocumentFallbackIframe', 'se usa visor integrado']:
+    ok(f'RC9 ausente: {old}') if old not in closure_text else fail(f'RC9 conserva resto obsoleto: {old}')
+visible_print_sources = '\n'.join([html, (ROOT/'app/js/obradorr-app-classic.js').read_text(encoding='utf-8'), (ROOT/'app/js/domain/document-profiles.js').read_text(encoding='utf-8')])
+for old_label in ['FPB ·', 'CM ·', 'GS ·', 'Ciclo Medio', 'Ciclo Superior', 'Nivel documental', 'Pedido consolidado']:
+    ok(f'etiqueta visible retirada: {old_label}') if old_label not in visible_print_sources else fail(f'etiqueta visible antigua en impresión: {old_label}')
 for entry_file in [ROOT/'index.html', ROOT/'Abrir_ObradORR.html', ROOT/'app/reset_local_data.html']:
     txt = entry_file.read_text(encoding='utf-8')
-    ok(f'entrada actualizada: {entry_file.relative_to(ROOT)}') if 'obradorr-210-rc8-release-candidate' in txt and 'obradorr-210-rc7-exports-discreet' not in txt else fail(f'entrada obsoleta: {entry_file.relative_to(ROOT)}')
+    ok(f'entrada actualizada: {entry_file.relative_to(ROOT)}') if 'obradorr-210-rc9-release-candidate' in txt and 'obradorr-210-rc7-exports-discreet' not in txt else fail(f'entrada obsoleta: {entry_file.relative_to(ROOT)}')
+
+print_sections_path = ROOT/'app/js/print/print-sections.js'
+ok('RC9 print-sections.js presente') if print_sections_path.exists() else fail('RC9 falta print-sections.js')
+if print_sections_path.exists():
+    pst = print_sections_path.read_text(encoding='utf-8')
+    for token in ['SECTION_CONTRACT','document_header','recipe_sheets','production_order','renderDocumentBody','2.1.0-rc9']:
+        ok(f'RC9 print-sections token presente: {token}') if token in pst else fail(f'RC9 print-sections token ausente: {token}')
+ok('RC9 print-sections cargado en HTML') if 'js/print/print-sections.js' in html else fail('RC9 print-sections no cargado en HTML')
+
+print_view_path = ROOT/'app/print-view.html'
+ok('RC9 print-view.html presente') if print_view_path.exists() else fail('RC9 falta print-view.html')
+if print_view_path.exists():
+    pvt = print_view_path.read_text(encoding='utf-8')
+    for token in ['ObradORRPrintView:', 'printBtn', 'docFrame', 'Imprimir / guardar PDF']:
+        ok(f'RC9 print-view token presente: {token}') if token in pvt else fail(f'RC9 print-view token ausente: {token}')
+for token in ['createPrintViewPayload', 'print-view.html?doc=', 'shouldShowIngredientLineCosts', 'escandalloBlockHtml', 'traceabilityBlockHtml', 'appccPrintMode', 'bakeryComponentsSummaryHtml', 'Escandallo técnico docente', 'Trazabilidad técnica', 'Componentes elaborados', 'resolveRecipeAllergens', 'resolveRecipeAllergenBundle', 'visitedWithoutCurrent', 'Detalle completo incluido en este modelo']:
+    ok(f'RC9 app print-view token presente: {token}') if token in alljs else fail(f'RC9 app print-view token ausente: {token}')
+
+
+
+print_css_path = ROOT/'app/css/print-document.css'
+ok('RC9 print-document.css presente') if print_css_path.exists() else fail('RC9 falta app/css/print-document.css')
+if print_css_path.exists():
+    pct = print_css_path.read_text(encoding='utf-8')
+    for token in ['@page{size:A4', 'RC9', 'print-color-adjust', '.sheet-head.has-photo', '.order-table', '.structured-appcc', '@media print']:
+        ok(f'RC9 print CSS token presente: {token}') if token in pct else fail(f'RC9 print CSS token ausente: {token}')
+for rel in ['app/js/obradorr-app-classic.js','app/js/obradorr-app.js']:
+    src = (ROOT/rel).read_text(encoding='utf-8')
+    ok(f'RC9 {rel} enlaza print-document.css') if 'css/print-document.css?v=obradorr-210-rc9-release-candidate' in src else fail(f'RC9 {rel} no enlaza print-document.css')
+    shell_start = src.find('function printDocumentShell')
+    shell_part = src[shell_start:shell_start+1400] if shell_start >= 0 else src
+    ok(f'RC9 {rel} sin @page largo embebido en shell') if '@page{size:A4' not in shell_part else fail(f'RC9 {rel} conserva CSS @page embebido en shell')
+
 if "IDB_DATA_DB = 'obradorr-data-210-rc7-release-candidate'" in alljs:
     ok('namespace IndexedDB RC7 conservado por compatibilidad')
 else:
     fail('namespace IndexedDB inesperado; revisar compatibilidad de persistencia')
+
+
+profiles_src = (ROOT/'app/js/domain/document-profiles.js').read_text(encoding='utf-8')
+app_src = (ROOT/'app/js/obradorr-app-classic.js').read_text(encoding='utf-8')
+ok('RC9 ficha ampliada incluye costes por defecto') if 'ficha_ampliada' in profiles_src and 'options: { includeCosts: true, includeProcess: true, includeAppcc: true, subrecipeMode: "sheets"' in profiles_src else fail('RC9 ficha ampliada no activa costes por defecto')
+ok('RC9 ficha ampliada sin escandallo') if 'costs: true, escandallo: false, validation: false' in profiles_src else fail('RC9 ficha ampliada mantiene escandallo/validación no deseados')
+ok('RC9 escandallo reservado a dossier') if 'out.escandallo = costAllowed && !!options.includeCosts && profile === "dossier_completo"' in profiles_src else fail('RC9 escandallo no queda reservado a dossier')
+ok('RC9 costes de líneas no duplican escandallo') if 'function shouldShowIngredientLineCosts' in app_src and '&& !shouldPrintEscandallo(opts)' in app_src else fail('RC9 falta control de duplicidad de costes de línea')
+
+# RC9 · Release Candidate checks
+classic_src = (ROOT / 'app/js/obradorr-app-classic.js').read_text(encoding='utf-8')
+ok('RC9 no muestra modal si window.open abre print-view.html') if 'if (popupOpened)' in classic_src and 'return;\n    }\n    modalRoot.innerHTML' in classic_src else fail('RC9 no garantiza retorno sin modal tras apertura correcta')
+ok('RC9 no conserva mensaje modal de apertura exitosa') if 'Vista de impresión abierta.' not in classic_src and 'Se abrió una pestaña independiente para imprimir o guardar PDF.' not in classic_src else fail('RC9 conserva modal de apertura exitosa')
+ok('RC9 conserva apertura manual solo para bloqueo') if 'No se pudo abrir automáticamente la vista de impresión.' in classic_src and 'Abrir vista independiente' in classic_src else fail('RC9 no conserva apertura manual ante bloqueo')
 
 con.close()
 print('\nRESULTADO:', 'OK' if not errors else f'ERRORES={len(errors)}')

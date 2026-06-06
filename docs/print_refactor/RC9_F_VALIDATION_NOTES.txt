@@ -1,0 +1,8 @@
+RC9-F valida:
+- app/css/print-document.css presente;
+- printDocumentShell enlaza la hoja CSS externa;
+- no queda bloque @page largo embebido en printDocumentShell;
+- print-view.html sigue presente;
+- visor integrado sigue presente;
+- token de caché obradorr-210-rc9-f-print-css presente en entradas;
+- SQLite principal sin cambios.

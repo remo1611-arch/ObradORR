@@ -1,0 +1,12 @@
+RC9 valida:
+- token de caché obradorr-210-rc9-release-candidate;
+- modelos neutrales de impresión;
+- Pedido de producción;
+- print-view.html independiente;
+- visor integrado de respaldo;
+- print-document.css externo;
+- secciones imprimibles;
+- bloques de escandallo, trazabilidad, APPCC y subelaboraciones;
+- ausencia de importación Excel;
+- integridad SQLite y foreign_key_check;
+- base principal sin modificaciones gastronómicas.

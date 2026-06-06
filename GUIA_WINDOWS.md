@@ -1,19 +1,21 @@
-# Guía Windows · ObradORR 2.1.0-RC8 Release Candidate
+# Guía Windows · ObradORR 2.1.0-RC9
 
-Desde la carpeta raíz del proyecto:
+1. Descomprime `ObradORR_2_1_0_RC9_RELEASE_CANDIDATE.zip`.
+2. Abre una terminal en la carpeta descomprimida.
+3. Ejecuta:
 
 ```powershell
-py -m http.server 8861 --bind 127.0.0.1
+python -m http.server 8870 --bind 127.0.0.1
 ```
 
-Reset local recomendado si vienes de versiones anteriores:
+4. Abre primero, si vienes de versiones anteriores:
 
 ```text
-http://127.0.0.1:8861/app/reset_local_data.html?v=obradorr-210-rc8-release-candidate-reset
+http://127.0.0.1:8870/app/reset_local_data.html?v=obradorr-210-rc9-release-candidate-reset
 ```
 
-Abrir:
+5. Después abre:
 
 ```text
-http://127.0.0.1:8861/app/obradorr.html?v=obradorr-210-rc8-release-candidate
+http://127.0.0.1:8870/app/obradorr.html?v=obradorr-210-rc9-release-candidate
 ```

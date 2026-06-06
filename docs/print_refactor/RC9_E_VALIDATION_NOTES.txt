@@ -1,0 +1,12 @@
+RC9-E validation notes
+======================
+
+Comprobaciones esperadas:
+
+- app/print-view.html existe.
+- presentPrintDocument() genera payload temporal para print-view.html.
+- El visor clásico iframe queda como fallback.
+- ObradORRPrintSections sigue cargado.
+- SQLite permanece intacta.
+- No se reintroduce importación Excel.
+- El token de caché pasa a obradorr-210-rc9-e-print-view.
